@@ -1,50 +1,51 @@
 import { ArrowRight } from "lucide-react";
+import { Link } from "wouter";
 
 const topThree = [
   {
-    id: 1,
     category: "Macro Outlooks",
     date: "March 26, 2026",
-    title: "Emerging Market Currency Volatility",
-    description:
-      "Sapatis noa masting lagemois cabrmcsts, and bing thectiure. Teur updat lcibost.",
+    title: "Emerging Market Currency Volatility: How IDR Is Faring",
+    description: "The IDR has appreciated 2.1% against the USD over the past month as BI signals a hold. We examine the carry trade dynamics at play.",
+    href: "/macro/macro-outlooks",
     featured: true,
   },
   {
-    id: 2,
-    category: "Section: Wahatla, Ghanate Flifs",
-    date: "March 19, 2026",
-    title: "Renewable Energy Investment Trends",
-    description:
-      "Expanly patton ommemcolic and masting investments of the finoweinthica intemnasas suspect the regoitr of prouval terots.",
+    category: "Geopolitical",
+    date: "March 22, 2026",
+    title: "US-China Trade Tensions: Impact on Indonesian Exports",
+    description: "Indonesia's commodity exports remain resilient, but manufacturing faces tariff displacement risk as trade war escalates.",
+    href: "/macro/geopolitical",
     featured: false,
   },
   {
-    id: 3,
-    category: "Section: Fil Ghchawe Fagto",
-    date: "March 17, 2026",
-    title: "US-China Trade Tenus Update",
-    description:
-      "Soghts finnenmide compemtic cLaherbess/trmisting and global mlateas, an glious or mere feal trends.",
+    category: "ESG",
+    date: "March 19, 2026",
+    title: "Renewable Energy Investment: Indonesia's Green Bond Push",
+    description: "Green bonds grew 45% in 2025. We assess credibility gaps and where the real capital is flowing.",
+    href: "/sectoral/esg",
     featured: false,
   },
 ];
 
 const listItems = [
   {
-    id: 4,
     category: "Sectoral Intelligence",
     date: "March 24, 2026",
-    title: "Updtern mene and gube luergy, and global trends",
-    description: "",
+    title: "Palm Oil Sector: Pricing Dynamics & European ESG Headwinds",
+    href: "/sectoral/deep-dives",
   },
   {
-    id: 5,
-    category: "Geopolitical Analysis",
+    category: "Regional Monitor",
     date: "March 20, 2026",
-    title: "Geopolitical Analysis",
-    description:
-      "Rentle drrirens on ntessity bates and inflations in satoqed.",
+    title: "Java Economic Corridor: Growth Concentration & Disparity Analysis",
+    href: "/sectoral/regional",
+  },
+  {
+    category: "Market Pulse",
+    date: "March 17, 2026",
+    title: "JCI Hits 7,200 on BI Hold — What Equity Investors Should Watch",
+    href: "/blog/market-pulse",
   },
 ];
 
@@ -52,70 +53,59 @@ export default function LatestInsights() {
   return (
     <section className="py-12 bg-white border-t border-[#E5E7EB]">
       <div className="max-w-[1200px] mx-auto px-6">
-        <h2 className="text-[22px] font-semibold text-gray-900 mb-8">
-          Latest Insights
-        </h2>
-
-        {/* Top three grid */}
-        <div className="border border-[#E5E7EB] grid grid-cols-1 md:grid-cols-3 mb-0">
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-[22px] font-semibold text-gray-900">Latest Insights</h2>
+          <Link href="/blog/market-pulse" className="text-[12.5px] font-medium text-[#1a3a5c] hover:underline flex items-center gap-1">
+            View all <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+        <div className="border border-[#E5E7EB] grid grid-cols-1 md:grid-cols-3">
           {topThree.map((item, i) => (
-            <div
-              key={item.id}
-              className={`p-5 flex flex-col ${i < 2 ? "border-b md:border-b-0 md:border-r border-[#E5E7EB]" : ""}`}
+            <Link
+              key={item.title}
+              href={item.href}
+              className={`p-5 flex flex-col hover:bg-gray-50 transition-colors ${
+                i < 2 ? "border-b md:border-b-0 md:border-r border-[#E5E7EB]" : ""
+              }`}
             >
-              <div className="text-[11px] text-gray-400 mb-1 uppercase tracking-wide font-medium">
-                {item.category} &mdash; {item.date}
+              <div className="text-[11px] text-gray-400 mb-1.5 uppercase tracking-wide font-medium">
+                {item.category} — {item.date}
               </div>
-              <h3
-                className={`font-semibold text-gray-900 leading-snug mb-2 ${item.featured ? "text-[16px]" : "text-[14px]"}`}
-              >
+              <h3 className={`font-semibold text-gray-900 leading-snug mb-2 hover:text-[#1a3a5c] ${item.featured ? "text-[16px]" : "text-[14px]"}`}>
                 {item.title}
               </h3>
-              {item.featured && (
-                <span className="inline-block w-1.5 h-1.5 rounded-full bg-gray-700 mb-2" />
-              )}
               <p className="text-[12.5px] text-gray-500 leading-relaxed flex-1 mb-3">
                 {item.description}
               </p>
-              <a
-                href="#"
-                className="inline-flex items-center gap-1 text-[12.5px] font-medium text-gray-700 hover:text-gray-900 transition-colors"
-              >
+              <span className="inline-flex items-center gap-1 text-[12.5px] font-medium text-gray-700 hover:text-[#1a3a5c] transition-colors">
                 Read More
                 <ArrowRight className="w-3.5 h-3.5" />
-              </a>
-            </div>
+              </span>
+            </Link>
           ))}
         </div>
-
-        {/* List items */}
         <div className="border-l border-r border-b border-[#E5E7EB]">
           {listItems.map((item) => (
-            <div
-              key={item.id}
-              className="px-5 py-4 border-t border-[#E5E7EB]"
+            <Link
+              key={item.title}
+              href={item.href}
+              className="block px-5 py-4 border-t border-[#E5E7EB] hover:bg-gray-50 transition-colors"
             >
-              <div className="flex items-start gap-4">
+              <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
                   <div className="text-[11.5px] font-semibold text-gray-700 mb-0.5">
                     {item.category}{" "}
-                    <span className="font-normal text-gray-400">&mdash; {item.date}</span>
+                    <span className="font-normal text-gray-400">— {item.date}</span>
                   </div>
-                  {item.description && (
-                    <p className="text-[12.5px] text-gray-500 mt-1 leading-relaxed">
-                      {item.description}
-                    </p>
-                  )}
+                  <div className="text-[13px] font-medium text-gray-900 leading-snug mt-1">
+                    {item.title}
+                  </div>
                 </div>
-                <a
-                  href="#"
-                  className="inline-flex items-center gap-1 text-[12.5px] font-medium text-gray-700 hover:text-gray-900 transition-colors flex-shrink-0 mt-0.5"
-                >
-                  Read More
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </a>
+                <span className="inline-flex items-center gap-1 text-[12px] font-medium text-gray-500 hover:text-gray-900 flex-shrink-0 mt-1">
+                  Read <ArrowRight className="w-3 h-3" />
+                </span>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>
