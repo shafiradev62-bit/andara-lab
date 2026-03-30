@@ -1,0 +1,157 @@
+30/03/26 10.18 - Pesan dan telepon terenkripsi secara end-to-end. Hanya orang di obrolan ini yang bisa membaca, mendengarkan, atau membagikannya. *Pelajari selengkapnya*.
+30/03/26 10.18 - 
+30/03/26 10.18 - +62 858-8356-7875: Selamat pagi Mba Rahmi
+30/03/26 10.19 - rrstudio: pagi, mba Dinda
+
+perkenalkan saya Rahmi, beberapa waktu lalu sempat dihubungi oleh pak Hermanto untuk membuat website 🙏🏻
+30/03/26 10.21 - +62 858-8356-7875: Iyaa mba rahmi, sebelumnya pak hermanto sudah info sampai mana ya ke mba rahmi?
+30/03/26 10.23 - rrstudio: untuk info projectnya beliau sebenarnya blm memberitahu mba, hanya website saja dan blm ada brief yg di share ke saya
+
+berkenan mba Dinda sampaikan untuk project website yg ingin dieksekusi dari pak Hermanto. jika ada kebingungan untuk membeli hosting, domain, dsb nya saya bisa bantu urus jg mba 🙏🏻
+30/03/26 10.37 - +62 858-8356-7875: baik mba, jadi rencananya untuk website yang ingin kami develop itu berupa research center di sektor ekonomi
+30/03/26 10.40 - +62 858-8356-7875: untuk domainnya rencananya kami mau pakai AndaraLab.id
+30/03/26 10.41 - +62 858-8356-7875: mungkin boleh dicheck dulu mba apakah available
+30/03/26 10.42 - rrstudio: Baik mba, noted
+
+Saya cek terlebih dahulu ya mba di hostinger nya 🙏🏻
+30/03/26 10.44 - rrstudio: <Media tidak disertakan>
+30/03/26 10.48 - +62 858-8356-7875: oke mba kits pakai yang .id saja ya mba.. bisa diproses untuk pembayarannya
+30/03/26 10.50 - rrstudio: baik mba, untuk proses pembayarannya saya pilihkan pakai qris dari hostinger nya tidak apa-apa mba?
+
+supaya langsung terdaftar domainnya 🙏🏻
+30/03/26 10.50 - +62 858-8356-7875: boleh mba
+30/03/26 10.54 - rrstudio: <Media tidak disertakan>
+30/03/26 10.56 - +62 858-8356-7875: ini untuk domain+hostingnya kan ya mba?
+30/03/26 10.57 - rrstudio: betul mba, di hostinger setiap pembelian hosting 1 tahun sudah free domain rp 0 
+
+sudah saya checkout kan dgn hosting nya sekalian
+30/03/26 10.58 - +62 858-8356-7875: untuk kapasitasnya berapa mba?
+30/03/26 11.00 - +62 858-8356-7875: boleh infonya mba untuk fiturnya apa saja kalau dari hostinger
+30/03/26 11.04 - rrstudio: baik mba. untuk paket premium hosting di hostinger ini, kapasitasnya cukup besar karena menggunakan storage SSD sekitar 25 GB, bandwidthnya tidak dibatasi, dan paket ini biasanya sudah mendukung beberapa website sekaligus
+
+fitur yg termasuk di hosting ini mencakup database my qsl, email hosting, SSL gratis, backup otomatis, dan panel kontrol hPanel untuk memudahkan pengelolaan website.
+
+untuk domain .id yang kita pakai berarti alamat website kita resmi, bisa langsung dihubungkan ke hosting, dan semua pengaturan dasar seperti DNS atau redirect bisa dikelola lewat hostinger tanpa perlu konfigurasi rumit. nantinya untuk website research center ini bisa berjalan lancar dan aman dari sisi hosting serta domain tanpa ada down dsb nya
+30/03/26 11.04 - rrstudio: <Media tidak disertakan>
+30/03/26 11.09 - +62 858-8356-7875: oke mbaa, untuk qrisnya sudah expired belum yah?
+30/03/26 11.11 - rrstudio: masih bisa mba cukup panjang untuk expired time nya, saya buatkan qris nya duluan supaya "book" domain andaralab.id agar tidak di booking oleh org lain 😁
+30/03/26 11.12 - +62 858-8356-7875: <Media tidak disertakan>
+30/03/26 11.12 - +62 858-8356-7875: sudah dibayar ya mba
+
+30/03/26 11.15 - rrstudio: <Media tidak disertakan>
+30/03/26 11.15 - rrstudio: untuk brief mengenai website nya berkenan untuk di share jg ya mba, supaya bisa saya eksekusi dari hari ini 🙏🏻
+30/03/26 11.17 - +62 858-8356-7875: baik mba, jadi rencananya website kita mau dalam bahasa inggris (sebagai bahasa utama) tapi juga bisa switch ke bahasa indonesia.
+30/03/26 11.19 - +62 858-8356-7875: untuk isi main menunyya:
+1. Home,
+2. About Us
+3. Macro Foundations
+4. ⁠Sectoral Intelligence
+5. ⁠Data Hub 
+6. ⁠Blog
+7. ⁠Contact
+30/03/26 11.19 - +62 858-8356-7875: untuk di homepagenya kita pakai tagline berikut ya mba 
+
+AndaraLab: Decoding Economies, Empowering Growth
+30/03/26 11.21 - rrstudio: multi-languange jg berarti ya mba? noted, untuk referensi design + visual seperti gambar dan jg informasi lainnya berkenan untuk dikirimkan jg ya mba 🙏🏻
+30/03/26 11.21 - +62 858-8356-7875: lalu untuk page About Us kita pakai ini ya mba
+
+About Us -> "At AndaraLab, we operate as a premier economic research hub under PT. Andara Investasi Cerdas. We bridge the gap between complex macro-economic data and actionable intelligence. Built on the pillar of 'Tumbuh' (Growth), our mission is to provide the analytical foundation that allows our partners to flourish in an ever-evolving economic landscape."
+30/03/26 11.23 - +62 858-8356-7875: baik mba
+30/03/26 11.28 - rrstudio: baik mba, noted
+
+saya sambil menunggu referensi design website + informasi gambar yg akan ditampilkan dan logo untuk profile+identitas dari website nya ya mba 🙏🏻
+30/03/26 11.46 - +62 858-8356-7875: untuk di homepagenya kita pakai tagline berikut ya mba 
+
+AndaraLab: Decoding Economies, Empowering Growth
+
+selain tag line isi homepage nya juga ada paragraf ini ya mba 
+
+AndaraLab, we bridge the gap between complex global shifts and local investment opportunities by transforming raw economic data into high-precision strategic intelligence. As the dedicated research arm of PT. Andara Investasi Cerdas, our "laboratory" approach combines rigorous econometric modeling with deep institutional expertise to ensure every insight is both scientifically grounded and practically actionable. We don’t just track the market; we decode the underlying forces of the Indonesian economy to fulfill our core promise of "Tumbuh"—empowering our partners with the clarity and foresight needed to achieve sustainable, long-term growth in an ever-evolving financial landscape.
+30/03/26 11.48 - +62 858-8356-7875: berikut untuk referensi design websitenya 
+
+https://www.jpmorgan.com/insights/research 
+
+color palletenya dominan putih agar tetap terlihat clean
+30/03/26 11.52 - rrstudio: baik mba, siap
+
+jika ada hal lain yg perlu saya tambahkan let me know ya 🙏🏻
+30/03/26 12.13 - +62 858-8356-7875: oke mba, kita lanjut untuk sub menunya ya mba:
+
+1. *Home: no sub menu*
+       Direct ke homepage
+       Memiliki active state di navbar
+
+2. ⁠*about us: no sub menu*
+       Direct ke halaman About Us
+
+3. ⁠*Macro Foundations: 3 Sub menu*
+       3.1 Macro Outlooks
+       3.2 Policy & Monetary Watch
+       3.3 Geopolitical & Structural Analysis
+
+4. *Sectoral Intelligence: 3 Sub menu*
+       4.1 Strategic Industry Deep-dives
+       4.2 Regional Economic Monitor
+       4.3 ESG
+ 
+  5. *Data Hub : 2 Sub menu*
+      5.1 Economic Calendar
+      5.2 Market Dashboard
+
+ 6. *Blog: 3 Sub menu*
+      6.1 Economics 101
+      6.2 Market Pulse (News)
+      6.3 Lab notes
+
+7. *Contact: No sub menu*
+      (list menyusul)
+30/03/26 12.18 - +62 858-8356-7875: ini untuk struktur URL nya ya mba
+
+
+/macro/macro-outlooks/
+/macro/policy-monetary/
+/macro/geopolitical/
+
+/sectoral/deep-dives/
+/sectoral/regional/
+/sectoral/esg/
+
+/data/economic-calendar/
+/data/market-dashboard/
+
+/blog/economics-101/
+/blog/market-pulse/
+/blog/lab-notes/ <Pesan ini diedit>
+30/03/26 12.22 - rrstudio: baik mba, thankyou info nya
+
+apa sudah semua informasi yg diberikan? jika ada penyesuaian bisa info saja ya supaya sambil on-going saja selama pembuatan website berlangsung 🙏🏻
+30/03/26 12.23 - +62 858-8356-7875: okee mba untuk detailnya sembari saya kirimkan ya mba
+30/03/26 12.23 - rrstudio: baik mba, saya tunggu
+30/03/26 12.26 - +62 858-8356-7875: untuk translationnya, kalau bisa pakai auto translate (translation engine) sebagai base biar lebih cepat. Tapi kita juga butuh supaya hasil translatenya bisa diedit atau diadjust manual di CMS.
+
+Kira-kira setup seperti ini bisa gak ya mba?
+30/03/26 12.30 - rrstudio: Bisa, mba. untuk secara teknis, kita bisa pakai auto-translate sebagai base di CMS, lalu hasilnya tetap bisa diedit manual. sehingga workflow-nya spt ini : konten pertama-tama diterjemahkan otomatis pakai engine (misal google translate/deepl), kemudian draft ini masuk CMS dan bisa di adjust langsung oleh editor sesuai kebutuhan tone, istilah, atau style tertentu. sehingga prosesnya akan lebih cepat tapi tetap fleksibel untuk koreksi manual
+30/03/26 12.34 - +62 858-8356-7875: Oke mba, untuk URL-nya bisa ditambahkan prefix bahasa gak ya, seperti /en/ dan /id/?
+
+Jadi nanti strukturnya kurang lebih seperti:
+
+/en/macro/macro-outlooks/
+/id/macro/macro-outlooks
+30/03/26 12.37 - rrstudio: bisa sekali mba. Kita bisa atur url structure dengan prefix bahasa seperti /en/ dan /id/, sehingga setiap versi bahasa punya path sendiri. supaya memudahkan SEO dan navigasi karena jelas mana konten bahasa Inggris dan mana bahasa Indonesia, tanpa harus bikin duplicate content di root url nya 👍🏻
+30/03/26 13.14 - +62 858-8356-7875: baik mba..
+30/03/26 13.14 - +62 858-8356-7875: <Media tidak disertakan>
+30/03/26 13.17 - rrstudio: bisa sekali mba 👍🏻
+
+dari segi tampilan dan jg isi dari website. biasanya saya mengikuti arahan dari client supaya bebas request dan benar" sesuai dgn kebutuhan
+30/03/26 13.34 - +62 858-8356-7875: Baik mba, noted yaa.. Untuk sementara mungkin itu dulu, nanti kalau ada tambahan saya update lagi atau ada yang mau mba tanyain boleh langsung infoin aja yah mba.🙏🏻😊
+30/03/26 13.34 - +62 858-8356-7875: Oh iya sekalian saya mau tanya mba, untuk payment flow biasanya seperti apa ya dari sisi mba?
+30/03/26 13.38 - rrstudio: baik mba siap, jika ada penyesuaian dll bisa tolong info saja ya. untuk pengerjaan project ini saya daily progress, jadi bisa sambil berjalan saja
+30/03/26 13.40 - rrstudio: untuk payment flow dari segi saya berdasarkan milestone/progress based mba
+
+skema nya di awal terdapat commitment fee, selama proses pengerjaan untuk payment berdasarkan apa yg sudah dikerjakan mba
+
+nanti ketika pelunasan. semua akses seperti source code, domain, dan jg akses lainnya diberikan secara penuh dan menjadi hak milik client 🙏🏻
+30/03/26 13.44 - +62 858-8356-7875: Baik mba, noted untuk skema paymentnya. Kalau untuk scope website yang tadi kita bahas, boleh dibantu share estimasi total biayanya?
+Kalau bisa sekalian breakdown per scope atau milestonenya juga yah mba..
+30/03/26 13.44 - rrstudio: baik mba, saya izin untuk membuatkan dokumen penawaran kerjasama nya dulu ya mba berdasarkan capaian per progress selama proses pengerjaan website ini 🙏🏻
+30/03/26 13.45 - +62 858-8356-7875: siap mbaa

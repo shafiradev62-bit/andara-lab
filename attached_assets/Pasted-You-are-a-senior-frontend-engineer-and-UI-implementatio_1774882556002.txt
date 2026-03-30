@@ -1,0 +1,201 @@
+You are a senior frontend engineer and UI implementation specialist.
+
+Your task is to RECREATE a website EXACTLY based on a provided reference image.
+
+CRITICAL RULE:
+- This is NOT inspiration
+- This is NOT approximation
+- You must match layout, spacing, hierarchy, and structure EXACTLY
+- No redesign
+- No creativity
+- Pixel-accurate reproduction
+
+====================================
+REFERENCE UI (STRICT)
+====================================
+
+The layout consists of:
+
+1. NAVBAR
+- Left: Logo "AndaraLab"
+- Center: menu items
+  - Insights (active)
+  - Macro
+  - Sectoral
+  - Data Hub
+  - Blog
+  - About
+  - Contact
+- Right:
+  - Language switch (EN | ID)
+  - Country selector (IN dropdown style)
+
+Navbar style:
+- White background
+- Thin bottom border
+- Medium spacing
+- Clean typography
+- No shadow
+
+====================================
+
+2. HERO SECTION (FULL WIDTH IMAGE)
+- Background: city skyline image
+- Overlay: dark gradient
+- Left aligned content
+
+Content:
+- Title:
+  "AndaraLab: Decoding Economies, Empowering Growth"
+- Subtitle paragraph
+- Button: "Learn More"
+
+Style:
+- Large headline (~48px)
+- White text
+- Max width ~600px
+- Vertical center alignment
+
+====================================
+
+3. FEATURED INSIGHTS (3 CARDS GRID)
+- Section title: "Featured Insights"
+- 3 horizontal cards
+
+Each card:
+- Image top
+- Title
+- Meta (category + date)
+- Short description
+- "Read More"
+
+Style:
+- Light border
+- Small shadow
+- Clean spacing
+
+====================================
+
+4. LATEST INSIGHTS (LIST STYLE)
+- Section title
+- Mix of:
+  - 1 featured horizontal card
+  - 2 smaller side cards
+  - List items below
+
+Each item:
+- Category
+- Date
+- Title
+- Short description
+
+NO card-heavy UI → mostly flat
+
+====================================
+
+5. RESEARCH AREAS (3 BOXES)
+- Macro Foundations
+- Sectoral Intelligence
+- Data Hub
+
+Each:
+- Background image
+- Overlay text
+
+====================================
+
+6. DATA HUB SNAPSHOT
+LEFT:
+- Economic Calendar list
+RIGHT:
+- Market Overview cards
+
+Style:
+- Two-column layout
+- Cards minimal
+- Border + spacing clean
+
+====================================
+
+7. ABOUT BLOCK
+- Centered text
+- Button below
+
+====================================
+
+DESIGN RULES (VERY STRICT)
+====================================
+
+- Use WHITE background
+- Avoid rounded corners > 8px
+- Avoid heavy shadows
+- Use thin borders (#E5E7EB)
+- Typography-first layout
+- Spacing must be consistent
+
+Typography:
+- h1: 48px
+- h2: 24px
+- body: 16px
+
+Container:
+- max-width: 1200px
+- center aligned
+
+Spacing scale:
+- 8 / 16 / 24 / 32 / 64
+
+====================================
+TECH STACK (REPLIT READY)
+====================================
+
+- Next.js (App Router)
+- TypeScript
+- Tailwind CSS
+
+NO external UI libraries.
+
+====================================
+IMPLEMENTATION STEPS (DO NOT SKIP)
+====================================
+
+1. Setup Next.js project
+2. Configure Tailwind
+3. Create layout container system
+4. Build Navbar EXACT
+5. Build Hero EXACT
+6. Build Featured Insights grid EXACT
+7. Build Latest Insights EXACT structure
+8. Build Research Areas section
+9. Build Data Hub layout (2 column)
+10. Build About section
+
+====================================
+DATA (TEMP)
+====================================
+
+Use hardcoded data first (for UI accuracy).
+
+Later:
+- Replace with CMS (Sanity)
+
+====================================
+OUTPUT FORMAT
+====================================
+
+- Provide full working code
+- Separate components clearly
+- No pseudo code
+- No explanation unless necessary
+
+====================================
+FINAL CHECK
+====================================
+
+Before finishing:
+- Compare structure with reference
+- Ensure layout matches exactly
+- Ensure spacing consistency
+- Ensure no "AI template feel"
+
+START NOW.

@@ -48,6 +48,16 @@ Every package extends `tsconfig.base.json` which sets `composite: true`. The roo
 - `pnpm run build` — runs `typecheck` first, then recursively runs `build` in all packages that define it
 - `pnpm run typecheck` — runs `tsc --build --emitDeclarationOnly` using project references
 
+## Artifacts
+
+### `artifacts/andaralab` (`@workspace/andaralab`)
+
+AndaraLab website — a React + Vite frontend-only web app. Economic research center website with:
+- Full-page homepage: Navbar, Hero, Featured Insights, Latest Insights, Research Areas, Data Hub Snapshot, About, Footer
+- Components in `artifacts/andaralab/src/components/`
+- No backend dependency (pure frontend, hardcoded data)
+- Deployed at preview path `/`
+
 ## Packages
 
 ### `artifacts/api-server` (`@workspace/api-server`)
