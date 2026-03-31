@@ -63,7 +63,7 @@ export default function Navbar() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-[#E5E7EB]">
+    <header className="bg-white border-b border-[#E5E7EB]">
       <div className="max-w-[1200px] mx-auto px-6 flex items-center h-14">
         <Link
           href="/"

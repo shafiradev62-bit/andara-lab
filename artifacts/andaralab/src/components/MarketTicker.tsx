@@ -1,7 +1,7 @@
 const tickers = [
   { symbol: "IDR/USD", value: "15,890", change: "+0.32%", up: false },
   { symbol: "JCI", value: "7,214.3", change: "+1.14%", up: true },
-  { symbol: "BI Rate", value: "6.00%", change: "Unch", up: true },
+  { symbol: "BI Rate", value: "6.00%", change: "Unch", up: null },
   { symbol: "US 10Y", value: "4.28%", change: "-0.05%", up: true },
   { symbol: "Gold", value: "$2,285", change: "+0.63%", up: true },
   { symbol: "Brent", value: "$82.4", change: "+0.78%", up: true },
@@ -16,32 +16,26 @@ const tickers = [
 const double = [...tickers, ...tickers];
 
 export default function MarketTicker() {
-  const now = new Date();
-  const timeStr = now.toLocaleTimeString("en-US", {
-    hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta",
-  });
-
   return (
-    <div className="bg-[#0f2540] border-b border-white/10 overflow-hidden h-8 flex items-center">
-      <div className="flex-shrink-0 flex items-center gap-2 px-3 border-r border-white/15 h-full bg-[#0f2540] z-10">
-        <span className="live-dot w-1.5 h-1.5 rounded-full bg-green-400 inline-block" />
-        <span className="text-[10.5px] font-semibold text-white/50 uppercase tracking-widest">Live</span>
-        <span className="text-[10.5px] text-white/30 ml-1">WIB {timeStr}</span>
+    <div className="bg-[#F9FAFB] border-b border-[#E5E7EB] overflow-hidden h-8 flex items-center">
+      <div className="flex-shrink-0 flex items-center gap-2 px-3 border-r border-[#E5E7EB] h-full bg-[#F9FAFB] z-10">
+        <span className="live-dot w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
+        <span className="text-[10.5px] font-semibold text-gray-400 uppercase tracking-widest">Live</span>
       </div>
       <div className="flex-1 overflow-hidden relative">
         <div className="ticker-track">
           {double.map((t, i) => (
-            <div key={i} className="flex items-center gap-2 px-5 border-r border-white/10 h-8">
-              <span className="text-[11px] font-semibold text-white/50 uppercase tracking-wide whitespace-nowrap">
+            <div key={i} className="flex items-center gap-2 px-5 border-r border-[#F3F4F6] h-8">
+              <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide whitespace-nowrap">
                 {t.symbol}
               </span>
-              <span className="text-[11.5px] font-semibold text-white whitespace-nowrap">{t.value}</span>
+              <span className="text-[11.5px] font-semibold text-gray-900 whitespace-nowrap">{t.value}</span>
               <span
                 className={`text-[10.5px] font-semibold whitespace-nowrap ${
-                  t.change === "Unch" ? "text-white/40" : t.up ? "text-green-400" : "text-red-400"
+                  t.up === null ? "text-gray-400" : t.up ? "text-green-600" : "text-red-500"
                 }`}
               >
-                {t.change === "Unch" ? t.change : (t.up ? "▲" : "▼") + " " + t.change}
+                {t.up === null ? t.change : (t.up ? "▲ " : "▼ ") + t.change}
               </span>
             </div>
           ))}

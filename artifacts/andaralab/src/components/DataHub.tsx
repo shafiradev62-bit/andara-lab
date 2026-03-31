@@ -41,7 +41,7 @@ function SparkTooltip({ active, payload }: any) {
 
 export default function DataHub() {
   return (
-    <section className="py-12 bg-[#F9FAFB] border-t border-[#E5E7EB]">
+    <section className="py-12 bg-white border-t border-[#E5E7EB]">
       <div className="max-w-[1200px] mx-auto px-6">
         <div className="flex items-center justify-between mb-6">
           <div>

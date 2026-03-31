@@ -23,30 +23,30 @@ const links = {
 
 export default function Footer() {
   return (
-    <footer className="bg-[#0f2540] text-white py-12 border-t border-white/10">
+    <footer className="bg-white border-t border-[#E5E7EB] py-12">
       <div className="max-w-[1200px] mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-8 mb-10">
           <div className="md:col-span-2">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-7 h-7 bg-white/10 flex items-center justify-center">
+              <div className="w-7 h-7 bg-[#1a3a5c] flex items-center justify-center">
                 <span className="text-white text-[11px] font-bold">AL</span>
               </div>
-              <span className="text-[16px] font-bold tracking-tight">AndaraLab</span>
+              <span className="text-[15px] font-bold text-gray-900 tracking-tight">AndaraLab</span>
             </div>
-            <p className="text-[12.5px] text-white/55 leading-relaxed max-w-[280px] mb-5">
+            <p className="text-[12.5px] text-gray-500 leading-relaxed max-w-[280px] mb-5">
               A premier economic research hub under PT. Andara Investasi Cerdas.
               Decoding economies, empowering growth.
             </p>
             <Link
               href="/contact"
-              className="inline-flex items-center text-[12.5px] font-medium text-white border border-white/30 px-4 py-2 hover:bg-white/10 transition-colors"
+              className="inline-flex items-center text-[12.5px] font-medium text-white bg-[#1a3a5c] px-4 py-2 hover:bg-[#14305a] transition-colors"
             >
               Get in Touch →
             </Link>
           </div>
           {Object.entries(links).map(([group, items]) => (
             <div key={group}>
-              <div className="text-[11px] font-semibold uppercase tracking-widest text-white/35 mb-4">
+              <div className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 mb-4">
                 {group}
               </div>
               <ul className="space-y-2.5">
@@ -54,7 +54,7 @@ export default function Footer() {
                   <li key={item.label}>
                     <Link
                       href={item.href}
-                      className="text-[12.5px] text-white/55 hover:text-white transition-colors"
+                      className="text-[12.5px] text-gray-500 hover:text-gray-900 transition-colors"
                     >
                       {item.label}
                     </Link>
@@ -64,11 +64,11 @@ export default function Footer() {
             </div>
           ))}
         </div>
-        <div className="border-t border-white/10 pt-6 flex flex-col md:flex-row items-center justify-between gap-2">
-          <p className="text-[11.5px] text-white/35">
+        <div className="border-t border-[#E5E7EB] pt-6 flex flex-col md:flex-row items-center justify-between gap-2">
+          <p className="text-[11.5px] text-gray-400">
             © 2026 AndaraLab · PT. Andara Investasi Cerdas. All rights reserved.
           </p>
-          <p className="text-[11.5px] text-white/30">andaralab.id</p>
+          <p className="text-[11.5px] text-gray-400">andaralab.id</p>
         </div>
       </div>
     </footer>

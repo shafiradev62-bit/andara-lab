@@ -24,7 +24,7 @@ const areas = [
 
 export default function ResearchAreas() {
   return (
-    <section className="py-12 bg-[#F9FAFB] border-t border-[#E5E7EB]">
+    <section className="py-12 bg-white border-t border-[#E5E7EB]">
       <div className="max-w-[1200px] mx-auto px-6">
         <h2 className="text-[22px] font-semibold text-gray-900 mb-8">
           Our Research Areas

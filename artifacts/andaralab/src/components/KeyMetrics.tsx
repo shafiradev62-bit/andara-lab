@@ -19,7 +19,7 @@ const metrics = [
     change: "-0.01pp",
     up: true,
     href: "/macro/policy-monetary",
-    sparkColor: "#e67e22",
+    sparkColor: "#6B7280",
     spark: [2.57, 2.75, 3.05, 3.0, 2.84, 2.51, 2.13, 2.12],
   },
   {
@@ -29,7 +29,7 @@ const metrics = [
     change: "0.00pp",
     up: null,
     href: "/macro/policy-monetary",
-    sparkColor: "#2ecc71",
+    sparkColor: "#9CA3AF",
     spark: [5.75, 5.75, 5.75, 6.0, 6.0, 6.25, 6.25, 6.0],
   },
   {
@@ -39,7 +39,7 @@ const metrics = [
     change: "+0.32%",
     up: false,
     href: "/data/market-dashboard",
-    sparkColor: "#e74c3c",
+    sparkColor: "#9CA3AF",
     spark: [15620, 15680, 15721, 16100, 16015, 16373, 16200, 15890],
   },
   {
@@ -49,7 +49,7 @@ const metrics = [
     change: "-0.3B",
     up: false,
     href: "/sectoral/deep-dives",
-    sparkColor: "#9b59b6",
+    sparkColor: "#9CA3AF",
     spark: [2.4, 1.5, 2.6, 2.6, 2.6, 2.3, 2.1, 2.3],
   },
 ];
