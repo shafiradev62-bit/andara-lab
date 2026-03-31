@@ -12,12 +12,12 @@ const categoryColors: Record<string, string> = {
 
 const topThree = [
   {
-    category: "Macro Outlooks",
+    category: "Market Pulse",
     date: "Mar 26, 2026",
     readTime: "6 min",
-    title: "Emerging Market Currency Volatility: How IDR Is Faring",
+    title: "IDR Currency Dynamics: Carry Trade and What Drives the Exchange Rate",
     description: "The IDR has appreciated 2.1% against the USD over the past month as BI signals a hold. We examine the carry trade dynamics at play and what the 2026 current account deficit means.",
-    href: "/macro/macro-outlooks",
+    href: "/article/idr-carry-trade-dynamics",
   },
   {
     category: "Geopolitical",
@@ -25,39 +25,39 @@ const topThree = [
     readTime: "7 min",
     title: "US-China Trade Tensions: Impact on Indonesian Exports",
     description: "Indonesia's commodity exports remain resilient, but manufacturing faces tariff displacement risk as the trade war escalates into a new phase.",
-    href: "/macro/geopolitical",
+    href: "/article/us-china-trade-indonesia",
   },
   {
     category: "ESG",
-    date: "Mar 19, 2026",
-    readTime: "9 min",
-    title: "Renewable Energy Investment: Indonesia's Green Bond Push",
+    date: "Mar 25, 2026",
+    readTime: "7 min",
+    title: "Indonesia's Green Bond Market: Growth & Credibility Challenges",
     description: "Green bonds grew 45% in 2025. We assess credibility gaps and where the real capital is flowing in Indonesia's energy transition.",
-    href: "/sectoral/esg",
+    href: "/article/indonesia-green-bond-market",
   },
 ];
 
 const listItems = [
   {
     category: "Sectoral Intelligence",
-    date: "Mar 24, 2026",
-    readTime: "5 min",
+    date: "Mar 15, 2026",
+    readTime: "7 min",
     title: "Palm Oil Sector: Pricing Dynamics & European ESG Headwinds",
-    href: "/sectoral/deep-dives",
+    href: "/article/palm-oil-esg-headwinds",
   },
   {
     category: "Regional Monitor",
     date: "Mar 20, 2026",
-    readTime: "6 min",
+    readTime: "8 min",
     title: "Java Economic Corridor: Growth Concentration & Disparity Analysis",
-    href: "/sectoral/regional",
+    href: "/article/java-economic-corridor",
   },
   {
     category: "Market Pulse",
     date: "Mar 17, 2026",
     readTime: "4 min",
     title: "JCI Hits 7,200 on BI Hold — What Equity Investors Should Watch",
-    href: "/blog/market-pulse",
+    href: "/article/jci-7200-bi-hold",
   },
 ];
 

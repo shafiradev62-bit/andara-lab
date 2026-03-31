@@ -11,7 +11,7 @@ const insights = [
     readTime: "8 min",
     description:
       "Indonesia maintains its 5% growth trajectory despite global trade tensions, supported by strong domestic consumption and commodity exports. We model three scenarios for H1 2026.",
-    href: "/macro/macro-outlooks",
+    href: "/article/indonesia-macro-outlook-2026",
     featured: true,
   },
   {
@@ -23,7 +23,7 @@ const insights = [
     readTime: "5 min",
     description:
       "BI's decision to hold rates signals a cautious easing bias. We analyze the inflation and FX dynamics guiding the central bank's next moves.",
-    href: "/macro/policy-monetary",
+    href: "/article/bi-rate-policy-2026",
     featured: false,
   },
   {
@@ -35,7 +35,7 @@ const insights = [
     readTime: "10 min",
     description:
       "With 40% of global nickel reserves, Indonesia is positioning itself as a pivotal player in the global EV battery supply chain.",
-    href: "/sectoral/deep-dives",
+    href: "/article/nickel-ev-indonesia",
     featured: false,
   },
 ];

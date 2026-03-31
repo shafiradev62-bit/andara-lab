@@ -8,6 +8,7 @@ import AboutPage from "@/pages/AboutPage";
 import ContactPage from "@/pages/ContactPage";
 import DataHubPage from "@/pages/DataHubPage";
 import AdminPage from "@/pages/AdminPage";
+import ArticlePage from "@/pages/ArticlePage";
 import {
   MacroOutlooksPage,
   PolicyMonetaryPage,
@@ -107,6 +108,10 @@ export default function App() {
           </Route>
           <Route path="/blog/lab-notes">
             <Layout><BlogPage sub="lab-notes" /></Layout>
+          </Route>
+
+          <Route path="/article/:slug">
+            <Layout withNewsletter={false}><ArticlePage /></Layout>
           </Route>
 
           <Route>
