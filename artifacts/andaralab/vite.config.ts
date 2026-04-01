@@ -47,6 +47,20 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    // Add timestamp to force cache bust on every build
+    rollupOptions: {
+      output: {
+        entryFileNames: `assets/[name].[hash].js`,
+        chunkFileNames: `assets/[name].[hash].js`,
+        assetFileNames: (assetInfo) => {
+          // Force cache bust for favicons and manifests
+          if (assetInfo.name && (assetInfo.name.includes('favicon') || assetInfo.name.includes('manifest'))) {
+            return `assets/[name].[hash][extname]`;
+          }
+          return `assets/[name].[hash][extname]`;
+        }
+      }
+    }
   },
   server: {
     port,
