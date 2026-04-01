@@ -22,6 +22,11 @@ RUN pnpm run build
 # Production stage - serve with nginx
 FROM nginx:alpine
 
+# Remove any default/cached favicons from old projects
+RUN rm -f /usr/share/nginx/html/favicon.ico \
+        /usr/share/nginx/html/apple-touch-icon.png \
+        /usr/share/nginx/html/apple-touch-icon-precomposed.png
+
 # Copy built files from builder
 COPY --from=builder /app/artifacts/andaralab/dist/public /usr/share/nginx/html
 
