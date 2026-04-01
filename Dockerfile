@@ -27,4 +27,4 @@ EXPOSE 8080
 ENV NODE_ENV=production
 ENV PORT=8080
 
-CMD ["node", "--enable-source-maps", "./dist/index.mjs"]
+CMD ["sh", "-c", "node --enable-source-maps ./dist/index.mjs"]
