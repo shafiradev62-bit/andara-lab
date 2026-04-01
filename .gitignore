@@ -52,3 +52,5 @@ Thumbs.db
 artifacts/andaralab/.env
 artifacts/andaralab/.env.local
 artifacts/andaralab/.env.production
+
+.vercel

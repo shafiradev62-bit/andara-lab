@@ -1,10 +1,13 @@
 {
   "framework": "vite",
-  "buildCommand": "pnpm run build",
+  "buildCommand": "pnpm --filter @workspace/andaralab run build",
   "outputDirectory": "artifacts/andaralab/dist/public",
   "installCommand": "pnpm install",
-  "devCommand": "pnpm --filter @workspace/andaralab run dev",
-  "env": {
-    "VITE_API_BASE_URL": "@VITE_API_BASE_URL"
+  "git": {
+    "deploymentEnabled": true
+  },
+  "github": {
+    "silent": false,
+    "autoJobCancelation": true
   }
 }
