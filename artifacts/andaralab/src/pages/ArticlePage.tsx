@@ -1,11 +1,13 @@
 import { Link, useParams } from "wouter";
 import { ArrowLeft, Clock, Tag, ArrowRight } from "lucide-react";
 import { getArticle, getRelated } from "@/lib/articles";
+import { useLocale } from "@/lib/locale";
 
 export default function ArticlePage() {
   const params = useParams<{ slug: string }>();
-  const article = getArticle(params.slug || "");
-  const related = article ? getRelated(params.slug || "") : [];
+  const { locale, t } = useLocale();
+  const article = getArticle(params.slug || "", locale);
+  const related = article ? getRelated(params.slug || "", locale) : [];
 
   if (!article) {
     return (
@@ -29,7 +31,7 @@ export default function ArticlePage() {
           <span>/</span>
           <Link href={article.categoryHref} className="hover:text-gray-700 transition-colors">{article.category}</Link>
           <span>/</span>
-          <span className="text-gray-600 truncate max-w-[300px]">{article.title}</span>
+          <span className="text-gray-600 truncate max-w-[300px]">{locale === "id" ? (article.titleId ?? article.title) : article.title}</span>
         </div>
       </div>
 
@@ -43,39 +45,39 @@ export default function ArticlePage() {
               className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[#1a3a5c] mb-5 hover:underline"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              {article.category}
+              {locale === "id" ? (article.tagId ?? article.tag) : article.tag}
             </Link>
 
             <div className="flex items-center gap-2 mb-4">
               <span className="text-[10.5px] font-semibold text-[#1a3a5c] border border-[#1a3a5c]/20 bg-blue-50 px-2 py-0.5 uppercase tracking-wide">
-                {article.tag}
+                {locale === "id" ? (article.tagId ?? article.tag) : article.tag}
               </span>
               <span className="flex items-center gap-1 text-[12px] text-gray-400">
-                <Clock className="w-3 h-3" /> {article.readTime}
+                <Clock className="w-3 h-3" /> {locale === "id" ? (article.readTime.replace("min read", "menit baca")) : article.readTime}
               </span>
               <span className="text-[12px] text-gray-400">{article.date}</span>
             </div>
 
             <h1 className="text-[28px] md:text-[34px] font-bold text-gray-900 leading-tight mb-4">
-              {article.title}
+              {locale === "id" ? (article.titleId ?? article.title) : article.title}
             </h1>
 
             <p className="text-[15px] text-gray-500 leading-relaxed mb-6 border-l-4 border-[#1a3a5c] pl-4">
-              {article.excerpt}
+              {locale === "id" ? (article.excerptId ?? article.excerpt) : article.excerpt}
             </p>
 
             {article.image && (
               <div className="mb-8 border border-[#E5E7EB] overflow-hidden">
                 <img
                   src={article.image}
-                  alt={article.title}
+                  alt={locale === "id" ? (article.titleId ?? article.title) : article.title}
                   className="w-full h-[300px] object-cover"
                 />
               </div>
             )}
 
             <div className="prose max-w-none">
-              {article.body.map((para, i) => (
+              {(locale === "id" && article.bodyId ? article.bodyId : article.body).map((para, i) => (
                 <p key={i} className="text-[14.5px] text-gray-700 leading-[1.8] mb-5">
                   {para}
                 </p>
@@ -90,7 +92,7 @@ export default function ArticlePage() {
                 href={article.categoryHref}
                 className="inline-flex items-center gap-2 text-[12.5px] font-medium text-white bg-[#1a3a5c] px-4 py-2 hover:bg-[#14305a] transition-colors"
               >
-                More in {article.category} <ArrowRight className="w-3.5 h-3.5" />
+                {locale === "id" ? "Selengkapnya di" : "More in"} {locale === "id" ? (article.tagId ?? article.tag) : article.category} <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
           </div>

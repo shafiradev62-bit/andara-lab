@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useLocation, Link } from "wouter";
-import { loadDatasets, ChartDataset } from "@/lib/cms-store";
+import { useDatasets } from "@/lib/cms-store";
 import InteractiveChart from "@/components/InteractiveChart";
-import { BarChart2, LineChart as LineChartIcon, TrendingUp, Calendar, Table as TableIcon, ArrowRight, ExternalLink } from "lucide-react";
+import { BarChart2, LineChart as LineChartIcon, TrendingUp, Calendar, Table as TableIcon, ArrowRight, ExternalLink, AlertCircle, Loader2 } from "lucide-react";
 
 const calendarItems = [
   { date: "Mar 28", event: "GDP Growth Q4", impact: "High", country: "🇺🇸", actual: "2.3%", forecast: "2.1%" },
@@ -25,20 +25,19 @@ const marketCards = [
 
 export default function DataHubPage() {
   const [location] = useLocation();
-  const [datasets, setDatasets] = useState<ChartDataset[]>([]);
   const [activeTab, setActiveTab] = useState<"charts" | "calendar" | "market">("charts");
   const [selectedChart, setSelectedChart] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<"chart" | "table">("chart");
 
+  const { data: datasets = [], isLoading, error } = useDatasets();
+
   const isCalendar = location.includes("economic-calendar");
   const isDashboard = location.includes("market-dashboard");
 
-  useEffect(() => {
-    setDatasets(loadDatasets());
-    if (isCalendar) setActiveTab("calendar");
-    else if (isDashboard) setActiveTab("market");
-    else setActiveTab("charts");
-  }, [isCalendar, isDashboard]);
+  // Sync tab from URL on mount/route change
+  if (isCalendar && activeTab !== "calendar") setActiveTab("calendar");
+  else if (isDashboard && activeTab !== "market") setActiveTab("market");
+  else if (!isCalendar && !isDashboard && activeTab !== "charts") setActiveTab("charts");
 
   const selectedDataset = selectedChart ? datasets.find((d) => d.id === selectedChart) : null;
 
@@ -89,32 +88,65 @@ export default function DataHubPage() {
                   Manage in CMS <ExternalLink className="w-3.5 h-3.5" />
                 </Link>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-                {datasets.map((ds) => (
-                  <button
-                    key={ds.id}
-                    onClick={() => setSelectedChart(ds.id)}
-                    className="border border-[#E5E7EB] p-5 text-left hover:border-[#1a3a5c] hover:shadow-sm transition-all group"
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-[10.5px] font-semibold uppercase tracking-widest text-[#1a3a5c] bg-blue-50 px-2 py-0.5">
-                        {ds.category}
-                      </span>
-                      <span className="text-[11px] text-gray-400 capitalize">{ds.chartType}</span>
+
+              {/* Loading state */}
+              {isLoading && (
+                <div className="flex items-center justify-center py-24 gap-3 text-gray-400">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span className="text-[13.5px]">Loading datasets…</span>
+                </div>
+              )}
+
+              {/* Error state — fallback to localStorage */}
+              {error && (
+                <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl mb-6">
+                  <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-[13px] font-semibold text-red-700">Could not reach API server</p>
+                    <p className="text-[12px] text-red-500 mt-0.5">
+                      Showing cached data. Start the API server: <code className="bg-red-100 px-1 rounded">pnpm --filter api-server dev</code>
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {!isLoading && (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                  {datasets.map((ds) => (
+                    <button
+                      key={ds.id}
+                      onClick={() => setSelectedChart(ds.id)}
+                      className="border border-[#E5E7EB] p-5 text-left hover:border-[#1a3a5c] hover:shadow-sm transition-all group"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-[10.5px] font-semibold uppercase tracking-widest text-[#1a3a5c] bg-blue-50 px-2 py-0.5">
+                          {ds.category}
+                        </span>
+                        <span className="text-[11px] text-gray-400 capitalize">{ds.chartType}</span>
+                      </div>
+                      <h3 className="text-[14px] font-semibold text-gray-900 mb-1.5 group-hover:text-[#1a3a5c] transition-colors">
+                        {ds.title}
+                      </h3>
+                      <p className="text-[12px] text-gray-500 mb-4 leading-relaxed">{ds.description}</p>
+                      <div className="h-[100px] pointer-events-none">
+                        <InteractiveChart dataset={ds} height={100} />
+                      </div>
+                      <div className="mt-3 flex items-center gap-1 text-[12px] text-[#1a3a5c] font-medium">
+                        View full chart <ArrowRight className="w-3.5 h-3.5" />
+                      </div>
+                    </button>
+                  ))}
+                  {datasets.length === 0 && !error && (
+                    <div className="col-span-full text-center py-16 text-gray-400">
+                      <BarChart2 className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                      <p className="text-[14px]">No datasets available.</p>
+                      <Link href="/admin" className="text-[13px] text-[#1a3a5c] hover:underline mt-1 inline-block">
+                        Add one in the CMS →
+                      </Link>
                     </div>
-                    <h3 className="text-[14px] font-semibold text-gray-900 mb-1.5 group-hover:text-[#1a3a5c] transition-colors">
-                      {ds.title}
-                    </h3>
-                    <p className="text-[12px] text-gray-500 mb-4 leading-relaxed">{ds.description}</p>
-                    <div className="h-[100px] pointer-events-none">
-                      <InteractiveChart dataset={ds} height={100} />
-                    </div>
-                    <div className="mt-3 flex items-center gap-1 text-[12px] text-[#1a3a5c] font-medium">
-                      View full chart <ArrowRight className="w-3.5 h-3.5" />
-                    </div>
-                  </button>
-                ))}
-              </div>
+                  )}
+                </div>
+              )}
             </>
           ) : selectedDataset ? (
             <div>

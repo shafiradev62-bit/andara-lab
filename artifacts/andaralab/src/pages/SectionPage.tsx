@@ -1,17 +1,25 @@
 import { ArrowRight, Clock, Tag } from "lucide-react";
 import { Link } from "wouter";
-import { articles } from "@/lib/articles";
+import { articles, getArticle } from "@/lib/articles";
+import { useLocale } from "@/lib/locale";
 
 function SectionPageLayout({
-  section, breadcrumb, breadcrumbHref, description, slugs,
+  section, sectionKey, breadcrumb, breadcrumbHref, description, descriptionKey, slugs,
 }: {
   section: string;
+  sectionKey?: "economics_101" | "market_pulse" | "lab_notes";
   breadcrumb: string;
   breadcrumbHref: string;
   description: string;
+  descriptionKey?: "economics_101" | "market_pulse" | "lab_notes";
   slugs: string[];
 }) {
-  const sectionArticles = slugs.map((s) => articles.find((a) => a.slug === s)).filter(Boolean) as typeof articles;
+  const { locale, t } = useLocale();
+  const displaySection = sectionKey ? t(sectionKey) : section;
+  const displayDescription = descriptionKey ? t(descriptionKey) : description;
+  const sectionArticles = slugs
+    .map((s) => getArticle(s, locale))
+    .filter(Boolean) as typeof articles;
 
   return (
     <div className="bg-white">
@@ -22,8 +30,8 @@ function SectionPageLayout({
             <span>/</span>
             <span className="text-gray-600">{breadcrumb}</span>
           </div>
-          <h1 className="text-[34px] font-bold text-gray-900 mb-3">{section}</h1>
-          <p className="text-[14.5px] text-gray-500 max-w-[560px]">{description}</p>
+          <h1 className="text-[34px] font-bold text-gray-900 mb-3">{displaySection}</h1>
+          <p className="text-[14.5px] text-gray-500 max-w-[560px]">{displayDescription}</p>
         </div>
       </section>
       <section className="max-w-[1200px] mx-auto px-6 py-10">
@@ -36,13 +44,13 @@ function SectionPageLayout({
             >
               {article.image && i === 0 && (
                 <div className="h-[220px] overflow-hidden">
-                  <img src={article.image} alt={article.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                  <img src={article.image} alt={locale === "id" ? (article.titleId ?? article.title) : article.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                 </div>
               )}
               <div className="p-5">
                 <div className="flex items-center gap-3 mb-3">
                   <span className="inline-flex items-center gap-1 text-[10.5px] font-medium text-[#1a3a5c] bg-blue-50 px-2 py-0.5">
-                    <Tag className="w-3 h-3" />{article.tag}
+                    <Tag className="w-3 h-3" />{locale === "id" ? (article.tagId ?? article.tag) : article.tag}
                   </span>
                   <span className="flex items-center gap-1 text-[11px] text-gray-400">
                     <Clock className="w-3 h-3" />{article.readTime}
@@ -50,9 +58,9 @@ function SectionPageLayout({
                   <span className="text-[11px] text-gray-400">{article.date}</span>
                 </div>
                 <h2 className={`font-semibold text-gray-900 mb-2 leading-snug group-hover:text-[#1a3a5c] transition-colors ${i === 0 ? "text-[20px]" : "text-[15px]"}`}>
-                  {article.title}
+                  {locale === "id" ? (article.titleId ?? article.title) : article.title}
                 </h2>
-                <p className="text-[13px] text-gray-500 leading-relaxed mb-4">{article.excerpt}</p>
+                <p className="text-[13px] text-gray-500 leading-relaxed mb-4">{locale === "id" ? (article.excerptId ?? article.excerpt) : article.excerpt}</p>
                 <span className="flex items-center gap-1.5 text-[12.5px] font-medium text-gray-700 group-hover:text-[#1a3a5c] transition-colors">
                   Read More <ArrowRight className="w-3.5 h-3.5" />
                 </span>
@@ -126,29 +134,31 @@ export function ESGPage() {
 }
 
 export function BlogPage({ sub }: { sub: "economics-101" | "market-pulse" | "lab-notes" }) {
-  const configs = {
+  const configs: Record<typeof sub, { sectionKey: "economics_101" | "market_pulse" | "lab_notes"; descriptionKey: "economics_101" | "market_pulse" | "lab_notes"; slugs: string[] }> = {
     "economics-101": {
-      title: "Economics 101",
-      desc: "Foundational economic concepts explained clearly for non-specialists.",
+      sectionKey: "economics_101",
+      descriptionKey: "economics_101",
       slugs: ["what-is-current-account-deficit", "cpi-vs-core-inflation", "fx-reserves-indonesia", "interest-rate-cycles-investments"],
     },
     "market-pulse": {
-      title: "Market Pulse",
-      desc: "Breaking market news and rapid-response analysis.",
+      sectionKey: "market_pulse",
+      descriptionKey: "market_pulse",
       slugs: ["jci-7200-bi-hold", "idr-carry-trade-dynamics", "bi-rate-hold-march-2026", "indonesia-inflation-breakdown"],
     },
     "lab-notes": {
-      title: "Lab Notes",
-      desc: "Behind-the-scenes insights from our research team.",
+      sectionKey: "lab_notes",
+      descriptionKey: "lab_notes",
       slugs: ["how-we-build-macro-models", "data-quality-indonesia-challenge", "nowcasting-indonesia-gdp"],
     },
   };
   const c = configs[sub];
   return <SectionPageLayout
-    section={c.title}
+    section=""
+    sectionKey={c.sectionKey}
     breadcrumb="Blog"
     breadcrumbHref={`/blog/${sub}`}
-    description={c.desc}
+    description=""
+    descriptionKey={c.descriptionKey}
     slugs={c.slugs}
   />;
 }

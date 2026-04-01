@@ -1,18 +1,37 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
-  loadDatasets, saveDataset, deleteDataset, ChartDataset,
+  useDatasets, useCreateDataset, useUpdateDataset,
+  useDeleteDataset, useResetDatasets,
+  usePages, useCreatePage, useUpdatePage, useDeletePage, useResetPages,
+  usePosts, useCreatePost, useUpdatePost, useDeletePost, useResetPosts,
+  type ChartDataset, type Page, type BlogPost,
 } from "@/lib/cms-store";
 import InteractiveChart from "@/components/InteractiveChart";
 import {
-  Plus, Trash2, Save, ChevronLeft, BarChart2, LineChart, TrendingUp, AlertCircle, CheckCircle,
+  Plus, Trash2, Save, ChevronLeft, BarChart2, LineChart,
+  TrendingUp, AlertCircle, CheckCircle, Loader2, RefreshCw,
+  Database, FileText, BookOpen, ChevronDown, ChevronRight,
+  Globe, Eye, EyeOff, Link2, Unlink,
 } from "lucide-react";
 
-const COLORS = ["#1a3a5c", "#e67e22", "#2ecc71", "#9b59b6", "#e74c3c", "#3498db"];
-const CATEGORIES = ["Macro Foundations", "Sectoral Intelligence", "Market Dashboard", "Geopolitical Analysis", "ESG"];
+// ─── Constants ─────────────────────────────────────────────────────────────────
 
-function newDataset(): ChartDataset {
+const COLORS = ["#1a3a5c", "#e67e22", "#2ecc71", "#9b59b6", "#e74c3c", "#3498db"];
+const CATEGORIES = [
+  "Macro Foundations", "Sectoral Intelligence",
+  "Market Dashboard", "Geopolitical Analysis", "ESG",
+];
+const BLOG_CATEGORIES = [
+  "economics-101", "market-pulse", "lab-notes",
+];
+const SECTIONS = [
+  "root", "Macro Foundations", "Sectoral Intelligence",
+];
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function newDataset(): Omit<ChartDataset, "id" | "createdAt" | "updatedAt"> {
   return {
-    id: `ds-${Date.now()}`,
     title: "New Dataset",
     description: "",
     category: "Macro Foundations",
@@ -26,329 +45,1118 @@ function newDataset(): ChartDataset {
       { Period: "2023 Q3", Value: 0 },
       { Period: "2023 Q4", Value: 0 },
     ],
-    createdAt: new Date().toISOString().split("T")[0],
-    updatedAt: new Date().toISOString().split("T")[0],
   };
 }
 
-export default function AdminPage() {
-  const [datasets, setDatasets] = useState<ChartDataset[]>([]);
-  const [selected, setSelected] = useState<ChartDataset | null>(null);
-  const [saved, setSaved] = useState(false);
-  const [view, setView] = useState<"list" | "edit">("list");
-  const [activeTab, setActiveTab] = useState<"meta" | "data" | "preview">("meta");
-
-  useEffect(() => { setDatasets(loadDatasets()); }, []);
-
-  const save = () => {
-    if (!selected) return;
-    const updated = { ...selected, updatedAt: new Date().toISOString().split("T")[0] };
-    const all = saveDataset(updated);
-    setDatasets(all);
-    setSelected(updated);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+function newPage(locale: "en" | "id" = "en"): Omit<Page, "id" | "createdAt" | "updatedAt"> {
+  return {
+    slug: "/new-page",
+    locale,
+    status: "draft",
+    title: "New Page",
+    description: "",
+    content: [],
+    navLabel: "",
+    section: "root",
   };
+}
 
-  const remove = (id: string) => {
-    if (!confirm("Delete this dataset?")) return;
-    const all = deleteDataset(id);
-    setDatasets(all);
-    if (selected?.id === id) { setSelected(null); setView("list"); }
+function newPost(locale: "en" | "id" = "en"): Omit<BlogPost, "id" | "createdAt" | "updatedAt"> {
+  return {
+    slug: "new-post",
+    locale,
+    status: "draft",
+    title: "New Post",
+    excerpt: "",
+    body: [""],
+    category: "economics-101",
+    tag: "",
+    readTime: "5 min read",
   };
+}
+
+function StatusBadge({ status }: { status: string }) {
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide ${
+      status === "published"
+        ? "bg-emerald-50 text-emerald-700"
+        : "bg-gray-100 text-gray-500"
+    }`}>
+      {status === "published" ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+      {status}
+    </span>
+  );
+}
+
+function LocaleBadge({ locale }: { locale: string }) {
+  return (
+    <span className={`text-[10.5px] font-semibold uppercase px-1.5 py-0.5 ${
+      locale === "id" ? "bg-orange-50 text-orange-700" : "bg-blue-50 text-blue-700"
+    }`}>
+      {locale === "id" ? "ID" : "EN"}
+    </span>
+  );
+}
+
+// ─── Dataset Editor ─────────────────────────────────────────────────────────────
+
+function DatasetEditor({
+  selected, draft, setDraft, onBack, onSave, isSaving, isSuccess,
+}: {
+  selected: ChartDataset | null; draft: Partial<ChartDataset> | null;
+  setDraft: (d: Partial<ChartDataset> | null) => void;
+  onBack: () => void; onSave: () => void;
+  isSaving: boolean; isSuccess: boolean;
+}) {
+  const [tab, setTab] = useState<"meta" | "chart" | "data" | "preview">("meta");
+  const effective = draft !== null ? { ...selected, ...draft } as ChartDataset : selected;
+  if (!effective) return null;
+
+  const patch = (fields: Partial<ChartDataset>) =>
+    setDraft({ ...(draft ?? {}), ...fields } as Partial<ChartDataset>);
 
   const addColumn = () => {
-    if (!selected) return;
-    const name = `Series ${selected.columns.length}`;
-    setSelected({
-      ...selected,
-      columns: [...selected.columns, name],
-      rows: selected.rows.map((r) => ({ ...r, [name]: 0 })),
-    });
+    const name = `Series ${effective.columns.length}`;
+    patch({ columns: [...effective.columns, name], rows: effective.rows.map((r) => ({ ...r, [name]: 0 })) });
   };
 
   const removeColumn = (col: string) => {
-    if (!selected || selected.columns.length <= 2) return;
-    const cols = selected.columns.filter((c) => c !== col);
-    setSelected({
-      ...selected,
-      columns: cols,
-      rows: selected.rows.map((r) => {
-        const nr = { ...r };
-        delete nr[col];
-        return nr;
-      }),
-    });
+    if (effective.columns.length <= 2) return;
+    patch({ columns: effective.columns.filter((c) => c !== col), rows: effective.rows.map((r) => { const nr = { ...r }; delete nr[col]; return nr; }) });
   };
 
   const renameColumn = (oldName: string, newName: string) => {
-    if (!selected) return;
-    setSelected({
-      ...selected,
-      columns: selected.columns.map((c) => (c === oldName ? newName : c)),
-      rows: selected.rows.map((r) => {
-        const nr = { ...r };
-        nr[newName] = nr[oldName];
-        delete nr[oldName];
-        return nr;
-      }),
-    });
+    patch({ columns: effective.columns.map((c) => c === oldName ? newName : c), rows: effective.rows.map((r) => { const nr = { ...r }; nr[newName] = nr[oldName]; delete nr[oldName]; return nr; }) });
   };
 
   const addRow = () => {
-    if (!selected) return;
     const newRow: Record<string, string | number> = {};
-    selected.columns.forEach((c, i) => { newRow[c] = i === 0 ? "New Row" : 0; });
-    setSelected({ ...selected, rows: [...selected.rows, newRow] });
+    effective.columns.forEach((c, i) => { newRow[c] = i === 0 ? "New Row" : 0; });
+    patch({ rows: [...effective.rows, newRow] });
   };
 
-  const removeRow = (idx: number) => {
-    if (!selected) return;
-    setSelected({ ...selected, rows: selected.rows.filter((_, i) => i !== idx) });
-  };
+  const removeRow = (idx: number) => patch({ rows: effective.rows.filter((_, i) => i !== idx) });
 
   const updateCell = (rowIdx: number, col: string, val: string) => {
-    if (!selected) return;
-    const rows = selected.rows.map((r, i) => {
+    patch({ rows: effective.rows.map((r, i) => {
       if (i !== rowIdx) return r;
-      const colIdx = selected.columns.indexOf(col);
-      const isNumeric = colIdx > 0;
-      return { ...r, [col]: isNumeric ? (isNaN(Number(val)) ? val : Number(val)) : val };
-    });
-    setSelected({ ...selected, rows });
+      const colIdx = effective.columns.indexOf(col);
+      return { ...r, [col]: colIdx > 0 ? (isNaN(Number(val)) ? val : Number(val)) : val };
+    })});
   };
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB]">
-      {/* Top bar */}
-      <div className="bg-white border-b border-[#E5E7EB] px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          {view === "edit" && (
-            <button
-              onClick={() => { setView("list"); setSelected(null); }}
-              className="flex items-center gap-1.5 text-[13px] text-gray-500 hover:text-gray-900 font-medium mr-2"
-            >
-              <ChevronLeft className="w-4 h-4" /> Back
-            </button>
-          )}
-          <span className="text-[15px] font-semibold text-gray-900">AndaraLab CMS</span>
-          <span className="text-gray-300">·</span>
-          <span className="text-[13px] text-gray-500">{view === "list" ? "Datasets" : selected?.title}</span>
-        </div>
-        <div className="flex items-center gap-3">
-          {view === "edit" && (
-            <button
-              onClick={save}
-              className="flex items-center gap-2 text-[13px] font-medium text-white bg-[#1a3a5c] px-4 py-1.5 hover:bg-[#14305a] transition-colors"
-            >
-              {saved ? <CheckCircle className="w-4 h-4 text-green-400" /> : <Save className="w-4 h-4" />}
-              {saved ? "Saved!" : "Save"}
-            </button>
-          )}
-          <a href="/" className="text-[12.5px] text-gray-500 hover:text-gray-800 font-medium">← Back to site</a>
-        </div>
+    <div>
+      <div className="flex items-center gap-3 mb-6">
+        <button onClick={onBack} className="flex items-center gap-1.5 text-[13px] text-gray-500 hover:text-gray-900 font-medium">
+          <ChevronLeft className="w-4 h-4" /> Back
+        </button>
+        <span className="text-gray-300">·</span>
+        <span className="text-[13px] font-medium text-gray-700 truncate max-w-[300px]">{effective.title}</span>
       </div>
 
-      {view === "list" ? (
-        <div className="max-w-[1100px] mx-auto px-6 py-8">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-[22px] font-semibold text-gray-900">Data Datasets</h1>
-            <button
-              onClick={() => { const d = newDataset(); setSelected(d); setView("edit"); setActiveTab("meta"); }}
-              className="flex items-center gap-2 text-[13px] font-medium text-white bg-[#1a3a5c] px-4 py-2 hover:bg-[#14305a]"
-            >
-              <Plus className="w-4 h-4" /> New Dataset
-            </button>
-          </div>
+      {/* Editor tabs */}
+      <div className="flex gap-0 border-b border-[#E5E7EB] mb-6">
+        {(["meta", "chart", "data", "preview"] as const).map((t) => (
+          <button key={t} onClick={() => setTab(t)}
+            className={`px-5 py-2.5 text-[13px] font-medium border-b-2 capitalize transition-colors ${
+              tab === t ? "border-[#1a3a5c] text-gray-900" : "border-transparent text-gray-500 hover:text-gray-800"
+            }`}>
+            {t === "meta" ? "Metadata" : t === "chart" ? "Chart Labels" : t === "data" ? "Table Data" : "Preview"}
+          </button>
+        ))}
+      </div>
 
-          <div className="bg-white border border-[#E5E7EB]">
-            <div className="grid grid-cols-12 border-b border-[#E5E7EB] bg-gray-50 px-4 py-2.5 text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide">
-              <div className="col-span-4">Title</div>
-              <div className="col-span-2">Category</div>
-              <div className="col-span-2">Type</div>
-              <div className="col-span-2">Rows</div>
-              <div className="col-span-2">Actions</div>
+      {/* Metadata tab */}
+      {tab === "meta" && (
+        <div className="bg-white border border-[#E5E7EB] p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+          {[
+            { label: "Title", field: "title" as const },
+            { label: "Description", field: "description" as const, textarea: true },
+            { label: "Unit (e.g. %, IDR, USD B)", field: "unit" as const },
+          ].map(({ label, field, textarea }) => (
+            <div key={field} className={textarea || field === "description" ? "md:col-span-2" : ""}>
+              <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">{label}</label>
+              {textarea ? (
+                <textarea rows={2} value={(effective as any)[field] ?? ""}
+                  onChange={(e) => patch({ [field]: e.target.value })}
+                  className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c] resize-none" />
+              ) : (
+                <input type="text" value={(effective as any)[field] ?? ""}
+                  onChange={(e) => patch({ [field]: e.target.value })}
+                  className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c]" />
+              )}
             </div>
-            {datasets.map((ds) => (
-              <div key={ds.id} className="grid grid-cols-12 border-b border-[#F3F4F6] px-4 py-3.5 items-center hover:bg-gray-50">
-                <div className="col-span-4">
-                  <div className="text-[13.5px] font-semibold text-gray-900">{ds.title}</div>
-                  <div className="text-[11.5px] text-gray-400 mt-0.5">{ds.description.slice(0, 50)}...</div>
-                </div>
-                <div className="col-span-2 text-[12.5px] text-gray-600">{ds.category}</div>
-                <div className="col-span-2">
-                  <span className="text-[11.5px] font-medium text-[#1a3a5c] bg-blue-50 px-2 py-0.5 capitalize">{ds.chartType}</span>
-                </div>
-                <div className="col-span-2 text-[12.5px] text-gray-600">{ds.rows.length} rows</div>
-                <div className="col-span-2 flex items-center gap-2">
-                  <button
-                    onClick={() => { setSelected({ ...ds }); setView("edit"); setActiveTab("data"); }}
-                    className="text-[12px] font-medium text-[#1a3a5c] hover:underline"
-                  >Edit</button>
-                  <button onClick={() => remove(ds.id)} className="text-gray-400 hover:text-red-500">
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            ))}
+          ))}
+          <div>
+            <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Category</label>
+            <select value={effective.category}
+              onChange={(e) => patch({ category: e.target.value })}
+              className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c] bg-white">
+              {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+            </select>
           </div>
-
-          <div className="mt-6 bg-blue-50 border border-blue-100 p-4 flex items-start gap-3">
-            <AlertCircle className="w-4 h-4 text-[#1a3a5c] flex-shrink-0 mt-0.5" />
-            <p className="text-[12.5px] text-[#1a3a5c] leading-relaxed">
-              Datasets are stored locally and auto-generate interactive charts on the Data Hub page. 
-              Create or edit datasets here — charts update instantly.
-            </p>
+          <div>
+            <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Chart Type</label>
+            <div className="flex gap-2">
+              {(["line", "bar", "area"] as const).map((t) => (
+                <button key={t} onClick={() => patch({ chartType: t })}
+                  className={`flex items-center gap-1.5 px-4 py-2 text-[12.5px] font-medium border capitalize ${effective.chartType === t ? "bg-[#1a3a5c] text-white border-[#1a3a5c]" : "border-[#E5E7EB] text-gray-600 hover:border-gray-400"}`}>
+                  {t === "line" ? <LineChart className="w-3.5 h-3.5" /> : t === "bar" ? <BarChart2 className="w-3.5 h-3.5" /> : <TrendingUp className="w-3.5 h-3.5" />}
+                  {t}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-      ) : selected ? (
-        <div className="max-w-[1100px] mx-auto px-6 py-8">
-          {/* Editor tabs */}
-          <div className="flex gap-0 border-b border-[#E5E7EB] mb-6">
-            {(["meta", "data", "preview"] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => setActiveTab(t)}
-                className={`px-5 py-2.5 text-[13px] font-medium border-b-2 capitalize transition-colors ${
-                  activeTab === t ? "border-[#1a3a5c] text-gray-900" : "border-transparent text-gray-500 hover:text-gray-800"
-                }`}
-              >
-                {t === "meta" ? "Metadata" : t === "data" ? "Table Data" : "Preview"}
+      )}
+
+      {/* Chart Labels tab — NEW */}
+      {tab === "chart" && (
+        <div className="bg-white border border-[#E5E7EB] p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="md:col-span-2">
+            <div className="flex items-center gap-2 mb-4 pb-4 border-b border-[#E5E7EB]">
+              <AlertCircle className="w-4 h-4 text-blue-500" />
+              <span className="text-[12.5px] text-gray-600">These labels override the chart display title and axis labels. Leave blank to use defaults.</span>
+            </div>
+          </div>
+          {[
+            { label: "Chart Title (displayed above chart)", field: "chartTitle" as const },
+            { label: "X-Axis Label", field: "xAxisLabel" as const },
+            { label: "Y-Axis Label", field: "yAxisLabel" as const },
+            { label: "Subtitle (below chart)", field: "subtitle" as const, textarea: true },
+          ].map(({ label, field, textarea }) => (
+            <div key={field} className={textarea || field === "chartTitle" || field === "subtitle" ? "md:col-span-2" : ""}>
+              <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">{label}</label>
+              {textarea ? (
+                <textarea rows={2} value={(effective as any)[field] ?? ""}
+                  onChange={(e) => patch({ [field]: e.target.value })}
+                  className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c] resize-none" />
+              ) : (
+                <input type="text" value={(effective as any)[field] ?? ""}
+                  onChange={(e) => patch({ [field]: e.target.value })}
+                  className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c]" />
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Data table tab */}
+      {tab === "data" && (
+        <div className="bg-white border border-[#E5E7EB] p-6">
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-[13px] text-gray-600">First column = X-axis labels. Remaining columns = data series.</p>
+            <div className="flex gap-2">
+              <button onClick={addColumn} className="flex items-center gap-1 text-[12px] font-medium text-[#1a3a5c] border border-[#1a3a5c] px-3 py-1.5 hover:bg-blue-50">
+                <Plus className="w-3.5 h-3.5" /> Add Series
+              </button>
+              <button onClick={addRow} className="flex items-center gap-1 text-[12px] font-medium text-white bg-[#1a3a5c] px-3 py-1.5 hover:bg-[#14305a]">
+                <Plus className="w-3.5 h-3.5" /> Add Row
+              </button>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-[12.5px] border-collapse">
+              <thead>
+                <tr>
+                  {effective.columns.map((col, i) => (
+                    <th key={col} className="border border-[#E5E7EB] bg-gray-50 px-2 py-1.5 text-left min-w-[100px]">
+                      <div className="flex items-center gap-1">
+                        <input value={col} onChange={(e) => renameColumn(col, e.target.value)}
+                          className="text-[12px] font-semibold text-gray-700 bg-transparent focus:outline-none w-full" />
+                        {i > 1 && (
+                          <button onClick={() => removeColumn(col)} className="text-gray-300 hover:text-red-400 flex-shrink-0">
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+                    </th>
+                  ))}
+                  <th className="border border-[#E5E7EB] bg-gray-50 px-2 py-1.5 w-8" />
+                </tr>
+              </thead>
+              <tbody>
+                {effective.rows.map((row, ri) => (
+                  <tr key={ri} className="hover:bg-gray-50">
+                    {effective.columns.map((col) => (
+                      <td key={col} className="border border-[#F3F4F6] px-2 py-1">
+                        <input value={row[col] ?? ""} onChange={(e) => updateCell(ri, col, e.target.value)}
+                          className="w-full text-[12.5px] text-gray-800 focus:outline-none bg-transparent" />
+                      </td>
+                    ))}
+                    <td className="border border-[#F3F4F6] px-2 py-1 text-center">
+                      <button onClick={() => removeRow(ri)} className="text-gray-300 hover:text-red-400">
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Preview tab */}
+      {tab === "preview" && (
+        <div className="bg-white border border-[#E5E7EB] p-6">
+          <h3 className="text-[16px] font-semibold text-gray-900 mb-1">{effective.title}</h3>
+          {effective.description && <p className="text-[12.5px] text-gray-500 mb-5">{effective.description}</p>}
+          <InteractiveChart dataset={effective} height={320} />
+          <p className="text-[11px] text-gray-400 mt-4">
+            Unit: {effective.unit} · {effective.rows.length} rows
+            {(effective as any).chartTitle && ` · Chart title: ${(effective as any).chartTitle}`}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Page Editor ────────────────────────────────────────────────────────────────
+
+function PageEditor({
+  page, onBack, isNew,
+}: {
+  page: Page | null;
+  onBack: () => void;
+  isNew?: boolean;
+}) {
+  const updateMut = useUpdatePage();
+  const createMut = useCreatePage();
+  const isSaving = updateMut.isPending || createMut.isPending;
+  const [draft, setDraft] = useState<Partial<Page>>(page ?? {});
+  const isUpdating = draft !== null && !isNew;
+
+  const handleSave = () => {
+    if (!draft) return;
+    if (isNew) {
+      createMut.mutate(draft as any, { onSuccess: onBack });
+    } else if (page?.id) {
+      updateMut.mutate({ id: page.id, data: draft }, { onSuccess: onBack });
+    }
+  };
+
+  const patch = (fields: Partial<Page>) => setDraft((prev) => ({ ...prev, ...fields }));
+
+  return (
+    <div>
+      <div className="flex items-center gap-3 mb-6">
+        <button onClick={onBack} className="flex items-center gap-1.5 text-[13px] text-gray-500 hover:text-gray-900 font-medium">
+          <ChevronLeft className="w-4 h-4" /> Back
+        </button>
+        <span className="text-gray-300">·</span>
+        <span className="text-[13px] font-medium text-gray-700">
+          {isNew ? "New Page" : (draft.title ?? page?.title ?? "Untitled")}
+        </span>
+        {page && <StatusBadge status={page.status} />}
+        {page && <LocaleBadge locale={page.locale} />}
+      </div>
+
+      <div className="bg-white border border-[#E5E7EB] p-6 grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+        <div className="md:col-span-2">
+          <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-4 pb-3 border-b border-[#E5E7EB]">Page Identity</div>
+        </div>
+
+        <div>
+          <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Slug (URL path)</label>
+          <input type="text" value={draft.slug ?? ""}
+            onChange={(e) => patch({ slug: e.target.value })}
+            className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c] font-mono" />
+          <p className="text-[10.5px] text-gray-400 mt-1">e.g. /macro/macro-outlooks or /about</p>
+        </div>
+
+        <div>
+          <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Language</label>
+          <div className="flex gap-2">
+            {(["en", "id"] as const).map((l) => (
+              <button key={l} onClick={() => patch({ locale: l })}
+                className={`px-4 py-2 text-[12.5px] font-semibold border capitalize ${
+                  draft.locale === l ? "bg-[#1a3a5c] text-white border-[#1a3a5c]" : "border-[#E5E7EB] text-gray-600 hover:bg-gray-50"
+                }`}>
+                {l === "en" ? "English" : "Bahasa Indonesia"}
               </button>
             ))}
           </div>
+        </div>
 
-          {/* Metadata tab */}
-          {activeTab === "meta" && (
-            <div className="bg-white border border-[#E5E7EB] p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
-              {[
-                { label: "Title", field: "title", type: "text" },
-                { label: "Unit (e.g. %, IDR, USD B)", field: "unit", type: "text" },
-              ].map(({ label, field, type }) => (
-                <div key={field}>
-                  <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">{label}</label>
-                  <input
-                    type={type}
-                    value={(selected as any)[field] || ""}
-                    onChange={(e) => setSelected({ ...selected, [field]: e.target.value })}
-                    className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c]"
-                  />
+        <div className="md:col-span-2">
+          <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Page Title</label>
+          <input type="text" value={draft.title ?? ""}
+            onChange={(e) => patch({ title: e.target.value })}
+            className="w-full border border-[#E5E7EB] px-3 py-2 text-[14px] font-medium text-gray-900 focus:outline-none focus:border-[#1a3a5c]" />
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Meta Description (SEO)</label>
+          <textarea rows={2} value={draft.description ?? ""}
+            onChange={(e) => patch({ description: e.target.value })}
+            className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c] resize-none" />
+        </div>
+
+        <div>
+          <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Navigation Label</label>
+          <input type="text" value={draft.navLabel ?? ""}
+            onChange={(e) => patch({ navLabel: e.target.value })}
+            className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c]" />
+          <p className="text-[10.5px] text-gray-400 mt-1">Short label shown in the top navigation bar</p>
+        </div>
+
+        <div>
+          <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Section</label>
+          <select value={draft.section ?? "root"}
+            onChange={(e) => patch({ section: e.target.value })}
+            className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c] bg-white">
+            {SECTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Status</label>
+          <div className="flex gap-2">
+            {(["draft", "published"] as const).map((s) => (
+              <button key={s} onClick={() => patch({ status: s })}
+                className={`px-4 py-2 text-[12.5px] font-semibold border capitalize ${
+                  draft.status === s ? "bg-[#1a3a5c] text-white border-[#1a3a5c]" : "border-[#E5E7EB] text-gray-600 hover:bg-gray-50"
+                }`}>
+                {s === "published" ? "Published (live)" : "Draft (hidden)"}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Linked page info */}
+        {!isNew && page?.linkedIdRecord && (
+          <div className="md:col-span-2 bg-blue-50 border border-blue-100 p-4 flex items-start gap-3">
+            <Link2 className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-[12.5px] font-semibold text-blue-800">Linked translation</p>
+              <p className="text-[12px] text-blue-600 mt-0.5">
+                This page is linked to the <LocaleBadge locale={page.linkedIdRecord.locale} /> version:
+                <strong className="ml-1">{page.linkedIdRecord.title}</strong>
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Save button */}
+      <div className="flex items-center gap-3">
+        <button onClick={handleSave} disabled={isSaving}
+          className="flex items-center gap-2 text-[13px] font-medium text-white bg-[#1a3a5c] px-5 py-2 hover:bg-[#14305a] disabled:opacity-50">
+          {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          {isSaving ? "Saving…" : "Save Page"}
+        </button>
+        {updateMut.isSuccess && <span className="text-[12px] text-green-600 flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5" /> Saved</span>}
+      </div>
+    </div>
+  );
+}
+
+// ─── Blog Post Editor ──────────────────────────────────────────────────────────
+
+function PostEditor({
+  post, onBack, isNew,
+}: {
+  post: BlogPost | null;
+  onBack: () => void;
+  isNew?: boolean;
+}) {
+  const updateMut = useUpdatePost();
+  const createMut = useCreatePost();
+  const isSaving = updateMut.isPending || createMut.isPending;
+  const [draft, setDraft] = useState<Partial<BlogPost>>(post ?? {});
+
+  const handleSave = () => {
+    if (!draft) return;
+    if (isNew) {
+      createMut.mutate(draft as any, { onSuccess: onBack });
+    } else if (post?.id) {
+      updateMut.mutate({ id: post.id, data: draft }, { onSuccess: onBack });
+    }
+  };
+
+  const patch = (fields: Partial<BlogPost>) => setDraft((prev) => ({ ...prev, ...fields }));
+
+  const bodyLines = Array.isArray(draft.body) ? draft.body : [""];
+  const setBodyLines = (lines: string[]) => patch({ body: lines });
+
+  return (
+    <div>
+      <div className="flex items-center gap-3 mb-6">
+        <button onClick={onBack} className="flex items-center gap-1.5 text-[13px] text-gray-500 hover:text-gray-900 font-medium">
+          <ChevronLeft className="w-4 h-4" /> Back
+        </button>
+        <span className="text-gray-300">·</span>
+        <span className="text-[13px] font-medium text-gray-700">
+          {isNew ? "New Blog Post" : (draft.title ?? post?.title ?? "Untitled")}
+        </span>
+        {post && <StatusBadge status={post.status} />}
+        {post && <LocaleBadge locale={post.locale} />}
+      </div>
+
+      <div className="bg-white border border-[#E5E7EB] p-6 grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+        <div className="md:col-span-2">
+          <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-4 pb-3 border-b border-[#E5E7EB]">Post Identity</div>
+        </div>
+
+        <div>
+          <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Slug</label>
+          <input type="text" value={draft.slug ?? ""}
+            onChange={(e) => patch({ slug: e.target.value })}
+            className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c] font-mono" />
+          <p className="text-[10.5px] text-gray-400 mt-1">URL slug, e.g. my-post-title</p>
+        </div>
+
+        <div>
+          <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Language</label>
+          <div className="flex gap-2">
+            {(["en", "id"] as const).map((l) => (
+              <button key={l} onClick={() => patch({ locale: l })}
+                className={`px-4 py-2 text-[12.5px] font-semibold border capitalize ${
+                  draft.locale === l ? "bg-[#1a3a5c] text-white border-[#1a3a5c]" : "border-[#E5E7EB] text-gray-600 hover:bg-gray-50"
+                }`}>
+                {l === "en" ? "English" : "Bahasa Indonesia"}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Title</label>
+          <input type="text" value={draft.title ?? ""}
+            onChange={(e) => patch({ title: e.target.value })}
+            className="w-full border border-[#E5E7EB] px-3 py-2 text-[14px] font-medium text-gray-900 focus:outline-none focus:border-[#1a3a5c]" />
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Excerpt</label>
+          <textarea rows={2} value={draft.excerpt ?? ""}
+            onChange={(e) => patch({ excerpt: e.target.value })}
+            className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c] resize-none" />
+        </div>
+
+        <div>
+          <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Category</label>
+          <select value={draft.category ?? "economics-101"}
+            onChange={(e) => patch({ category: e.target.value })}
+            className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c] bg-white">
+            {BLOG_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Tag</label>
+          <input type="text" value={draft.tag ?? ""}
+            onChange={(e) => patch({ tag: e.target.value })}
+            className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c]" />
+        </div>
+
+        <div>
+          <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Read Time</label>
+          <input type="text" value={draft.readTime ?? ""}
+            onChange={(e) => patch({ readTime: e.target.value })}
+            className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c]"
+            placeholder="e.g. 5 min read" />
+        </div>
+
+        <div>
+          <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Status</label>
+          <div className="flex gap-2">
+            {(["draft", "published"] as const).map((s) => (
+              <button key={s} onClick={() => patch({ status: s })}
+                className={`px-4 py-2 text-[12.5px] font-semibold border capitalize ${
+                  draft.status === s ? "bg-[#1a3a5c] text-white border-[#1a3a5c]" : "border-[#E5E7EB] text-gray-600 hover:bg-gray-50"
+                }`}>
+                {s === "published" ? "Published" : "Draft"}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Body editor */}
+        <div className="md:col-span-2">
+          <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+            Body — Paragraphs (one per line)
+          </label>
+          <textarea rows={bodyLines.length + 2} value={bodyLines.join("\n")}
+            onChange={(e) => setBodyLines(e.target.value.split("\n"))}
+            className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c] resize-y font-mono leading-relaxed"
+            placeholder="Enter paragraph text… Each line becomes a new paragraph." />
+          <p className="text-[10.5px] text-gray-400 mt-1">{bodyLines.length} paragraph{bodyLines.length !== 1 ? "s" : ""}</p>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <button onClick={handleSave} disabled={isSaving}
+          className="flex items-center gap-2 text-[13px] font-medium text-white bg-[#1a3a5c] px-5 py-2 hover:bg-[#14305a] disabled:opacity-50">
+          {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          {isSaving ? "Saving…" : "Save Post"}
+        </button>
+        {updateMut.isSuccess && <span className="text-[12px] text-green-600 flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5" /> Saved</span>}
+      </div>
+    </div>
+  );
+}
+
+// ─── Data Hub Tab ──────────────────────────────────────────────────────────────
+
+function DataHubTab() {
+  const { data: datasets = [], isLoading } = useDatasets();
+  const createMut  = useCreateDataset();
+  const updateMut  = useUpdateDataset();
+  const deleteMut = useDeleteDataset();
+  const resetMut  = useResetDatasets();
+
+  const [selected, setSelected]   = useState<ChartDataset | null>(null);
+  const [draft, setDraft]         = useState<Partial<ChartDataset> | null>(null);
+  const [view, setView]          = useState<"list" | "edit">("list");
+
+  const effective = draft !== null ? { ...selected, ...draft } as ChartDataset : selected;
+
+  const handleSave = () => {
+    if (!effective) return;
+    const { id, createdAt, updatedAt, ...rest } = effective;
+    if (effective.id.startsWith("tmp-")) {
+      createMut.mutate(rest as any, { onSuccess: (created) => { setSelected(created); setDraft(null); setView("list"); } });
+    } else {
+      updateMut.mutate({ id: effective.id, data: rest }, { onSuccess: (updated) => { setSelected(updated); setDraft(null); } });
+    }
+  };
+
+  const handleDelete = (id: string) => {
+    if (!confirm("Delete this dataset? This cannot be undone.")) return;
+    deleteMut.mutate(id, { onSuccess: () => { if (selected?.id === id) { setSelected(null); setDraft(null); setView("list"); } } });
+  };
+
+  const handleReset = () => {
+    if (!confirm("Reset all datasets to seed state? All edits will be lost.")) return;
+    resetMut.mutate(undefined, { onSuccess: () => { setSelected(null); setDraft(null); setView("list"); } });
+  };
+
+  const openNew = () => {
+    const d = newDataset();
+    const temp: ChartDataset = { ...d, id: `tmp-${Date.now()}`, createdAt: "", updatedAt: "" } as any;
+    setSelected(temp); setDraft(d); setView("edit");
+  };
+
+  const openEdit = (ds: ChartDataset) => {
+    setSelected(ds); setDraft(null); setView("edit");
+  };
+
+  const isSaving = createMut.isPending || updateMut.isPending;
+
+  return (
+    <div>
+      {view === "list" ? (
+        <div>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-[20px] font-semibold text-gray-900">Data Datasets</h2>
+              <p className="text-[12px] text-gray-400 mt-0.5">
+                {isLoading ? "Loading…" : `${datasets.length} datasets — served from API`}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button onClick={handleReset} disabled={resetMut.isPending}
+                className="flex items-center gap-1.5 text-[12px] font-medium text-amber-600 border border-amber-200 bg-amber-50 px-3 py-1.5 hover:bg-amber-100 disabled:opacity-50">
+                {resetMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                Reset to Seed
+              </button>
+              <button onClick={openNew}
+                className="flex items-center gap-2 text-[13px] font-medium text-white bg-[#1a3a5c] px-4 py-2 hover:bg-[#14305a]">
+                <Plus className="w-4 h-4" /> New Dataset
+              </button>
+            </div>
+          </div>
+
+          {isLoading ? (
+            <div className="flex items-center justify-center py-24 gap-3 text-gray-400">
+              <Loader2 className="w-5 h-5 animate-spin" /> <span className="text-[13.5px]">Fetching from API…</span>
+            </div>
+          ) : (
+            <div className="bg-white border border-[#E5E7EB]">
+              <div className="grid grid-cols-12 border-b border-[#E5E7EB] bg-gray-50 px-4 py-2.5 text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide">
+                <div className="col-span-4">Title</div>
+                <div className="col-span-2">Category</div>
+                <div className="col-span-2">Type</div>
+                <div className="col-span-2">Rows</div>
+                <div className="col-span-2">Actions</div>
+              </div>
+              {datasets.length === 0 ? (
+                <div className="py-16 text-center text-gray-400">
+                  <BarChart2 className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                  <p className="text-[14px]">No datasets found.</p>
+                </div>
+              ) : datasets.map((ds) => (
+                <div key={ds.id} className="grid grid-cols-12 border-b border-[#F3F4F6] px-4 py-3.5 items-center hover:bg-gray-50">
+                  <div className="col-span-4">
+                    <div className="text-[13.5px] font-semibold text-gray-900">{ds.title}</div>
+                    <div className="text-[11.5px] text-gray-400 mt-0.5">{ds.description?.slice(0, 55)}{ds.description?.length > 55 ? "…" : ""}</div>
+                  </div>
+                  <div className="col-span-2 text-[12.5px] text-gray-600">{ds.category}</div>
+                  <div className="col-span-2">
+                    <span className="text-[11.5px] font-medium text-[#1a3a5c] bg-blue-50 px-2 py-0.5 capitalize">{ds.chartType}</span>
+                  </div>
+                  <div className="col-span-2 text-[12.5px] text-gray-600">{ds.rows.length} rows</div>
+                  <div className="col-span-2 flex items-center gap-2">
+                    <button onClick={() => openEdit(ds)} className="text-[12px] font-medium text-[#1a3a5c] hover:underline">Edit</button>
+                    <button onClick={() => handleDelete(ds.id)} disabled={deleteMut.isPending} className="text-gray-400 hover:text-red-500 disabled:opacity-40">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               ))}
-              <div className="md:col-span-2">
-                <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Description</label>
-                <textarea
-                  rows={2}
-                  value={selected.description}
-                  onChange={(e) => setSelected({ ...selected, description: e.target.value })}
-                  className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c] resize-none"
-                />
-              </div>
-              <div>
-                <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Category</label>
-                <select
-                  value={selected.category}
-                  onChange={(e) => setSelected({ ...selected, category: e.target.value })}
-                  className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c] bg-white"
-                >
-                  {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Chart Type</label>
-                <div className="flex gap-2">
-                  {(["line", "bar", "area"] as const).map((t) => (
-                    <button
-                      key={t}
-                      onClick={() => setSelected({ ...selected, chartType: t })}
-                      className={`flex items-center gap-1.5 px-4 py-2 text-[12.5px] font-medium border transition-colors capitalize ${
-                        selected.chartType === t ? "bg-[#1a3a5c] text-white border-[#1a3a5c]" : "border-[#E5E7EB] text-gray-600 hover:border-gray-400"
-                      }`}
-                    >
-                      {t === "line" ? <LineChart className="w-3.5 h-3.5" /> : t === "bar" ? <BarChart2 className="w-3.5 h-3.5" /> : <TrendingUp className="w-3.5 h-3.5" />}
-                      {t}
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
           )}
 
-          {/* Data table tab */}
-          {activeTab === "data" && (
-            <div className="bg-white border border-[#E5E7EB] p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-[14px] font-semibold text-gray-900">
-                  Data Table — First column is X-axis label, rest are data series
-                </h3>
-                <div className="flex gap-2">
-                  <button onClick={addColumn} className="flex items-center gap-1 text-[12px] font-medium text-[#1a3a5c] border border-[#1a3a5c] px-3 py-1.5 hover:bg-blue-50">
-                    <Plus className="w-3.5 h-3.5" /> Add Series
-                  </button>
-                  <button onClick={addRow} className="flex items-center gap-1 text-[12px] font-medium text-white bg-[#1a3a5c] px-3 py-1.5 hover:bg-[#14305a]">
-                    <Plus className="w-3.5 h-3.5" /> Add Row
-                  </button>
-                </div>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-[12.5px] border-collapse">
-                  <thead>
-                    <tr>
-                      {selected.columns.map((col, i) => (
-                        <th key={col} className="border border-[#E5E7EB] bg-gray-50 px-2 py-1.5 text-left">
-                          <div className="flex items-center gap-1">
-                            <input
-                              value={col}
-                              onChange={(e) => renameColumn(col, e.target.value)}
-                              className="text-[12px] font-semibold text-gray-700 bg-transparent focus:outline-none w-full min-w-[80px]"
-                            />
-                            {i > 1 && (
-                              <button onClick={() => removeColumn(col)} className="text-gray-300 hover:text-red-400 flex-shrink-0">
-                                <Trash2 className="w-3 h-3" />
-                              </button>
-                            )}
-                          </div>
-                        </th>
-                      ))}
-                      <th className="border border-[#E5E7EB] bg-gray-50 px-2 py-1.5 w-8" />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {selected.rows.map((row, ri) => (
-                      <tr key={ri} className="hover:bg-gray-50">
-                        {selected.columns.map((col) => (
-                          <td key={col} className="border border-[#F3F4F6] px-2 py-1">
-                            <input
-                              value={row[col] ?? ""}
-                              onChange={(e) => updateCell(ri, col, e.target.value)}
-                              className="w-full text-[12.5px] text-gray-800 focus:outline-none bg-transparent min-w-[80px]"
-                            />
-                          </td>
-                        ))}
-                        <td className="border border-[#F3F4F6] px-2 py-1 text-center">
-                          <button onClick={() => removeRow(ri)} className="text-gray-300 hover:text-red-400">
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* Preview tab */}
-          {activeTab === "preview" && (
-            <div className="bg-white border border-[#E5E7EB] p-6">
-              <h3 className="text-[14px] font-semibold text-gray-900 mb-1">{selected.title}</h3>
-              <p className="text-[12.5px] text-gray-500 mb-5">{selected.description}</p>
-              <InteractiveChart dataset={selected} height={320} />
-              <p className="text-[11px] text-gray-400 mt-4">Unit: {selected.unit}</p>
-            </div>
-          )}
+          <div className="mt-5 bg-blue-50 border border-blue-100 p-4 flex items-start gap-3">
+            <AlertCircle className="w-4 h-4 text-[#1a3a5c] flex-shrink-0 mt-0.5" />
+            <p className="text-[12px] text-[#1a3a5c] leading-relaxed">
+              All data is served via the <strong>REST API</strong> backed by an in-memory store.
+              Click "Reset to Seed" to restore original datasets.
+              In production, replace the store with PostgreSQL + Drizzle ORM.
+            </p>
+          </div>
         </div>
-      ) : null}
+      ) : (
+        <DatasetEditor
+          selected={selected} draft={draft} setDraft={setDraft}
+          onBack={() => { setSelected(null); setDraft(null); setView("list"); }}
+          onSave={handleSave}
+          isSaving={isSaving}
+          isSuccess={updateMut.isSuccess || createMut.isSuccess}
+        />
+      )}
+    </div>
+  );
+}
+
+// ─── Pages Tab ─────────────────────────────────────────────────────────────────
+
+function PagesTab() {
+  const [localeFilter, setLocaleFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [editPage, setEditPage] = useState<Page | null>(null);
+  const [isNewPage, setIsNewPage] = useState(false);
+
+  const filter: any = {};
+  if (localeFilter !== "all") filter.locale = localeFilter;
+  if (statusFilter !== "all") filter.status = statusFilter;
+
+  const { data: pages = [], isLoading } = usePages(filter);
+  const deleteMut = useDeletePage();
+  const resetMut = useResetPages();
+
+  const handleDelete = (id: number, title: string) => {
+    if (!confirm(`Delete page "${title}"?`)) return;
+    deleteMut.mutate(id, { onSuccess: () => { if (expandedId === id) setExpandedId(null); } });
+  };
+
+  const openNew = (locale: "en" | "id") => {
+    setEditPage(null as any);
+    setIsNewPage(true);
+  };
+
+  const openEdit = (page: Page) => {
+    setEditPage(page);
+    setIsNewPage(false);
+    setExpandedId(null);
+  };
+
+  // Group pages by slug to show EN↔ID pairs
+  const grouped = pages.reduce<Record<string, Page[]>>((acc, p) => {
+    const key = p.slug;
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(p);
+    return acc;
+  }, {});
+
+  if (editPage !== null || isNewPage) {
+    return (
+      <div>
+        <PageEditor
+          page={isNewPage ? null : editPage}
+          onBack={() => { setEditPage(null); setIsNewPage(false); }}
+          isNew={isNewPage}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-[20px] font-semibold text-gray-900">Pages</h2>
+          <p className="text-[12px] text-gray-400 mt-0.5">
+            {isLoading ? "Loading…" : `${pages.length} page versions across ${Object.keys(grouped).length} pages`}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={() => resetMut.mutate(undefined)} disabled={resetMut.isPending}
+            className="flex items-center gap-1.5 text-[12px] font-medium text-amber-600 border border-amber-200 bg-amber-50 px-3 py-1.5 hover:bg-amber-100 disabled:opacity-50">
+            {resetMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+            Reset
+          </button>
+          <button onClick={() => openNew("en")}
+            className="flex items-center gap-2 text-[13px] font-medium text-white bg-[#1a3a5c] px-4 py-2 hover:bg-[#14305a]">
+            <Plus className="w-4 h-4" /> New Page (EN)
+          </button>
+          <button onClick={() => openNew("id")}
+            className="flex items-center gap-2 text-[13px] font-medium text-white bg-orange-600 px-4 py-2 hover:bg-orange-700">
+            <Plus className="w-4 h-4" /> New Page (ID)
+          </button>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="flex items-center gap-3 mb-4">
+        <span className="text-[11.5px] text-gray-500 font-medium">Filter:</span>
+        {[["all", "All"], ["en", "English"], ["id", "Indonesia"]].map(([v, label]) => (
+          <button key={v} onClick={() => setLocaleFilter(v)}
+            className={`px-3 py-1 text-[12px] font-medium border ${
+              localeFilter === v ? "border-[#1a3a5c] bg-blue-50 text-[#1a3a5c]" : "border-gray-200 text-gray-500 hover:bg-gray-50"
+            }`}>{label}</button>
+        ))}
+        <div className="h-4 w-px bg-gray-200 mx-1" />
+        {[["all", "All"], ["published", "Published"], ["draft", "Draft"]].map(([v, label]) => (
+          <button key={v} onClick={() => setStatusFilter(v)}
+            className={`px-3 py-1 text-[12px] font-medium border ${
+              statusFilter === v ? "border-[#1a3a5c] bg-blue-50 text-[#1a3a5c]" : "border-gray-200 text-gray-500 hover:bg-gray-50"
+            }`}>{label}</button>
+        ))}
+      </div>
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-24 gap-3 text-gray-400">
+          <Loader2 className="w-5 h-5 animate-spin" /> <span className="text-[13.5px]">Loading…</span>
+        </div>
+      ) : (
+        <div className="bg-white border border-[#E5E7EB]">
+          {/* Table header */}
+          <div className="grid grid-cols-12 border-b border-[#E5E7EB] bg-gray-50 px-4 py-2.5 text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide">
+            <div className="col-span-1" />
+            <div className="col-span-3">Title</div>
+            <div className="col-span-3">Slug</div>
+            <div className="col-span-2">Language</div>
+            <div className="col-span-1">Status</div>
+            <div className="col-span-2">Actions</div>
+          </div>
+
+          {Object.keys(grouped).length === 0 ? (
+            <div className="py-16 text-center text-gray-400">
+              <FileText className="w-10 h-10 mx-auto mb-3 opacity-30" />
+              <p className="text-[14px]">No pages found for this filter.</p>
+            </div>
+          ) : Object.entries(grouped).map(([slug, pgList]) => {
+            const enPage = pgList.find((p) => p.locale === "en");
+            const idPage = pgList.find((p) => p.locale === "id");
+            const anyPage = pgList[0];
+            const isExpanded = expandedId === anyPage.id;
+
+            return (
+              <div key={slug}>
+                {/* Group header / first row */}
+                <div className="grid grid-cols-12 border-b border-[#F3F4F6] px-4 py-3 items-center hover:bg-gray-50">
+                  <div className="col-span-1">
+                    <button onClick={() => setExpandedId(isExpanded ? null : anyPage.id)}
+                      className="text-gray-400 hover:text-gray-700">
+                      {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  <div className="col-span-3">
+                    <div className="flex items-center gap-2">
+                      {enPage && <LocaleBadge locale="en" />}
+                      {idPage && <LocaleBadge locale="id" />}
+                      <span className="text-[13.5px] font-semibold text-gray-900 truncate">{anyPage.title}</span>
+                    </div>
+                    {enPage && idPage && (
+                      <p className="text-[10.5px] text-gray-400 mt-0.5 flex items-center gap-1">
+                        <Link2 className="w-3 h-3" /> Linked (EN + ID)
+                      </p>
+                    )}
+                  </div>
+                  <div className="col-span-3 text-[12px] text-gray-500 font-mono truncate">{slug}</div>
+                  <div className="col-span-2 flex items-center gap-1">
+                    {enPage && <LocaleBadge locale="en" />}
+                    {idPage && <><span className="text-gray-300">·</span><LocaleBadge locale="id" /></>}
+                  </div>
+                  <div className="col-span-1">
+                    <StatusBadge status={anyPage.status} />
+                  </div>
+                  <div className="col-span-2 flex items-center gap-2">
+                    <button onClick={() => openEdit(anyPage)} className="text-[12px] font-medium text-[#1a3a5c] hover:underline">Edit</button>
+                    <button onClick={() => handleDelete(anyPage.id, anyPage.title)} className="text-gray-400 hover:text-red-500">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Expanded: show both EN and ID rows */}
+                {isExpanded && pgList.map((p) => (
+                  <div key={p.id} className="grid grid-cols-12 border-b border-[#F3F4F6] px-4 py-2.5 bg-gray-50/50 items-center">
+                    <div className="col-span-1" />
+                    <div className="col-span-3 pl-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <LocaleBadge locale={p.locale} />
+                        <span className="text-[12.5px] font-semibold text-gray-700">{p.title}</span>
+                      </div>
+                      <div className="text-[11px] text-gray-400">{p.navLabel ? `Nav: "${p.navLabel}"` : `Section: ${p.section}`}</div>
+                    </div>
+                    <div className="col-span-3 text-[12px] text-gray-400 font-mono pl-4">{p.slug}</div>
+                    <div className="col-span-2"><LocaleBadge locale={p.locale} /></div>
+                    <div className="col-span-1"><StatusBadge status={p.status} /></div>
+                    <div className="col-span-2 flex items-center gap-2">
+                      <button onClick={() => openEdit(p)} className="text-[12px] font-medium text-[#1a3a5c] hover:underline">Edit</button>
+                      {p.linkedIdRecord && (
+                        <span className="text-[11px] text-gray-400 flex items-center gap-1">
+                          <Link2 className="w-3 h-3" /> linked
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Blog Tab ──────────────────────────────────────────────────────────────────
+
+function BlogTab() {
+  const [localeFilter, setLocaleFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [editPost, setEditPost] = useState<BlogPost | null>(null);
+  const [isNewPost, setIsNewPost] = useState(false);
+
+  const filter: any = {};
+  if (localeFilter !== "all") filter.locale = localeFilter;
+  if (statusFilter !== "all") filter.status = statusFilter;
+  if (categoryFilter !== "all") filter.category = categoryFilter;
+
+  const { data: posts = [], isLoading } = usePosts(filter);
+  const deleteMut = useDeletePost();
+  const resetMut = useResetPosts();
+
+  const handleDelete = (id: number, title: string) => {
+    if (!confirm(`Delete post "${title}"?`)) return;
+    deleteMut.mutate(id, { onSuccess: () => { if (expandedId === id) setExpandedId(null); } });
+  };
+
+  if (editPost !== null || isNewPost) {
+    return (
+      <div>
+        <PostEditor
+          post={isNewPost ? null : editPost}
+          onBack={() => { setEditPost(null); setIsNewPost(false); }}
+          isNew={isNewPost}
+        />
+      </div>
+    );
+  }
+
+  // Group by slug to show EN↔ID pairs
+  const grouped = posts.reduce<Record<string, BlogPost[]>>((acc, p) => {
+    const key = p.slug;
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(p);
+    return acc;
+  }, {});
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-[20px] font-semibold text-gray-900">Blog Posts</h2>
+          <p className="text-[12px] text-gray-400 mt-0.5">
+            {isLoading ? "Loading…" : `${posts.length} post versions across ${Object.keys(grouped).length} posts`}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={() => resetMut.mutate(undefined)} disabled={resetMut.isPending}
+            className="flex items-center gap-1.5 text-[12px] font-medium text-amber-600 border border-amber-200 bg-amber-50 px-3 py-1.5 hover:bg-amber-100 disabled:opacity-50">
+            {resetMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+            Reset
+          </button>
+          <button onClick={() => { setEditPost(null as any); setIsNewPost(true); }}
+            className="flex items-center gap-2 text-[13px] font-medium text-white bg-[#1a3a5c] px-4 py-2 hover:bg-[#14305a]">
+            <Plus className="w-4 h-4" /> New Post (EN)
+          </button>
+          <button onClick={() => { const p = newPost("id"); setEditPost(p as any); setIsNewPost(true); }}
+            className="flex items-center gap-2 text-[13px] font-medium text-white bg-orange-600 px-4 py-2 hover:bg-orange-700">
+            <Plus className="w-4 h-4" /> New Post (ID)
+          </button>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="flex items-center gap-3 mb-4 flex-wrap">
+        <span className="text-[11.5px] text-gray-500 font-medium">Language:</span>
+        {[["all", "All"], ["en", "English"], ["id", "Indonesia"]].map(([v, label]) => (
+          <button key={v} onClick={() => setLocaleFilter(v)}
+            className={`px-3 py-1 text-[12px] font-medium border ${
+              localeFilter === v ? "border-[#1a3a5c] bg-blue-50 text-[#1a3a5c]" : "border-gray-200 text-gray-500 hover:bg-gray-50"
+            }`}>{label}</button>
+        ))}
+        <div className="h-4 w-px bg-gray-200 mx-1" />
+        <span className="text-[11.5px] text-gray-500 font-medium">Status:</span>
+        {[["all", "All"], ["published", "Published"], ["draft", "Draft"]].map(([v, label]) => (
+          <button key={v} onClick={() => setStatusFilter(v)}
+            className={`px-3 py-1 text-[12px] font-medium border ${
+              statusFilter === v ? "border-[#1a3a5c] bg-blue-50 text-[#1a3a5c]" : "border-gray-200 text-gray-500 hover:bg-gray-50"
+            }`}>{label}</button>
+        ))}
+        <div className="h-4 w-px bg-gray-200 mx-1" />
+        <span className="text-[11.5px] text-gray-500 font-medium">Category:</span>
+        {[["all", "All"], ...BLOG_CATEGORIES.map((c) => [c, c] as [string, string])].map(([v, label]) => (
+          <button key={v} onClick={() => setCategoryFilter(v)}
+            className={`px-3 py-1 text-[12px] font-medium border ${
+              categoryFilter === v ? "border-[#1a3a5c] bg-blue-50 text-[#1a3a5c]" : "border-gray-200 text-gray-500 hover:bg-gray-50"
+            }`}>{label}</button>
+        ))}
+      </div>
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-24 gap-3 text-gray-400">
+          <Loader2 className="w-5 h-5 animate-spin" /> <span className="text-[13.5px]">Loading…</span>
+        </div>
+      ) : (
+        <div className="bg-white border border-[#E5E7EB]">
+          <div className="grid grid-cols-12 border-b border-[#E5E7EB] bg-gray-50 px-4 py-2.5 text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide">
+            <div className="col-span-1" />
+            <div className="col-span-3">Title</div>
+            <div className="col-span-2">Category</div>
+            <div className="col-span-2">Language</div>
+            <div className="col-span-1">Status</div>
+            <div className="col-span-1">Tag</div>
+            <div className="col-span-2">Actions</div>
+          </div>
+
+          {Object.keys(grouped).length === 0 ? (
+            <div className="py-16 text-center text-gray-400">
+              <BookOpen className="w-10 h-10 mx-auto mb-3 opacity-30" />
+              <p className="text-[14px]">No posts found for this filter.</p>
+            </div>
+          ) : Object.entries(grouped).map(([slug, postList]) => {
+            const anyPost = postList[0];
+            const isExpanded = expandedId === anyPost.id;
+
+            return (
+              <div key={slug}>
+                <div className="grid grid-cols-12 border-b border-[#F3F4F6] px-4 py-3 items-center hover:bg-gray-50">
+                  <div className="col-span-1">
+                    <button onClick={() => setExpandedId(isExpanded ? null : anyPost.id)}
+                      className="text-gray-400 hover:text-gray-700">
+                      {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  <div className="col-span-3">
+                    <div className="flex items-center gap-2">
+                      {postList.find((p) => p.locale === "en") && <LocaleBadge locale="en" />}
+                      {postList.find((p) => p.locale === "id") && <><span className="text-gray-300">·</span><LocaleBadge locale="id" /></>}
+                      <span className="text-[13.5px] font-semibold text-gray-900 truncate">{anyPost.title}</span>
+                    </div>
+                    {postList.length > 1 && (
+                      <p className="text-[10.5px] text-gray-400 mt-0.5 flex items-center gap-1">
+                        <Link2 className="w-3 h-3" /> Linked (EN + ID)
+                      </p>
+                    )}
+                  </div>
+                  <div className="col-span-2 text-[12px] text-gray-600">{anyPost.category}</div>
+                  <div className="col-span-2 flex items-center gap-1">
+                    {postList.find((p) => p.locale === "en") && <LocaleBadge locale="en" />}
+                    {postList.length > 1 && <><span className="text-gray-300">·</span><LocaleBadge locale="id" /></>}
+                  </div>
+                  <div className="col-span-1"><StatusBadge status={anyPost.status} /></div>
+                  <div className="col-span-1 text-[12px] text-gray-400">{anyPost.tag}</div>
+                  <div className="col-span-2 flex items-center gap-2">
+                    <button onClick={() => { setEditPost(anyPost); setIsNewPost(false); setExpandedId(null); }}
+                      className="text-[12px] font-medium text-[#1a3a5c] hover:underline">Edit</button>
+                    <button onClick={() => handleDelete(anyPost.id, anyPost.title)} className="text-gray-400 hover:text-red-500">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {isExpanded && postList.map((p) => (
+                  <div key={p.id} className="grid grid-cols-12 border-b border-[#F3F4F6] px-4 py-2.5 bg-gray-50/50 items-center">
+                    <div className="col-span-1" />
+                    <div className="col-span-3 pl-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <LocaleBadge locale={p.locale} />
+                        <span className="text-[12.5px] font-semibold text-gray-700">{p.title}</span>
+                      </div>
+                      <div className="text-[11px] text-gray-400 line-clamp-1">{p.excerpt}</div>
+                    </div>
+                    <div className="col-span-2 text-[12px] text-gray-600 pl-4">{p.category}</div>
+                    <div className="col-span-2"><LocaleBadge locale={p.locale} /></div>
+                    <div className="col-span-1"><StatusBadge status={p.status} /></div>
+                    <div className="col-span-1 text-[12px] text-gray-400">{p.tag}</div>
+                    <div className="col-span-2 flex items-center gap-2">
+                      <button onClick={() => { setEditPost(p); setIsNewPost(false); }}
+                        className="text-[12px] font-medium text-[#1a3a5c] hover:underline">Edit</button>
+                      {p.linkedIdRecord && <span className="text-[11px] text-gray-400 flex items-center gap-1"><Link2 className="w-3 h-3" /> linked</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Main AdminPage ────────────────────────────────────────────────────────────
+
+export default function AdminPage() {
+  const [activeTab, setActiveTab] = useState<"data" | "pages" | "blog">("data");
+
+  const tabs = [
+    { key: "data" as const,  label: "Data Hub",  icon: <Database className="w-4 h-4" /> },
+    { key: "pages" as const, label: "Pages",     icon: <FileText className="w-4 h-4" /> },
+    { key: "blog" as const,  label: "Blog",       icon: <BookOpen className="w-4 h-4" /> },
+  ];
+
+  return (
+    <div className="min-h-screen bg-[#F9FAFB]">
+      {/* ── Top bar ─────────────────────────────────────────────────────────── */}
+      <div className="bg-white border-b border-[#E5E7EB] px-6 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <span className="text-[15px] font-semibold text-gray-900">AndaraLab CMS</span>
+          <div className="flex items-center gap-1 border-l border-gray-200 pl-4">
+            {tabs.map((t) => (
+              <button key={t.key} onClick={() => setActiveTab(t.key)}
+                className={`flex items-center gap-1.5 px-4 py-1.5 text-[13px] font-medium border transition-colors ${
+                  activeTab === t.key
+                    ? "border-[#1a3a5c] bg-blue-50 text-[#1a3a5c]"
+                    : "border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50"
+                }`}>
+                {t.icon}
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <a href="/" className="text-[12.5px] text-gray-500 hover:text-gray-800 font-medium">← Back to site</a>
+      </div>
+
+      {/* ── Tab content ───────────────────────────────────────────────────────── */}
+      <div className="max-w-[1200px] mx-auto px-6 py-8">
+        {activeTab === "data"  && <DataHubTab />}
+        {activeTab === "pages" && <PagesTab />}
+        {activeTab === "blog"  && <BlogTab />}
+      </div>
     </div>
   );
 }

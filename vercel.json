@@ -1,0 +1,10 @@
+{
+  "framework": "vite",
+  "buildCommand": "pnpm run build",
+  "outputDirectory": "artifacts/andaralab/dist/public",
+  "installCommand": "pnpm install",
+  "devCommand": "pnpm --filter @workspace/andaralab run dev",
+  "env": {
+    "VITE_API_BASE_URL": "@vercel/env-var-placeholder"
+  }
+}

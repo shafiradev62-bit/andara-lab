@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { ChevronDown, Menu, X } from "lucide-react";
+import { useLocale } from "@/lib/locale";
 
 const navItems = [
   { label: "Home", href: "/" },
@@ -25,6 +26,7 @@ const navItems = [
     label: "Data Hub",
     children: [
       { label: "Interactive Charts", href: "/data" },
+      { label: "LLM Model Comparison", href: "/data/models" },
       { label: "Economic Calendar", href: "/data/economic-calendar" },
       { label: "Market Dashboard", href: "/data/market-dashboard" },
     ],
@@ -45,7 +47,7 @@ export default function Navbar() {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
-  const [lang, setLang] = useState<"EN" | "ID">("EN");
+  const { locale, setLocale } = useLocale();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isActive = (item: (typeof navItems)[0]) => {
@@ -140,15 +142,15 @@ export default function Navbar() {
         {/* Right side */}
         <div className="hidden lg:flex items-center gap-3 ml-4">
           <div className="flex items-center gap-1 text-[12.5px] text-gray-500 border border-[#E5E7EB] p-0.5">
-            {(["EN", "ID"] as const).map((l) => (
+            {(["en", "id"] as const).map((l) => (
               <button
                 key={l}
-                onClick={() => setLang(l)}
+                onClick={() => setLocale(l)}
                 className={`px-2.5 py-1 font-medium transition-colors ${
-                  lang === l ? "bg-[#1a3a5c] text-white" : "hover:text-gray-800"
+                  locale === l ? "bg-[#1a3a5c] text-white" : "hover:text-gray-800"
                 }`}
               >
-                {l}
+                {l.toUpperCase()}
               </button>
             ))}
           </div>
@@ -215,13 +217,13 @@ export default function Navbar() {
           ))}
           <div className="flex items-center gap-3 px-6 py-4">
             <div className="flex items-center gap-1 text-[12.5px] text-gray-500 border border-[#E5E7EB] p-0.5">
-              {(["EN", "ID"] as const).map((l) => (
+              {(["en", "id"] as const).map((l) => (
                 <button
                   key={l}
-                  onClick={() => setLang(l)}
-                  className={`px-2.5 py-1 font-medium transition-colors ${lang === l ? "bg-[#1a3a5c] text-white" : "hover:text-gray-800"}`}
+                  onClick={() => setLocale(l)}
+                  className={`px-2.5 py-1 font-medium transition-colors ${locale === l ? "bg-[#1a3a5c] text-white" : "hover:text-gray-800"}`}
                 >
-                  {l}
+                  {l.toUpperCase()}
                 </button>
               ))}
             </div>

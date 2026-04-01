@@ -1,20 +1,74 @@
 export interface Article {
   slug: string;
+  locale: "en" | "id";
   title: string;
+  titleId?: string; // Indonesian translation (CMS-editable separately)
   excerpt: string;
+  excerptId?: string;
   date: string;
   readTime: string;
   tag: string;
+  tagId?: string;
   category: string;
   categoryHref: string;
   image?: string;
   body: string[];
+  bodyId?: string[]; // Indonesian translation
 }
 
 export const articles: Article[] = [
+  // ─── INDONESIAN ARTICLES ─────────────────────────────────────────────────
+  {
+    slug: "prospeks-makro-indonesia-2026",
+    locale: "id",
+    title: "Prospek Makro Indonesia: Menavigasi Angin Keringat Global 2026",
+    titleId: "Prospek Makro Indonesia: Menavigasi Angin Keringat Global 2026",
+    excerpt: "Dengan pertumbuhan global melambat dan ketegangan perdagangan meningkat, fundamental makroekonomi Indonesia tetap tangguh, didukung oleh konsumsi domestik yang kuat.",
+    excerptId: "Dengan pertumbuhan global melambat dan ketegangan perdagangan meningkat, fundamental makroekonomi Indonesia tetap tangguh, didukung oleh konsumsi domestik yang kuat.",
+    date: "26 Maret 2026", readTime: "8 menit baca", tag: "Makro",
+    tagId: "Makro",
+    category: "Prospek Makro",
+    categoryHref: "/macro/macro-outlooks",
+    body: [
+      "Indonesia memasuki 2026 dengan salah satu profil makro paling tangguh di Asia Tenggara. Meskipun menghadapi hambatan dari perlambatan permintaan global, dollar AS yang lebih kuat, dan ketegangan perdagangan AS-Tiongkok yang belum terselesaikan, ekonomi domestik terus berkinerja di atas ekspektasi — mencatat pertumbuhan PDB 5,02% di K4 2024.",
+      "Pendorong utama ketahanan ini adalah konsumsi rumah tangga yang kuat, yang menyumbang sekitar 57% PDB. Pendapatan kelas menengah yang meningkat, didukung oleh pasar tenaga kerja yang ketat, telah menjaga pertumbuhan penjualan ritel dalam kisaran 4-6% tahun-ke-tahun.",
+      "Secara eksternal, Indonesia diuntungkan dari basis ekspor komoditas. Minyak kelapa sawit dan batu bara memang telah moderat dari puncak 2022, namun ekspor nikel dan tembaga melonjak seiring permintaan rantai pasok baterai EV. Ini partially menstabilkan transaksi berjalan.",
+      "Risiko utama meliputi: pelemahan IDR jika The Fed menunda pemotongan suku bunga, perlambatan Tiongkok yang lebih tajam dari yang diharapkan, dan tekanan pengeluaran siklus pemilu domestik.",
+    ],
+    bodyId: [
+      "Indonesia memasuki 2026 dengan salah satu profil makro paling tangguh di Asia Tenggara. Meskipun menghadapi hambatan dari perlambatan permintaan global, dollar AS yang lebih kuat, dan ketegangan perdagangan AS-Tiongkok yang belum terselesaikan, ekonomi domestik terus berkinerja di atas ekspektasi — mencatat pertumbuhan PDB 5,02% di K4 2024.",
+      "Pendorong utama ketahanan ini adalah konsumsi rumah tangga yang kuat, yang menyumbang sekitar 57% PDB. Pendapatan kelas menengah yang meningkat, didukung oleh pasar tenaga kerja yang ketat, telah menjaga pertumbuhan penjualan ritel dalam kisaran 4-6% tahun-ke-tahun.",
+      "Secara eksternal, Indonesia diuntungkan dari basis ekspor komoditas. Minyak kelapa sawit dan batu bara memang telah moderat dari puncak 2022, namun ekspor nikel dan tembaga melonjak seiring permintaan rantai pasok baterai EV. Ini partially menstabilkan transaksi berjalan.",
+      "Risiko utama meliputi: pelemahan IDR jika The Fed menunda pemotongan suku bunga, perlambatan Tiongkok yang lebih tajam dari yang diharapkan, dan tekanan pengeluaran siklus pemilu domestik.",
+    ],
+  },
+  {
+    slug: "inflasi-indonesia-2026",
+    locale: "id",
+    title: "Inflasi Indonesia: Apa yang Perlu Dipahami?",
+    titleId: "Inflasi Indonesia: Apa yang Perlu Dipahami?",
+    excerpt: "Inflasi CPI Indonesia di 2,51% — apa artinya bagi kebijakan moneter dan investasi? Penjelasan mendalam.",
+    excerptId: "Inflasi CPI Indonesia di 2,51% — apa artinya bagi kebijakan moneter dan investasi? Penjelasan mendalam.",
+    date: "14 Maret 2026", readTime: "5 menit baca", tag: "Inflasi",
+    tagId: "Inflasi",
+    category: "Kebijakan & Moneter",
+    categoryHref: "/macro/policy-monetary",
+    body: [
+      "Indeks Harga Konsumen (IHK) Indonesia tercatat 2,51% YoY untuk Maret 2026 — dengan baik berada dalam band sasaran BI 1,5-3,5%. Namun angka yang lebih relevan secara kebijakan adalah inflasi inti.",
+      "Inflasi inti, yang mengecualikan komponen paling volatil seperti harga pangan mentah dan harga yang dikelola pemerintah, saat ini berada di 2,1%. Deselerasi ini mencerminkan keberhasilan siklus pengetatan moneter BI.",
+      "Untuk kebijakan moneter, ambang batas utama adalah inflasi inti yang secara berkelanjutan di bawah 2,5% — kondisi yang tampaknya semakin dalam jangkauan.",
+    ],
+    bodyId: [
+      "Indeks Harga Konsumen (IHK) Indonesia tercatat 2,51% YoY untuk Maret 2026 — dengan baik berada dalam band sasaran BI 1,5-3,5%. Namun angka yang lebih relevan secara kebijakan adalah inflasi inti.",
+      "Inflasi inti, yang mengecualikan komponen paling volatil seperti harga pangan mentah dan harga yang dikelola pemerintah, saat ini berada di 2,1%. Deselerasi ini mencerminkan keberhasilan siklus pengetatan moneter BI.",
+      "Untuk kebijakan moneter, ambang batas utama adalah inflasi inti yang secara berkelanjutan di bawah 2,5% — kondisi yang tampaknya semakin dalam jangkauan.",
+    ],
+  },
+
   // ─── MACRO OUTLOOKS ───────────────────────────────────────────────────────
   {
     slug: "indonesia-macro-outlook-2026",
+    locale: "en",
     title: "Indonesia's Macro Outlook: Navigating Global Headwinds in 2026",
     excerpt: "With global growth slowing and trade tensions escalating, Indonesia's macroeconomic fundamentals remain resilient, supported by strong domestic consumption and a commodity export cushion.",
     date: "March 26, 2026", readTime: "8 min read", tag: "Macro",
@@ -30,6 +84,7 @@ export const articles: Article[] = [
   },
   {
     slug: "bi-rate-policy-2026",
+    locale: "en",
     title: "Bank Indonesia Rate Policy: What's Next After the Hold?",
     excerpt: "After keeping rates at 6.00% for the third consecutive meeting, BI signals a potential cut window in H2 2026 if inflation stays benign.",
     date: "March 18, 2026", readTime: "5 min read", tag: "Monetary",
@@ -44,6 +99,7 @@ export const articles: Article[] = [
   },
   {
     slug: "fiscal-consolidation-indonesia",
+    locale: "en",
     title: "Fiscal Consolidation & Budget Deficit: Indonesia's Path to B3 Ratio",
     excerpt: "The government's 2026 budget targets a deficit at 2.5% of GDP, a strategic step toward the B3 threshold while maintaining growth-supportive spending.",
     date: "March 10, 2026", readTime: "6 min read", tag: "Fiscal",
@@ -58,6 +114,7 @@ export const articles: Article[] = [
   },
   {
     slug: "current-account-balance-2026",
+    locale: "en",
     title: "Current Account Balance: Surplus Narrowing as Imports Recover",
     excerpt: "Indonesia's current account returned to a slight deficit in Q4 2025, as capital goods imports surged amid infrastructure investment acceleration.",
     date: "February 28, 2026", readTime: "4 min read", tag: "Trade",
@@ -73,6 +130,7 @@ export const articles: Article[] = [
   // ─── POLICY & MONETARY ────────────────────────────────────────────────────
   {
     slug: "bi-rate-hold-march-2026",
+    locale: "en",
     title: "BI Holds Rates: Reading Between the Lines of the March Statement",
     excerpt: "The March 2026 BI board meeting delivered a unanimous hold, but the nuanced language in Governor Warjiyo's statement contained important forward guidance signals.",
     date: "March 22, 2026", readTime: "5 min read", tag: "Monetary",
@@ -87,6 +145,7 @@ export const articles: Article[] = [
   },
   {
     slug: "indonesia-inflation-breakdown",
+    locale: "en",
     title: "Indonesia Inflation Deep-Dive: Why Core is the One to Watch",
     excerpt: "Headline CPI at 2.51% tells only part of the story. Core inflation at 2.1% gives the real signal about demand conditions.",
     date: "March 14, 2026", readTime: "6 min read", tag: "Inflation",
@@ -103,6 +162,7 @@ export const articles: Article[] = [
   // ─── GEOPOLITICAL ─────────────────────────────────────────────────────────
   {
     slug: "us-china-trade-indonesia",
+    locale: "en",
     title: "US-China Trade Tensions: Impact on Indonesian Exports",
     excerpt: "Indonesia's commodity exports remain resilient, but manufacturing faces tariff displacement risk as trade war escalates.",
     date: "March 22, 2026", readTime: "7 min read", tag: "Geopolitical",
@@ -118,6 +178,7 @@ export const articles: Article[] = [
   },
   {
     slug: "asean-economic-integration",
+    locale: "en",
     title: "ASEAN Economic Integration: Where Indonesia Sits in the New Supply Chain Map",
     excerpt: "The re-ordering of global supply chains is accelerating ASEAN's rise. Indonesia's strategic position offers both promise and competitive challenges.",
     date: "March 15, 2026", readTime: "8 min read", tag: "Geopolitical",
@@ -133,6 +194,7 @@ export const articles: Article[] = [
   // ─── SECTORAL: DEEP-DIVES ─────────────────────────────────────────────────
   {
     slug: "nickel-ev-indonesia",
+    locale: "en",
     title: "Nickel & Battery Supply Chain: Indonesia's EV Ambitions",
     excerpt: "Indonesia controls over 40% of global nickel reserves. We analyze how the country is positioning itself as the epicenter of the global EV battery supply chain.",
     date: "March 22, 2026", readTime: "10 min read", tag: "Sectoral",
@@ -148,6 +210,7 @@ export const articles: Article[] = [
   },
   {
     slug: "palm-oil-esg-headwinds",
+    locale: "en",
     title: "Palm Oil Sector: Pricing Dynamics & ESG Headwinds",
     excerpt: "Despite price normalization, the palm oil sector faces mounting ESG pressure from European import regulations and sustainability certification requirements.",
     date: "March 15, 2026", readTime: "7 min read", tag: "Sectoral",
@@ -162,6 +225,7 @@ export const articles: Article[] = [
   },
   {
     slug: "digital-economy-130b",
+    locale: "en",
     title: "Digital Economy: The $130B Opportunity",
     excerpt: "Indonesia's digital economy is set to reach $130B by 2028. We examine the sectors driving growth and where capital is flowing.",
     date: "March 8, 2026", readTime: "6 min read", tag: "Tech",
@@ -176,6 +240,7 @@ export const articles: Article[] = [
   },
   {
     slug: "banking-sector-credit-npl",
+    locale: "en",
     title: "Banking Sector: Credit Growth & NPL Risks",
     excerpt: "Indonesian banks show strong credit growth at 10-12% YoY, but rising consumer NPLs in the MSME segment warrant close monitoring.",
     date: "March 1, 2026", readTime: "5 min read", tag: "Finance",
@@ -192,6 +257,7 @@ export const articles: Article[] = [
   // ─── REGIONAL ─────────────────────────────────────────────────────────────
   {
     slug: "java-economic-corridor",
+    locale: "en",
     title: "Java Economic Corridor: Growth Concentration & Disparity",
     excerpt: "Over 58% of Indonesia's GDP is generated in Java. We assess spillover effects and the role of Nusantara in redistributing economic activity.",
     date: "March 20, 2026", readTime: "8 min read", tag: "Regional",
@@ -207,6 +273,7 @@ export const articles: Article[] = [
   },
   {
     slug: "kalimantan-nusantara-investment",
+    locale: "en",
     title: "Kalimantan: Beyond the Capital City — Investment Momentum",
     excerpt: "IKN continues to attract investment despite logistical challenges. We map the real estate, infrastructure, and services opportunities emerging in the region.",
     date: "March 12, 2026", readTime: "6 min read", tag: "Regional",
@@ -220,6 +287,7 @@ export const articles: Article[] = [
   },
   {
     slug: "sumatra-connectivity",
+    locale: "en",
     title: "Sumatra Connectivity: Trade Flows & Infrastructure Gap",
     excerpt: "Sumatra remains underserved by transport infrastructure relative to its economic potential. New toll roads are changing the calculus.",
     date: "March 5, 2026", readTime: "5 min read", tag: "Regional",
@@ -236,6 +304,7 @@ export const articles: Article[] = [
   // ─── ESG ──────────────────────────────────────────────────────────────────
   {
     slug: "indonesia-green-bond-market",
+    locale: "en",
     title: "Indonesia's Green Bond Market: Growth & Credibility Challenges",
     excerpt: "The Indonesian green bond market grew 45% in 2025, but greenwashing concerns persist. We assess the regulatory landscape and best practices.",
     date: "March 25, 2026", readTime: "7 min read", tag: "ESG",
@@ -251,6 +320,7 @@ export const articles: Article[] = [
   },
   {
     slug: "corporate-governance-reform",
+    locale: "en",
     title: "Corporate Governance Reform: Impact on Foreign Investment",
     excerpt: "New OJK governance regulations are strengthening transparency requirements for listed companies, with significant implications for foreign investor confidence.",
     date: "March 17, 2026", readTime: "6 min read", tag: "Governance",
@@ -265,6 +335,7 @@ export const articles: Article[] = [
   },
   {
     slug: "indonesia-coal-exit-jetp",
+    locale: "en",
     title: "Just Energy Transition: Indonesia's Coal Exit Timeline",
     excerpt: "Under JETP commitments, Indonesia targets coal phase-out by 2050. We model the economic impact and investment requirements.",
     date: "March 9, 2026", readTime: "8 min read", tag: "Energy",
@@ -281,6 +352,7 @@ export const articles: Article[] = [
   // ─── BLOG ─────────────────────────────────────────────────────────────────
   {
     slug: "what-is-current-account-deficit",
+    locale: "en",
     title: "What Is the Current Account Deficit (and Why Does It Matter)?",
     excerpt: "Many people confuse trade balance with current account. Here's a clear breakdown of what each metric measures and why Indonesia's current account matters for your portfolio.",
     date: "March 24, 2026", readTime: "5 min read", tag: "Education",
@@ -296,6 +368,7 @@ export const articles: Article[] = [
   },
   {
     slug: "cpi-vs-core-inflation",
+    locale: "en",
     title: "Understanding Inflation: CPI vs Core Inflation",
     excerpt: "CPI and core inflation tell different stories. Learn which one the central bank cares about most and why.",
     date: "March 17, 2026", readTime: "4 min read", tag: "Education",
@@ -310,6 +383,7 @@ export const articles: Article[] = [
   },
   {
     slug: "fx-reserves-indonesia",
+    locale: "en",
     title: "FX Reserves: Indonesia's Buffer Against External Shocks",
     excerpt: "With $150B in reserves, Indonesia is relatively well-cushioned. But what constitutes 'adequate' reserves? We explain.",
     date: "March 10, 2026", readTime: "5 min read", tag: "Education",
@@ -324,6 +398,7 @@ export const articles: Article[] = [
   },
   {
     slug: "interest-rate-cycles-investments",
+    locale: "en",
     title: "Interest Rate Cycles: How BI Moves Affect Your Investments",
     excerpt: "Rising rates compress bond prices but boost savings yields. Here's the full picture of rate cycle effects across asset classes.",
     date: "March 3, 2026", readTime: "6 min read", tag: "Education",
@@ -340,6 +415,7 @@ export const articles: Article[] = [
   // ─── MARKET PULSE ────────────────────────────────────────────────────────
   {
     slug: "jci-7200-bi-hold",
+    locale: "en",
     title: "JCI Hits 7,200 on BI Hold — What Equity Investors Should Watch",
     excerpt: "The JCI breached 7,200 following BI's unchanged rate decision. We assess whether this rally has legs and identify key levels to monitor.",
     date: "March 17, 2026", readTime: "4 min read", tag: "Market",
@@ -354,6 +430,7 @@ export const articles: Article[] = [
   },
   {
     slug: "idr-carry-trade-dynamics",
+    locale: "en",
     title: "IDR Currency Dynamics: Carry Trade and What Drives the Exchange Rate",
     excerpt: "The IDR has appreciated 2.1% against the USD over the past month as BI signals a hold. We examine the carry trade dynamics at play.",
     date: "March 26, 2026", readTime: "6 min read", tag: "FX",
@@ -370,6 +447,7 @@ export const articles: Article[] = [
   // ─── LAB NOTES ────────────────────────────────────────────────────────────
   {
     slug: "how-we-build-macro-models",
+    locale: "en",
     title: "Inside AndaraLab: How We Build Our Macro Forecasting Models",
     excerpt: "A behind-the-scenes look at the data sources, statistical methods, and scenario frameworks we use to generate our economic outlook.",
     date: "March 20, 2026", readTime: "8 min read", tag: "Lab Notes",
@@ -385,6 +463,7 @@ export const articles: Article[] = [
   },
   {
     slug: "data-quality-indonesia-challenge",
+    locale: "en",
     title: "The Data Quality Challenge: Working with Indonesian Economic Statistics",
     excerpt: "Pioneering research in a market like Indonesia requires navigating imperfect data. Here's how we approach the challenge.",
     date: "March 13, 2026", readTime: "6 min read", tag: "Lab Notes",
@@ -399,6 +478,7 @@ export const articles: Article[] = [
   },
   {
     slug: "nowcasting-indonesia-gdp",
+    locale: "en",
     title: "Nowcasting Indonesia's GDP: Real-Time Indicators We Track",
     excerpt: "Official GDP data arrives with a 6-week lag. Here are the high-frequency indicators we monitor to estimate growth in real time.",
     date: "March 6, 2026", readTime: "7 min read", tag: "Lab Notes",
@@ -413,14 +493,20 @@ export const articles: Article[] = [
   },
 ];
 
-export function getArticle(slug: string): Article | undefined {
-  return articles.find((a) => a.slug === slug);
+export function getArticle(slug: string, locale: "en" | "id" = "en"): Article | undefined {
+  // If a locale-specific version exists, return it; otherwise fall back to the canonical (en) version
+  return articles.find((a) => a.slug === slug && a.locale === locale)
+    ?? articles.find((a) => a.slug === slug && a.locale === "en");
 }
 
-export function getRelated(slug: string, limit = 3): Article[] {
-  const current = getArticle(slug);
+export function getRelated(slug: string, locale: "en" | "id" = "en", limit = 3): Article[] {
+  const current = getArticle(slug, locale);
   if (!current) return [];
   return articles
-    .filter((a) => a.slug !== slug && a.categoryHref === current.categoryHref)
+    .filter((a) => a.slug !== slug && a.categoryHref === current.categoryHref && a.locale === locale)
     .slice(0, limit);
+}
+
+export function getArticlesByLocale(locale: "en" | "id" = "en"): Article[] {
+  return articles.filter((a) => a.locale === locale);
 }
