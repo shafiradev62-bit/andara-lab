@@ -86,45 +86,121 @@ export interface BlogPost {
 //
 // These mirror the original localStorage functions but hit the REST API.
 // They return raw data (hooks handle loading/error states).
+// FALLBACK: If API is unavailable (e.g., Vercel production without backend),
+// we fall back to localStorage with seed data.
 
 import {
   apiGet, apiPost, apiPut, apiDelete,
   type ApiListResponse, type ApiSingleResponse,
 } from "./api";
+import {
+  getSeedDatasets, getSeedPages, getSeedPosts,
+  saveDatasetsToStorage, savePagesToStorage, savePostsToStorage,
+  resetDatasetsToSeed, resetPagesToSeed, resetPostsToSeed,
+} from "./seed-data-frontend";
 
 export async function fetchDatasets(category?: string): Promise<ChartDataset[]> {
-  const params = category ? `?category=${encodeURIComponent(category)}` : "";
-  const res = await apiGet<ApiListResponse<ChartDataset>>(`/api/datasets${params}`);
-  return res.data;
+  try {
+    const params = category ? `?category=${encodeURIComponent(category)}` : "";
+    const res = await apiGet<ApiListResponse<ChartDataset>>(`/api/datasets${params}`);
+    // Save to localStorage as cache
+    saveDatasetsToStorage(res.data);
+    return res.data;
+  } catch (error) {
+    console.warn('API unavailable, using seed data:', error);
+    // Fallback to seed data from localStorage
+    const seedData = getSeedDatasets();
+    return category 
+      ? seedData.filter(d => d.category === category)
+      : seedData;
+  }
 }
 
 export async function fetchDataset(id: string): Promise<ChartDataset> {
-  const res = await apiGet<ApiSingleResponse<ChartDataset>>(`/api/datasets/${id}`);
-  return res.data;
+  try {
+    const res = await apiGet<ApiSingleResponse<ChartDataset>>(`/api/datasets/${id}`);
+    return res.data;
+  } catch (error) {
+    console.warn('API unavailable, fetching from seed:', error);
+    const seedData = getSeedDatasets();
+    const found = seedData.find(d => d.id === id);
+    if (!found) throw new Error(`Dataset ${id} not found`);
+    return found;
+  }
 }
 
 export async function createDataset(
   data: Omit<ChartDataset, "id" | "createdAt" | "updatedAt">
 ): Promise<ChartDataset> {
-  const res = await apiPost<ApiSingleResponse<ChartDataset>>("/api/datasets", data);
-  return res.data;
+  try {
+    const res = await apiPost<ApiSingleResponse<ChartDataset>>("/api/datasets", data);
+    // Also update localStorage cache
+    const currentDatasets = getSeedDatasets();
+    saveDatasetsToStorage([...currentDatasets, res.data]);
+    return res.data;
+  } catch (error) {
+    console.warn('API unavailable, saving to localStorage only:', error);
+    // Fallback: save to localStorage only
+    const newDataset: ChartDataset = {
+      ...data,
+      id: `local-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    const currentDatasets = getSeedDatasets();
+    saveDatasetsToStorage([...currentDatasets, newDataset]);
+    return newDataset;
+  }
 }
 
 export async function updateDataset(
   id: string,
   data: Partial<Omit<ChartDataset, "id" | "createdAt" | "updatedAt">>
 ): Promise<ChartDataset> {
-  const res = await apiPut<ApiSingleResponse<ChartDataset>>(`/api/datasets/${id}`, data);
-  return res.data;
+  try {
+    const res = await apiPut<ApiSingleResponse<ChartDataset>>(`/api/datasets/${id}`, data);
+    // Also update localStorage cache
+    const currentDatasets = getSeedDatasets();
+    const updated = currentDatasets.map(d => d.id === id ? { ...d, ...data } : d);
+    saveDatasetsToStorage(updated as ChartDataset[]);
+    return res.data;
+  } catch (error) {
+    console.warn('API unavailable, updating localStorage only:', error);
+    // Fallback: update localStorage only
+    const currentDatasets = getSeedDatasets();
+    const index = currentDatasets.findIndex(d => d.id === id);
+    if (index === -1) throw new Error(`Dataset ${id} not found`);
+    const updated = { ...currentDatasets[index], ...data, updatedAt: new Date().toISOString() } as ChartDataset;
+    currentDatasets[index] = updated;
+    saveDatasetsToStorage(currentDatasets);
+    return updated;
+  }
 }
 
 export async function deleteDatasetAPI(id: string): Promise<void> {
-  return apiDelete(`/api/datasets/${id}`);
+  try {
+    await apiDelete(`/api/datasets/${id}`);
+    // Also remove from localStorage cache
+    const currentDatasets = getSeedDatasets();
+    saveDatasetsToStorage(currentDatasets.filter(d => d.id !== id));
+  } catch (error) {
+    console.warn('API unavailable, deleting from localStorage only:', error);
+    // Fallback: delete from localStorage only
+    const currentDatasets = getSeedDatasets();
+    saveDatasetsToStorage(currentDatasets.filter(d => d.id !== id));
+  }
 }
 
 export async function resetDatasets(): Promise<ChartDataset[]> {
-  const res = await apiPost<ApiListResponse<ChartDataset>>("/api/datasets/reset", {});
-  return res.data;
+  try {
+    const res = await apiPost<ApiListResponse<ChartDataset>>("/api/datasets/reset", {});
+    saveDatasetsToStorage(res.data);
+    return res.data;
+  } catch (error) {
+    console.warn('API unavailable, resetting to seed data:', error);
+    // Fallback: reset to seed data
+    return resetDatasetsToSeed();
+  }
 }
 
 export async function fetchCategories(): Promise<string[]> {
@@ -145,43 +221,116 @@ interface PageApiResponse {
 }
 
 export async function fetchPages(filter?: { locale?: string; status?: string; section?: string }): Promise<Page[]> {
-  const params = new URLSearchParams();
-  if (filter?.locale)  params.set("locale",  filter.locale);
-  if (filter?.status)  params.set("status",  filter.status);
-  if (filter?.section) params.set("section", filter.section);
-  const qs = params.toString() ? `?${params.toString()}` : "";
-  const res = await apiGet<PagesApiResponse>(`/api/pages${qs}`);
-  return res.data;
+  try {
+    const params = new URLSearchParams();
+    if (filter?.locale)  params.set("locale",  filter.locale);
+    if (filter?.status)  params.set("status",  filter.status);
+    if (filter?.section) params.set("section", filter.section);
+    const qs = params.toString() ? `?${params.toString()}` : "";
+    const res = await apiGet<PagesApiResponse>(`/api/pages${qs}`);
+    savePagesToStorage(res.data);
+    return res.data;
+  } catch (error) {
+    console.warn('API unavailable, using seed pages:', error);
+    const seedPages = getSeedPages();
+    // Apply filters locally
+    if (!filter) return seedPages;
+    return seedPages.filter(p => {
+      if (filter.locale && p.locale !== filter.locale) return false;
+      if (filter.status && p.status !== filter.status) return false;
+      if (filter.section && p.section !== filter.section) return false;
+      return true;
+    });
+  }
 }
 
 export async function fetchPage(id: number): Promise<Page> {
-  const res = await apiGet<PageApiResponse>(`/api/pages/${id}`);
-  return res.data;
+  try {
+    const res = await apiGet<PageApiResponse>(`/api/pages/${id}`);
+    return res.data;
+  } catch (error) {
+    console.warn('API unavailable, fetching from seed:', error);
+    const seedPages = getSeedPages();
+    const found = seedPages.find(p => p.id === id);
+    if (!found) throw new Error(`Page ${id} not found`);
+    return found;
+  }
 }
 
 export async function fetchPageBySlug(slug: string, locale?: string): Promise<Page> {
-  const params = locale ? `?locale=${locale}` : "";
-  const res = await apiGet<PageApiResponse>(`/api/pages/slug/${encodeURIComponent(slug)}${params}`);
-  return res.data;
+  try {
+    const params = locale ? `?locale=${locale}` : "";
+    const res = await apiGet<PageApiResponse>(`/api/pages/slug/${encodeURIComponent(slug)}${params}`);
+    return res.data;
+  } catch (error) {
+    console.warn('API unavailable, fetching from seed:', error);
+    const seedPages = getSeedPages();
+    const found = seedPages.find(p => p.slug === slug && (!locale || p.locale === locale));
+    if (!found) throw new Error(`Page ${slug} not found`);
+    return found;
+  }
 }
 
 export async function createPage(data: Omit<Page, "id" | "createdAt" | "updatedAt">): Promise<Page> {
-  const res = await apiPost<PageApiResponse>("/api/pages", data);
-  return res.data;
+  try {
+    const res = await apiPost<PageApiResponse>("/api/pages", data);
+    const currentPages = getSeedPages();
+    savePagesToStorage([...currentPages, res.data]);
+    return res.data;
+  } catch (error) {
+    console.warn('API unavailable, saving to localStorage only:', error);
+    const newPage: Page = {
+      ...data,
+      id: Date.now(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    const currentPages = getSeedPages();
+    savePagesToStorage([...currentPages, newPage]);
+    return newPage;
+  }
 }
 
 export async function updatePage(id: number, data: Partial<Omit<Page, "id" | "createdAt" | "updatedAt">>): Promise<Page> {
-  const res = await apiPut<PageApiResponse>(`/api/pages/${id}`, data);
-  return res.data;
+  try {
+    const res = await apiPut<PageApiResponse>(`/api/pages/${id}`, data);
+    const currentPages = getSeedPages();
+    const updated = currentPages.map(p => p.id === id ? { ...p, ...data } : p);
+    savePagesToStorage(updated as Page[]);
+    return res.data;
+  } catch (error) {
+    console.warn('API unavailable, updating localStorage only:', error);
+    const currentPages = getSeedPages();
+    const index = currentPages.findIndex(p => p.id === id);
+    if (index === -1) throw new Error(`Page ${id} not found`);
+    const updated = { ...currentPages[index], ...data, updatedAt: new Date().toISOString() } as Page;
+    currentPages[index] = updated;
+    savePagesToStorage(currentPages);
+    return updated;
+  }
 }
 
 export async function deletePageAPI(id: number): Promise<void> {
-  return apiDelete(`/api/pages/${id}`);
+  try {
+    await apiDelete(`/api/pages/${id}`);
+    const currentPages = getSeedPages();
+    savePagesToStorage(currentPages.filter(p => p.id !== id));
+  } catch (error) {
+    console.warn('API unavailable, deleting from localStorage only:', error);
+    const currentPages = getSeedPages();
+    savePagesToStorage(currentPages.filter(p => p.id !== id));
+  }
 }
 
 export async function resetPages(): Promise<Page[]> {
-  const res = await apiPost<PagesApiResponse>("/api/pages/reset", {});
-  return res.data;
+  try {
+    const res = await apiPost<PagesApiResponse>("/api/pages/reset", {});
+    savePagesToStorage(res.data);
+    return res.data;
+  } catch (error) {
+    console.warn('API unavailable, resetting to seed data:', error);
+    return resetPagesToSeed();
+  }
 }
 
 export async function linkPages(idA: number, idB: number): Promise<void> {
@@ -201,37 +350,101 @@ interface PostApiResponse {
 }
 
 export async function fetchPosts(filter?: { locale?: string; status?: string; category?: string }): Promise<BlogPost[]> {
-  const params = new URLSearchParams();
-  if (filter?.locale)   params.set("locale",   filter.locale);
-  if (filter?.status)   params.set("status",   filter.status);
-  if (filter?.category) params.set("category",  filter.category);
-  const qs = params.toString() ? `?${params.toString()}` : "";
-  const res = await apiGet<PostsApiResponse>(`/api/blog${qs}`);
-  return res.data;
+  try {
+    const params = new URLSearchParams();
+    if (filter?.locale)   params.set("locale",   filter.locale);
+    if (filter?.status)   params.set("status",   filter.status);
+    if (filter?.category) params.set("category",  filter.category);
+    const qs = params.toString() ? `?${params.toString()}` : "";
+    const res = await apiGet<PostsApiResponse>(`/api/blog${qs}`);
+    savePostsToStorage(res.data);
+    return res.data;
+  } catch (error) {
+    console.warn('API unavailable, using seed posts:', error);
+    const seedPosts = getSeedPosts();
+    if (!filter) return seedPosts;
+    return seedPosts.filter(p => {
+      if (filter.locale && p.locale !== filter.locale) return false;
+      if (filter.status && p.status !== filter.status) return false;
+      if (filter.category && p.category !== filter.category) return false;
+      return true;
+    });
+  }
 }
 
 export async function fetchPost(id: number): Promise<BlogPost> {
-  const res = await apiGet<PostApiResponse>(`/api/blog/${id}`);
-  return res.data;
+  try {
+    const res = await apiGet<PostApiResponse>(`/api/blog/${id}`);
+    return res.data;
+  } catch (error) {
+    console.warn('API unavailable, fetching from seed:', error);
+    const seedPosts = getSeedPosts();
+    const found = seedPosts.find(p => p.id === id);
+    if (!found) throw new Error(`Post ${id} not found`);
+    return found;
+  }
 }
 
 export async function createPost(data: Omit<BlogPost, "id" | "createdAt" | "updatedAt">): Promise<BlogPost> {
-  const res = await apiPost<PostApiResponse>("/api/blog", data);
-  return res.data;
+  try {
+    const res = await apiPost<PostApiResponse>("/api/blog", data);
+    const currentPosts = getSeedPosts();
+    savePostsToStorage([...currentPosts, res.data]);
+    return res.data;
+  } catch (error) {
+    console.warn('API unavailable, saving to localStorage only:', error);
+    const newPost: BlogPost = {
+      ...data,
+      id: Date.now(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    const currentPosts = getSeedPosts();
+    savePostsToStorage([...currentPosts, newPost]);
+    return newPost;
+  }
 }
 
 export async function updatePost(id: number, data: Partial<Omit<BlogPost, "id" | "createdAt" | "updatedAt">>): Promise<BlogPost> {
-  const res = await apiPut<PostApiResponse>(`/api/blog/${id}`, data);
-  return res.data;
+  try {
+    const res = await apiPut<PostApiResponse>(`/api/blog/${id}`, data);
+    const currentPosts = getSeedPosts();
+    const updated = currentPosts.map(p => p.id === id ? { ...p, ...data } : p);
+    savePostsToStorage(updated as BlogPost[]);
+    return res.data;
+  } catch (error) {
+    console.warn('API unavailable, updating localStorage only:', error);
+    const currentPosts = getSeedPosts();
+    const index = currentPosts.findIndex(p => p.id === id);
+    if (index === -1) throw new Error(`Post ${id} not found`);
+    const updated = { ...currentPosts[index], ...data, updatedAt: new Date().toISOString() } as BlogPost;
+    currentPosts[index] = updated;
+    savePostsToStorage(currentPosts);
+    return updated;
+  }
 }
 
 export async function deletePostAPI(id: number): Promise<void> {
-  return apiDelete(`/api/blog/${id}`);
+  try {
+    await apiDelete(`/api/blog/${id}`);
+    const currentPosts = getSeedPosts();
+    savePostsToStorage(currentPosts.filter(p => p.id !== id));
+  } catch (error) {
+    console.warn('API unavailable, deleting from localStorage only:', error);
+    const currentPosts = getSeedPosts();
+    savePostsToStorage(currentPosts.filter(p => p.id !== id));
+  }
 }
 
 export async function resetPosts(): Promise<BlogPost[]> {
-  const res = await apiPost<PostsApiResponse>("/api/blog/reset", {});
-  return res.data;
+  try {
+    const res = await apiPost<PostsApiResponse>("/api/blog/reset", {});
+    savePostsToStorage(res.data);
+    return res.data;
+  } catch (error) {
+    console.warn('API unavailable, resetting to seed data:', error);
+    return resetPostsToSeed();
+  }
 }
 
 export async function linkPosts(idA: number, idB: number): Promise<void> {
