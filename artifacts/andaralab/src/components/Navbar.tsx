@@ -74,7 +74,10 @@ export default function Navbar() {
           <div className="w-7 h-7 bg-[#1a3a5c] flex items-center justify-center">
             <span className="text-white text-[11px] font-bold">AL</span>
           </div>
-          <span className="text-[15px] font-bold text-gray-900 tracking-tight">AndaraLab</span>
+          <div className="flex items-center gap-2">
+            <span className="text-[15px] font-bold text-gray-900 tracking-tight">AndaraLab</span>
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-700">Auto-Deployed</span>
+          </div>
         </Link>
 
         {/* Desktop nav */}
