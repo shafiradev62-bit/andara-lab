@@ -5,6 +5,6 @@
   "installCommand": "pnpm install",
   "devCommand": "pnpm --filter @workspace/andaralab run dev",
   "env": {
-    "VITE_API_BASE_URL": "@vercel/env-var-placeholder"
+    "VITE_API_BASE_URL": "@VITE_API_BASE_URL"
   }
 }
