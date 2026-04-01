@@ -29,9 +29,10 @@ const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
   "http://localhost:4173",
-  // Add your Vercel deployment URL here after deploying
-  // e.g. "https://andara-lab.vercel.app",
-  // and any custom domains you configure in Vercel
+  "http://localhost:3001",
+  // Vercel production & preview deployments
+  "https://andaralab-ui.vercel.app",
+  "https://andaralab-lkxp7b875-rahmis-projects-881d2cc1.vercel.app",
 ];
 
 app.use(cors({
@@ -40,11 +41,12 @@ app.use(cors({
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
     // Allow all Vercel preview/deployment URLs
-    if (origin.includes(".vercel.app")) return callback(null, true);
+    if (origin && origin.includes(".vercel.app")) return callback(null, true);
     callback(new Error(`CORS: origin ${origin} not allowed`));
   },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
