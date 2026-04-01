@@ -228,14 +228,16 @@ export async function fetchPages(filter?: { locale?: string; status?: string; se
     if (filter?.section) params.set("section", filter.section);
     const qs = params.toString() ? `?${params.toString()}` : "";
     const res = await apiGet<PagesApiResponse>(`/api/pages${qs}`);
+    // ALWAYS use API data, save to localStorage as cache
     savePagesToStorage(res.data);
     return res.data;
   } catch (error) {
-    console.warn('API unavailable, using seed pages:', error);
-    const seedPages = getSeedPages();
-    // Apply filters locally
-    if (!filter) return seedPages;
-    return seedPages.filter(p => {
+    console.warn('API unavailable for fetchPages, using cached data:', error);
+    // Fallback to localStorage cache ONLY
+    const cachedPages = getSeedPages();
+    // Apply filters locally if provided
+    if (!filter || cachedPages.length === 0) return cachedPages;
+    return cachedPages.filter(p => {
       if (filter.locale && p.locale !== filter.locale) return false;
       if (filter.status && p.status !== filter.status) return false;
       if (filter.section && p.section !== filter.section) return false;
@@ -274,11 +276,13 @@ export async function fetchPageBySlug(slug: string, locale?: string): Promise<Pa
 export async function createPage(data: Omit<Page, "id" | "createdAt" | "updatedAt">): Promise<Page> {
   try {
     const res = await apiPost<PageApiResponse>("/api/pages", data);
+    // Update localStorage cache with new page
     const currentPages = getSeedPages();
     savePagesToStorage([...currentPages, res.data]);
     return res.data;
   } catch (error) {
-    console.warn('API unavailable, saving to localStorage only:', error);
+    console.warn('API unavailable for createPage, saving to localStorage only:', error);
+    // Fallback: save to localStorage only (for offline/demo)
     const newPage: Page = {
       ...data,
       id: Date.now(),
@@ -294,15 +298,17 @@ export async function createPage(data: Omit<Page, "id" | "createdAt" | "updatedA
 export async function updatePage(id: number, data: Partial<Omit<Page, "id" | "createdAt" | "updatedAt">>): Promise<Page> {
   try {
     const res = await apiPut<PageApiResponse>(`/api/pages/${id}`, data);
+    // Update localStorage cache
     const currentPages = getSeedPages();
-    const updated = currentPages.map(p => p.id === id ? { ...p, ...data } : p);
-    savePagesToStorage(updated as Page[]);
+    const updatedPages = currentPages.map(p => p.id === id ? { ...p, ...data } : p);
+    savePagesToStorage(updatedPages as Page[]);
     return res.data;
   } catch (error) {
-    console.warn('API unavailable, updating localStorage only:', error);
+    console.warn('API unavailable for updatePage, updating localStorage only:', error);
+    // Fallback: update localStorage only
     const currentPages = getSeedPages();
     const index = currentPages.findIndex(p => p.id === id);
-    if (index === -1) throw new Error(`Page ${id} not found`);
+    if (index === -1) throw new Error(`Page ${id} not found in cache`);
     const updated = { ...currentPages[index], ...data, updatedAt: new Date().toISOString() } as Page;
     currentPages[index] = updated;
     savePagesToStorage(currentPages);
