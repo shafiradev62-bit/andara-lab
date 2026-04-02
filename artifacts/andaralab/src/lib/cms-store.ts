@@ -275,9 +275,29 @@ export async function fetchPageBySlug(slug: string, locale?: string): Promise<Pa
     } catch {
       console.warn("API unavailable, fetching page from cache/seed:", lookupErr);
       const seedPages = getSeedPages();
-      const found = seedPages.find((p) => p.slug === slug && (!locale || p.locale === locale));
-      if (!found) throw new Error(`Page ${slug} not found`);
-      return found;
+      const norm = slug.startsWith("/") ? slug : `/${slug}`;
+      const matchSlug = (p: Page) => p.slug === norm || p.slug === norm.replace(/^\//, "");
+      const published = seedPages.filter((p) => matchSlug(p) && p.status === "published");
+      const pickNewest = (rows: Page[]) =>
+        [...rows].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0];
+      let pick: Page | undefined;
+      if (locale) {
+        const forLocale = published.filter((p) => p.locale === locale);
+        if (forLocale.length) pick = pickNewest(forLocale);
+      }
+      if (!pick && published.length) pick = pickNewest(published);
+      if (pick) return pick;
+      const draftMatch = seedPages.find(
+        (p) => matchSlug(p) && p.status === "draft" && (!locale || p.locale === locale)
+      );
+      if (draftMatch) {
+        const err = new Error(
+          "This page is still a draft. In Admin → Pages, choose Published (live) and save."
+        ) as Error & { apiDetail?: string };
+        err.apiDetail = err.message;
+        throw err;
+      }
+      throw new Error(`Page ${slug} not found`);
     }
   }
 }

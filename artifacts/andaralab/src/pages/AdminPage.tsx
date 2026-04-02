@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   useDatasets, useCreateDataset, useUpdateDataset,
   useDeleteDataset, useResetDatasets,
@@ -48,11 +48,11 @@ function newDataset(): Omit<ChartDataset, "id" | "createdAt" | "updatedAt"> {
   };
 }
 
-function newPage(locale: "en" | "id" = "en"): Omit<Page, "id" | "createdAt" | "updatedAt"> {
+/** New page draft — `status` must be chosen in the editor before Save. */
+function newPage(locale: "en" | "id" = "en"): Partial<Page> {
   return {
     slug: "/new-page",
     locale,
-    status: "draft",
     title: "New Page",
     description: "",
     content: [],
@@ -61,11 +61,11 @@ function newPage(locale: "en" | "id" = "en"): Omit<Page, "id" | "createdAt" | "u
   };
 }
 
-function newPost(locale: "en" | "id" = "en"): Omit<BlogPost, "id" | "createdAt" | "updatedAt"> {
+/** New post draft — `status` must be chosen before Save. */
+function newPost(locale: "en" | "id" = "en"): Partial<BlogPost> {
   return {
     slug: "new-post",
     locale,
-    status: "draft",
     title: "New Post",
     excerpt: "",
     body: [""],
@@ -73,6 +73,16 @@ function newPost(locale: "en" | "id" = "en"): Omit<BlogPost, "id" | "createdAt" 
     tag: "",
     readTime: "5 min read",
   };
+}
+
+function normalizePageSlug(raw: string): string {
+  const t = raw.trim().replace(/\s+/g, "-");
+  if (!t || t === "/") return "/";
+  return t.startsWith("/") ? t : `/${t}`;
+}
+
+function normalizeBlogSlug(raw: string): string {
+  return raw.trim().replace(/^\/+/g, "").replace(/\s+/g, "-") || "new-post";
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -317,37 +327,68 @@ function DatasetEditor({
 // ─── Page Editor ────────────────────────────────────────────────────────────────
 
 function PageEditor({
-  page, onBack, isNew,
+  page, onBack, isNew, defaultLocaleForNew = "en",
 }: {
   page: Page | null;
   onBack: () => void;
   isNew?: boolean;
+  defaultLocaleForNew?: "en" | "id";
 }) {
   const updateMut = useUpdatePage();
   const createMut = useCreatePage();
   const isSaving = updateMut.isPending || createMut.isPending;
-  const [draft, setDraft] = useState<Partial<Page>>(page ?? {});
+  const [draft, setDraft] = useState<Partial<Page>>(() => (page ? { ...page } : { ...newPage(defaultLocaleForNew) }));
   const [savedSlug, setSavedSlug] = useState<string | null>(null);
-  const isUpdating = draft !== null && !isNew;
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setSaveError(null);
+    setSavedSlug(null);
+    if (page) setDraft({ ...page });
+    else if (isNew) setDraft({ ...newPage(defaultLocaleForNew) });
+  }, [page?.id, isNew, defaultLocaleForNew]);
+
+  const statusOk = draft.status === "draft" || draft.status === "published";
 
   const handleSave = () => {
     if (!draft) return;
+    setSaveError(null);
+    if (!statusOk) {
+      setSaveError("Pilih status dulu: Draft (hidden) atau Published (live), baru klik Save.");
+      return;
+    }
+    const slug = normalizePageSlug(draft.slug ?? "");
+    const title = (draft.title ?? "").trim();
+    if (!title) {
+      setSaveError("Judul halaman wajib diisi.");
+      return;
+    }
+    const payload: Partial<Page> = { ...draft, slug, title, status: draft.status };
+
     if (isNew) {
-      createMut.mutate(draft as any, {
-        onSuccess: (res: any) => {
-          setSavedSlug(res.data?.slug ?? draft.slug ?? null);
+      createMut.mutate(payload as Omit<Page, "id" | "createdAt" | "updatedAt">, {
+        onSuccess: (saved: Page) => {
+          setSavedSlug(saved.slug ?? slug);
         },
+        onError: (e: Error) => setSaveError(e.message || "Gagal menyimpan"),
       });
     } else if (page?.id) {
-      updateMut.mutate({ id: page.id, data: draft }, {
-        onSuccess: () => {
-          setSavedSlug(draft.slug ?? page.slug ?? null);
-        },
-      });
+      updateMut.mutate(
+        { id: page.id, data: payload },
+        {
+          onSuccess: () => setSavedSlug(slug),
+          onError: (e: Error) => setSaveError(e.message || "Gagal menyimpan"),
+        }
+      );
     }
   };
 
-  const patch = (fields: Partial<Page>) => setDraft((prev) => ({ ...prev, ...fields }));
+  const patch = (fields: Partial<Page>) => {
+    setSaveError(null);
+    setDraft((prev) => ({ ...prev, ...fields }));
+  };
+
+  const viewHref = savedSlug ? (savedSlug.startsWith("/") ? savedSlug : `/${savedSlug}`) : "/";
 
   return (
     <div>
@@ -359,8 +400,8 @@ function PageEditor({
         <span className="text-[13px] font-medium text-gray-700">
           {isNew ? "New Page" : (draft.title ?? page?.title ?? "Untitled")}
         </span>
-        {page && <StatusBadge status={page.status} />}
-        {page && <LocaleBadge locale={page.locale} />}
+        {page ? <StatusBadge status={page.status} /> : draft.status ? <StatusBadge status={draft.status} /> : null}
+        <LocaleBadge locale={(draft.locale ?? page?.locale ?? "en") as "en" | "id"} />
       </div>
 
       <div className="bg-white border border-[#E5E7EB] p-6 grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
@@ -422,10 +463,12 @@ function PageEditor({
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Status</label>
-          <div className="flex gap-2">
+          <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+            Status <span className="text-red-500">*</span>
+          </label>
+          <div className="flex gap-2 flex-wrap">
             {(["draft", "published"] as const).map((s) => (
-              <button key={s} onClick={() => patch({ status: s })}
+              <button key={s} type="button" onClick={() => patch({ status: s })}
                 className={`px-4 py-2 text-[12.5px] font-semibold border capitalize ${
                   draft.status === s ? "bg-[#1a3a5c] text-white border-[#1a3a5c]" : "border-[#E5E7EB] text-gray-600 hover:bg-gray-50"
                 }`}>
@@ -433,6 +476,9 @@ function PageEditor({
               </button>
             ))}
           </div>
+          <p className="text-[10.5px] text-gray-500 mt-2">
+            Wajib pilih salah satu sebelum Save. Hanya <strong>Published (live)</strong> yang tampil di situs publik.
+          </p>
         </div>
 
         {/* Linked page info */}
@@ -450,10 +496,22 @@ function PageEditor({
         )}
       </div>
 
+      {saveError && (
+        <div className="mb-4 flex items-start gap-2 text-[12.5px] text-red-700 bg-red-50 border border-red-200 px-4 py-3">
+          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+          <span>{saveError}</span>
+        </div>
+      )}
+
       {/* Save button */}
-      <div className="flex items-center gap-3">
-        <button onClick={handleSave} disabled={isSaving}
-          className="flex items-center gap-2 text-[13px] font-medium text-white bg-[#1a3a5c] px-5 py-2 hover:bg-[#14305a] disabled:opacity-50">
+      <div className="flex items-center gap-3 flex-wrap">
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={isSaving || !statusOk}
+          title={!statusOk ? "Pilih Draft atau Published terlebih dahulu" : undefined}
+          className="flex items-center gap-2 text-[13px] font-medium text-white bg-[#1a3a5c] px-5 py-2 hover:bg-[#14305a] disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           {isSaving ? "Saving…" : "Save Page"}
         </button>
@@ -471,15 +529,20 @@ function PageEditor({
             <CheckCircle className="w-4 h-4 text-gray-700" />
             Page saved successfully
           </p>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <a
-              href={savedSlug}
+              href={viewHref}
               target="_blank"
               rel="noopener noreferrer"
               className="text-[12.5px] font-medium text-[#1a3a5c] underline"
             >
-              View on site → {window.location.origin}{savedSlug}
+              View on site → {window.location.origin}{viewHref}
             </a>
+            {draft.status === "draft" && (
+              <span className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 px-2 py-1">
+                Draft tidak tampil di situs sampai Anda pilih Published lalu Save lagi.
+              </span>
+            )}
             <span className="text-gray-300">·</span>
             <button
               onClick={() => { setSavedSlug(null); onBack(); }}
@@ -497,52 +560,91 @@ function PageEditor({
 // ─── Blog Post Editor ──────────────────────────────────────────────────────────
 
 function PostEditor({
-  post, onBack, isNew,
+  post, onBack, isNew, defaultLocaleForNew = "en",
 }: {
   post: BlogPost | null;
   onBack: () => void;
   isNew?: boolean;
+  defaultLocaleForNew?: "en" | "id";
 }) {
   const updateMut = useUpdatePost();
   const createMut = useCreatePost();
   const isSaving = updateMut.isPending || createMut.isPending;
-  const [draft, setDraft] = useState<Partial<BlogPost>>(post ?? {});
+  const [draft, setDraft] = useState<Partial<BlogPost>>(() =>
+    post ? { ...post } : { ...newPost(defaultLocaleForNew) }
+  );
   const [savedSlug, setSavedSlug] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setSaveError(null);
+    setSavedSlug(null);
+    if (post) setDraft({ ...post });
+    else if (isNew) setDraft({ ...newPost(defaultLocaleForNew) });
+  }, [post?.id, isNew, defaultLocaleForNew]);
+
+  const statusOk = draft.status === "draft" || draft.status === "published";
 
   const handleSave = () => {
     if (!draft) return;
+    setSaveError(null);
+    if (!statusOk) {
+      setSaveError("Pilih status dulu: Draft atau Published, baru klik Save.");
+      return;
+    }
+    const slug = normalizeBlogSlug(draft.slug ?? "");
+    const title = (draft.title ?? "").trim();
+    if (!title) {
+      setSaveError("Judul posting wajib diisi.");
+      return;
+    }
+    const bodyLines = Array.isArray(draft.body) ? draft.body : [""];
+    const payload: Partial<BlogPost> = {
+      ...draft,
+      slug,
+      title,
+      body: bodyLines,
+      status: draft.status,
+    };
+
     if (isNew) {
-      createMut.mutate(draft as any, {
-        onSuccess: (res: any) => {
-          setSavedSlug(res.data?.slug ?? draft.slug ?? null);
-        },
+      createMut.mutate(payload as Omit<BlogPost, "id" | "createdAt" | "updatedAt">, {
+        onSuccess: (saved: BlogPost) => setSavedSlug(saved.slug ?? slug),
+        onError: (e: Error) => setSaveError(e.message || "Gagal menyimpan"),
       });
     } else if (post?.id) {
-      updateMut.mutate({ id: post.id, data: draft }, {
-        onSuccess: () => {
-          setSavedSlug(draft.slug ?? post.slug ?? null);
-        },
-      });
+      updateMut.mutate(
+        { id: post.id, data: payload },
+        {
+          onSuccess: () => setSavedSlug(slug),
+          onError: (e: Error) => setSaveError(e.message || "Gagal menyimpan"),
+        }
+      );
     }
   };
 
-  const patch = (fields: Partial<BlogPost>) => setDraft((prev) => ({ ...prev, ...fields }));
+  const patch = (fields: Partial<BlogPost>) => {
+    setSaveError(null);
+    setDraft((prev) => ({ ...prev, ...fields }));
+  };
 
   const bodyLines = Array.isArray(draft.body) ? draft.body : [""];
   const setBodyLines = (lines: string[]) => patch({ body: lines });
 
+  const articleHref = savedSlug ? `/article/${savedSlug}` : "/blog";
+
   return (
     <div>
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={onBack} className="flex items-center gap-1.5 text-[13px] text-gray-500 hover:text-gray-900 font-medium">
+        <button type="button" onClick={onBack} className="flex items-center gap-1.5 text-[13px] text-gray-500 hover:text-gray-900 font-medium">
           <ChevronLeft className="w-4 h-4" /> Back
         </button>
         <span className="text-gray-300">·</span>
         <span className="text-[13px] font-medium text-gray-700">
           {isNew ? "New Blog Post" : (draft.title ?? post?.title ?? "Untitled")}
         </span>
-        {post && <StatusBadge status={post.status} />}
-        {post && <LocaleBadge locale={post.locale} />}
+        {post ? <StatusBadge status={post.status} /> : draft.status ? <StatusBadge status={draft.status} /> : null}
+        <LocaleBadge locale={(draft.locale ?? post?.locale ?? "en") as "en" | "id"} />
       </div>
 
       <div className="bg-white border border-[#E5E7EB] p-6 grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
@@ -611,17 +713,22 @@ function PostEditor({
         </div>
 
         <div>
-          <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Status</label>
-          <div className="flex gap-2">
+          <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+            Status <span className="text-red-500">*</span>
+          </label>
+          <div className="flex gap-2 flex-wrap">
             {(["draft", "published"] as const).map((s) => (
-              <button key={s} onClick={() => patch({ status: s })}
+              <button key={s} type="button" onClick={() => patch({ status: s })}
                 className={`px-4 py-2 text-[12.5px] font-semibold border capitalize ${
                   draft.status === s ? "bg-[#1a3a5c] text-white border-[#1a3a5c]" : "border-[#E5E7EB] text-gray-600 hover:bg-gray-50"
                 }`}>
-                {s === "published" ? "Published" : "Draft"}
+                {s === "published" ? "Published (live)" : "Draft (hidden)"}
               </button>
             ))}
           </div>
+          <p className="text-[10.5px] text-gray-500 mt-2">
+            Wajib pilih salah satu sebelum Save. Hanya <strong>Published (live)</strong> yang tampil di situs.
+          </p>
         </div>
 
         {/* Body editor */}
@@ -637,9 +744,21 @@ function PostEditor({
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
-        <button onClick={handleSave} disabled={isSaving}
-          className="flex items-center gap-2 text-[13px] font-medium text-white bg-[#1a3a5c] px-5 py-2 hover:bg-[#14305a] disabled:opacity-50">
+      {saveError && (
+        <div className="mb-4 flex items-start gap-2 text-[12.5px] text-red-700 bg-red-50 border border-red-200 px-4 py-3">
+          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+          <span>{saveError}</span>
+        </div>
+      )}
+
+      <div className="flex items-center gap-3 flex-wrap">
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={isSaving || !statusOk}
+          title={!statusOk ? "Pilih Draft atau Published terlebih dahulu" : undefined}
+          className="flex items-center gap-2 text-[13px] font-medium text-white bg-[#1a3a5c] px-5 py-2 hover:bg-[#14305a] disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           {isSaving ? "Saving…" : "Save Post"}
         </button>
@@ -657,17 +776,23 @@ function PostEditor({
             <CheckCircle className="w-4 h-4 text-gray-700" />
             Post saved successfully
           </p>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <a
-              href="/blog"
+              href={articleHref}
               target="_blank"
               rel="noopener noreferrer"
               className="text-[12.5px] font-medium text-[#1a3a5c] underline"
             >
-              View on site → {window.location.origin}/blog
+              View article → {window.location.origin}{articleHref}
             </a>
+            {draft.status === "draft" && (
+              <span className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 px-2 py-1">
+                Draft: artikel tidak tampil sampai Published + Save.
+              </span>
+            )}
             <span className="text-gray-300">·</span>
             <button
+              type="button"
               onClick={() => { setSavedSlug(null); onBack(); }}
               className="text-[12.5px] text-gray-500 hover:text-gray-800 underline"
             >
@@ -821,6 +946,7 @@ function PagesTab() {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [editPage, setEditPage] = useState<Page | null>(null);
   const [isNewPage, setIsNewPage] = useState(false);
+  const [newPageLocale, setNewPageLocale] = useState<"en" | "id">("en");
   const [deleteSuccess, setDeleteSuccess] = useState<string | null>(null);
 
   const filter: any = {};
@@ -841,6 +967,7 @@ function PagesTab() {
   };
 
   const openNew = (locale: "en" | "id") => {
+    setNewPageLocale(locale);
     setEditPage(null as any);
     setIsNewPage(true);
   };
@@ -866,6 +993,7 @@ function PagesTab() {
           page={isNewPage ? null : editPage}
           onBack={() => { setEditPage(null); setIsNewPage(false); }}
           isNew={isNewPage}
+          defaultLocaleForNew={newPageLocale}
         />
       </div>
     );
@@ -1031,6 +1159,7 @@ function BlogTab() {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [editPost, setEditPost] = useState<BlogPost | null>(null);
   const [isNewPost, setIsNewPost] = useState(false);
+  const [newPostLocale, setNewPostLocale] = useState<"en" | "id">("en");
   const [deleteSuccess, setDeleteSuccess] = useState<string | null>(null);
 
   const filter: any = {};
@@ -1058,6 +1187,7 @@ function BlogTab() {
           post={isNewPost ? null : editPost}
           onBack={() => { setEditPost(null); setIsNewPost(false); }}
           isNew={isNewPost}
+          defaultLocaleForNew={newPostLocale}
         />
       </div>
     );
@@ -1095,11 +1225,11 @@ function BlogTab() {
             {resetMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
             Reset
           </button>
-          <button onClick={() => { setEditPost(null as any); setIsNewPost(true); }}
+          <button type="button" onClick={() => { setNewPostLocale("en"); setEditPost(null as any); setIsNewPost(true); }}
             className="flex items-center gap-2 text-[13px] font-medium text-white bg-[#1a3a5c] px-4 py-2 hover:bg-[#14305a]">
             <Plus className="w-4 h-4" /> New Post (EN)
           </button>
-          <button onClick={() => { const p = newPost("id"); setEditPost(p as any); setIsNewPost(true); }}
+          <button type="button" onClick={() => { setNewPostLocale("id"); setEditPost(null as any); setIsNewPost(true); }}
             className="flex items-center gap-2 text-[13px] font-medium text-white bg-gray-700 px-4 py-2 hover:bg-gray-800">
             <Plus className="w-4 h-4" /> New Post (ID)
           </button>

@@ -164,6 +164,8 @@ export interface PageStore {
   list(filter?: { locale?: string; status?: string; section?: string }): PageRecord[];
   get(id: number): PageRecord | undefined;
   getBySlug(slug: string, locale?: string): PageRecord | undefined;
+  /** Public site: only published; prefers locale; newest updatedAt wins on duplicates. */
+  getBySlugPublic(slug: string, locale?: string): PageRecord | undefined;
   getLinked(id: number): PageRecord | undefined;
   create(data: SeedPage): PageRecord;
   update(id: number, data: Partial<SeedPage>): PageRecord | null;
@@ -226,6 +228,23 @@ class PersistentPageStore implements PageStore {
     return matches[0];
   }
 
+  getBySlugPublic(slug: string, locale?: string): PageRecord | undefined {
+    const norm = slug.startsWith("/") ? slug : "/" + slug;
+    const published = [...this.pages.values()].filter(
+      (p) =>
+        p.status === "published" &&
+        (p.slug === norm || p.slug === norm.replace(/^\//, ""))
+    );
+    if (!published.length) return undefined;
+    const pickNewest = (rows: PageRecord[]) =>
+      [...rows].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0];
+    if (locale) {
+      const forLocale = published.filter((p) => p.locale === locale);
+      if (forLocale.length) return pickNewest(forLocale);
+    }
+    return pickNewest(published);
+  }
+
   getLinked(id: number): PageRecord | undefined {
     const page = this.pages.get(id);
     if (!page?.linkedId) return undefined;
@@ -274,6 +293,7 @@ export interface BlogPostStore {
   list(filter?: { locale?: string; status?: string; category?: string }): BlogPostRecord[];
   get(id: number): BlogPostRecord | undefined;
   getBySlug(slug: string, locale?: string): BlogPostRecord | undefined;
+  getBySlugPublic(slug: string, locale?: string): BlogPostRecord | undefined;
   getLinked(id: number): BlogPostRecord | undefined;
   create(data: SeedBlogPost): BlogPostRecord;
   update(id: number, data: Partial<SeedBlogPost>): BlogPostRecord | null;
@@ -334,6 +354,23 @@ class PersistentBlogPostStore implements BlogPostStore {
       if (localized) return localized;
     }
     return matches[0];
+  }
+
+  getBySlugPublic(slug: string, locale?: string): BlogPostRecord | undefined {
+    const norm = slug.startsWith("/") ? slug : "/" + slug;
+    const published = [...this.posts.values()].filter(
+      (p) =>
+        p.status === "published" &&
+        (p.slug === norm || p.slug === norm.replace(/^\//, ""))
+    );
+    if (!published.length) return undefined;
+    const pickNewest = (rows: BlogPostRecord[]) =>
+      [...rows].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0];
+    if (locale) {
+      const forLocale = published.filter((p) => p.locale === locale);
+      if (forLocale.length) return pickNewest(forLocale);
+    }
+    return pickNewest(published);
   }
 
   getLinked(id: number): BlogPostRecord | undefined {

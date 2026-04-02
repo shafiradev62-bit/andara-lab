@@ -26,7 +26,20 @@ async function rf<T>(path: string, init?: RequestInit): Promise<T> {
   });
   if (!res.ok) {
     const body = await res.text().catch(() => null);
-    throw new Error(`HTTP ${res.status} ${res.statusText}${body ? `: ${body}` : ""}`);
+    let detail: string | undefined;
+    try {
+      const j = JSON.parse(body || "{}") as { detail?: string };
+      if (typeof j.detail === "string") detail = j.detail;
+    } catch {
+      /* not JSON */
+    }
+    const err = new Error(detail ?? `HTTP ${res.status} ${res.statusText}${body && !detail ? `: ${body}` : ""}`) as Error & {
+      apiDetail?: string;
+      apiStatus?: number;
+    };
+    err.apiDetail = detail;
+    err.apiStatus = res.status;
+    throw err;
   }
   if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;

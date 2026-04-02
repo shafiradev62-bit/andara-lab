@@ -83,9 +83,21 @@ router.post("/link", (req: Request, res: Response) => {
 
 router.get("/slug/:slug", (req: Request, res: Response) => {
   const locale = queryStr(req, "locale");
-  const post = blogPostStore.getBySlug(paramStr(req, "slug"), locale);
-  if (!post) return problem(res, 404, "Not Found", `Post with slug '${req.params.slug}' does not exist`);
-  res.json({ data: { ...post, linkedIdRecord: blogPostStore.getLinked(post.id) ?? null } });
+  const slug = paramStr(req, "slug");
+  const post = blogPostStore.getBySlugPublic(slug, locale);
+  if (post) {
+    return res.json({ data: { ...post, linkedIdRecord: blogPostStore.getLinked(post.id) ?? null } });
+  }
+  const any = blogPostStore.getBySlug(slug, locale);
+  if (any?.status === "draft") {
+    return problem(
+      res,
+      404,
+      "Not Found",
+      "This post is still a draft. In Admin → Blog, publish it before it appears on the site."
+    );
+  }
+  return problem(res, 404, "Not Found", `Post with slug '${req.params.slug}' does not exist`);
 });
 
 router.get("/:id", (req: Request, res: Response) => {

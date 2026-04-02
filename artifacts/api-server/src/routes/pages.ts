@@ -91,11 +91,26 @@ router.post("/link", (req: Request, res: Response) => {
   res.json({ data: { idA, idB, linked: true }, meta: { linked: true } });
 });
 
+function sendPublicPageBySlug(res: Response, slugParam: string, pathLabel: string, locale?: string) {
+  const page = pageStore.getBySlugPublic(slugParam, locale);
+  if (page) {
+    return res.json({ data: { ...page, linkedIdRecord: pageStore.getLinked(page.id) ?? null } });
+  }
+  const any = pageStore.getBySlug(slugParam, locale);
+  if (any?.status === "draft") {
+    return problem(
+      res,
+      404,
+      "Not Found",
+      "This URL exists in the CMS but is still a draft. In Admin → Pages, open the page, choose Published (live), then Save."
+    );
+  }
+  return problem(res, 404, "Not Found", `No page found for ${pathLabel}`);
+}
+
 router.get("/slug/:slug", (req: Request, res: Response) => {
   const locale = queryStr(req, "locale");
-  const page = pageStore.getBySlug(paramStr(req, "slug"), locale);
-  if (!page) return problem(res, 404, "Not Found", `Page with slug '${req.params.slug}' does not exist`);
-  res.json({ data: { ...page, linkedIdRecord: pageStore.getLinked(page.id) ?? null } });
+  return sendPublicPageBySlug(res, paramStr(req, "slug"), `slug '${req.params.slug}'`, locale);
 });
 
 /** Resolve page by full path without encoding "/" in the URL path (avoids reverse-proxy issues with %2F). */
@@ -103,9 +118,7 @@ router.get("/lookup", (req: Request, res: Response) => {
   const pathRaw = queryStr(req, "path");
   const locale = queryStr(req, "locale");
   if (!pathRaw) return problem(res, 400, "Bad Request", "Query parameter 'path' is required (e.g. /macro)");
-  const page = pageStore.getBySlug(pathRaw, locale);
-  if (!page) return problem(res, 404, "Not Found", `No published page for path '${pathRaw}'`);
-  res.json({ data: { ...page, linkedIdRecord: pageStore.getLinked(page.id) ?? null } });
+  return sendPublicPageBySlug(res, pathRaw, `path '${pathRaw}'`, locale);
 });
 
 router.get("/:id", (req: Request, res: Response) => {
