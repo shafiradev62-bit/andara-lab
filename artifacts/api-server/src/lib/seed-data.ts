@@ -29,6 +29,7 @@ export type ContentSection =
   | { type: "hero";      headline: string; subheadline?: string; ctaText?: string; ctaHref?: string }
   | { type: "stats";     items: { label: string; value: string; unit?: string }[] }
   | { type: "featured";  slugs: string[]; limit?: number }
+  | { type: "posts";     categories: string[]; title?: string }
   | { type: "chart";     datasetId: string; title?: string }
   | { type: "cta";       heading: string; body: string; buttonText: string; buttonHref: string }
   | { type: "divider" };
@@ -510,6 +511,14 @@ export const SEED_PAGES: SeedPage[] = [
     content: [
       { type: "text", content: "Our Macro Outlooks series provides quarterly and annual assessments of Indonesia's macroeconomic environment." },
       { type: "featured", slugs: ["omnibus-job-creation-law-analysis", "bank-mandatory-ratio-q1-2026", "government-bond-market-outlook-2026"] },
+      {
+        type: "posts",
+        title: "Latest analysis",
+        categories: [
+          "macro-outlooks", "Macro Outlooks", "macro", "Macro",
+          "economics-101", "market-pulse", "lab-notes", "policy-analysis", "financial-markets",
+        ],
+      },
     ],
   },
   {
@@ -523,6 +532,274 @@ export const SEED_PAGES: SeedPage[] = [
     content: [
       { type: "text", content: "Seri Prospek Makro kami menyediakan penilaian kuartalan dan tahunan tentang lingkungan makroekonomi Indonesia." },
       { type: "featured", slugs: ["prospeks-makro-indonesia-2026-id", "ri-transmigration-nickel-downstreaming", "food-inflation-handling-indonesia"] },
+      {
+        type: "posts",
+        title: "Analisis terbaru",
+        categories: [
+          "macro-outlooks", "Macro Outlooks", "macro", "Macro",
+          "economics-101", "market-pulse", "lab-notes", "policy-analysis", "financial-markets",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "/macro/policy-monetary",
+    locale: "en",
+    status: "published",
+    title: "Policy & Monetary Watch",
+    description: "Tracking Bank Indonesia policy, monetary conditions, and fiscal developments.",
+    navLabel: "Policy & Monetary Watch",
+    section: "Macro Foundations",
+    content: [
+      { type: "hero", headline: "Policy & Monetary Watch", subheadline: "Bank Indonesia, rates, liquidity, and fiscal policy — tracked for investors and policymakers." },
+      {
+        type: "posts",
+        title: "Latest",
+        categories: ["monetary", "Monetary", "policy-monetary", "Policy & Monetary", "policy-analysis", "financial-markets"],
+      },
+    ],
+  },
+  {
+    slug: "/macro/policy-monetary",
+    locale: "id",
+    status: "published",
+    title: "Kebijakan & Pantauan Moneter",
+    description: "Memantau kebijakan Bank Indonesia, kondisi moneter, dan perkembangan fiskal.",
+    navLabel: "Kebijakan & Moneter",
+    section: "Fondasi Makro",
+    content: [
+      { type: "hero", headline: "Kebijakan & Pantauan Moneter", subheadline: "BI, suku bunga, likuiditas, dan kebijakan fiskal — untuk investor dan pembuat kebijakan." },
+      {
+        type: "posts",
+        title: "Terbaru",
+        categories: ["monetary", "Monetary", "policy-monetary", "Policy & Monetary", "policy-analysis", "financial-markets"],
+      },
+    ],
+  },
+  {
+    slug: "/macro/geopolitical",
+    locale: "en",
+    status: "published",
+    title: "Geopolitical & Structural Analysis",
+    description: "Geopolitical dynamics and structural shifts affecting Indonesia and the region.",
+    navLabel: "Geopolitical & Structural Analysis",
+    section: "Macro Foundations",
+    content: [
+      { type: "hero", headline: "Geopolitical & Structural Analysis", subheadline: "Trade, alliances, supply chains, and long-run structural forces shaping Indonesia." },
+      { type: "posts", title: "Latest", categories: ["geopolitical", "Geopolitical", "policy-analysis", "sectoral-analysis"] },
+    ],
+  },
+  {
+    slug: "/macro/geopolitical",
+    locale: "id",
+    status: "published",
+    title: "Analisis Geopolitik & Struktural",
+    description: "Dinamika geopolitik dan pergeseran struktural yang memengaruhi Indonesia dan kawasan.",
+    navLabel: "Geopolitik & Struktural",
+    section: "Fondasi Makro",
+    content: [
+      { type: "hero", headline: "Analisis Geopolitik & Struktural", subheadline: "Perdagangan, aliansi, rantai pasok, dan kekuatan struktural jangka panjang bagi Indonesia." },
+      { type: "posts", title: "Terbaru", categories: ["geopolitical", "Geopolitical", "policy-analysis", "sectoral-analysis"] },
+    ],
+  },
+  {
+    slug: "/sectoral/deep-dives",
+    locale: "en",
+    status: "published",
+    title: "Strategic Industry Deep-dives",
+    description: "Sector-level analysis of Indonesia's key industries and strategic outlook.",
+    navLabel: "Strategic Industry Deep-dives",
+    section: "Sectoral Intelligence",
+    content: [
+      { type: "hero", headline: "Strategic Industry Deep-dives", subheadline: "Deep sector research across commodities, manufacturing, and digital infrastructure." },
+      { type: "posts", title: "Latest", categories: ["sectoral", "Sectoral Intelligence", "deep-dives", "sectoral-analysis"] },
+    ],
+  },
+  {
+    slug: "/sectoral/deep-dives",
+    locale: "id",
+    status: "published",
+    title: "Deep-dive Industri Strategis",
+    description: "Analisis sektor untuk industri utama Indonesia dan prospek strategis.",
+    navLabel: "Deep-dive Industri",
+    section: "Intelijen Sektoral",
+    content: [
+      { type: "hero", headline: "Deep-dive Industri Strategis", subheadline: "Riset sektor mendalam: komoditas, manufaktur, dan infrastruktur digital." },
+      { type: "posts", title: "Terbaru", categories: ["sectoral", "Sectoral Intelligence", "deep-dives", "sectoral-analysis"] },
+    ],
+  },
+  {
+    slug: "/sectoral/regional",
+    locale: "en",
+    status: "published",
+    title: "Regional Economic Monitor",
+    description: "Regional economic performance across Java, Sumatra, Kalimantan, and beyond.",
+    navLabel: "Regional Economic Monitor",
+    section: "Sectoral Intelligence",
+    content: [
+      { type: "hero", headline: "Regional Economic Monitor", subheadline: "Growth and structural trends across Indonesia's major regions." },
+      { type: "posts", title: "Latest", categories: ["regional", "Regional Monitor", "Regional", "sectoral-analysis", "economics-101"] },
+    ],
+  },
+  {
+    slug: "/sectoral/regional",
+    locale: "id",
+    status: "published",
+    title: "Monitor Ekonomi Regional",
+    description: "Kinerja ekonomi regional di Jawa, Sumatra, Kalimantan, dan lainnya.",
+    navLabel: "Monitor Regional",
+    section: "Intelijen Sektoral",
+    content: [
+      { type: "hero", headline: "Monitor Ekonomi Regional", subheadline: "Tren pertumbuhan dan struktur di wilayah utama Indonesia." },
+      { type: "posts", title: "Terbaru", categories: ["regional", "Regional Monitor", "Regional", "sectoral-analysis", "economics-101"] },
+    ],
+  },
+  {
+    slug: "/sectoral/esg",
+    locale: "en",
+    status: "published",
+    title: "ESG",
+    description: "Environmental, social, and governance analysis for Indonesian markets.",
+    navLabel: "ESG",
+    section: "Sectoral Intelligence",
+    content: [
+      { type: "hero", headline: "ESG Intelligence", subheadline: "Sustainability, disclosure, and transition themes for investors." },
+      { type: "posts", title: "Latest", categories: ["esg", "ESG", "sectoral-analysis", "economics-101"] },
+    ],
+  },
+  {
+    slug: "/sectoral/esg",
+    locale: "id",
+    status: "published",
+    title: "ESG",
+    description: "Analisis lingkungan, sosial, dan tata kelola untuk pasar Indonesia.",
+    navLabel: "ESG",
+    section: "Intelijen Sektoral",
+    content: [
+      { type: "hero", headline: "Intelijen ESG", subheadline: "Keberlanjutan, pengungkapan, dan transisi untuk investor." },
+      { type: "posts", title: "Terbaru", categories: ["esg", "ESG", "sectoral-analysis", "economics-101"] },
+    ],
+  },
+  {
+    slug: "/blog",
+    locale: "en",
+    status: "published",
+    title: "Blog — All Insights",
+    description: "Research, commentary, and analysis across all themes.",
+    navLabel: "All Insights",
+    section: "root",
+    content: [
+      { type: "hero", headline: "All Insights", subheadline: "Published research, market commentary, and lab notes." },
+      {
+        type: "posts",
+        title: "All posts",
+        categories: [
+          "economics-101", "market-pulse", "lab-notes",
+          "macro-outlooks", "macro", "Macro", "geopolitical", "Geopolitical",
+          "esg", "ESG", "sectoral", "regional", "monetary",
+          "sectoral-analysis", "policy-analysis", "financial-markets",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "/blog",
+    locale: "id",
+    status: "published",
+    title: "Blog — Semua Wawasan",
+    description: "Riset, komentar, dan analisis di semua tema.",
+    navLabel: "Semua Wawasan",
+    section: "root",
+    content: [
+      { type: "hero", headline: "Semua Wawasan", subheadline: "Riset, komentar pasar, dan catatan lab." },
+      {
+        type: "posts",
+        title: "Semua artikel",
+        categories: [
+          "economics-101", "market-pulse", "lab-notes",
+          "macro-outlooks", "macro", "Macro", "geopolitical", "Geopolitical",
+          "esg", "ESG", "sectoral", "regional", "monetary",
+          "sectoral-analysis", "policy-analysis", "financial-markets",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "/blog/economics-101",
+    locale: "en",
+    status: "published",
+    title: "Economics 101",
+    description: "Foundational concepts through the lens of Indonesia's economy.",
+    navLabel: "Economics 101",
+    section: "root",
+    content: [
+      { type: "hero", headline: "Economics 101", subheadline: "Core ideas made practical for Indonesia." },
+      { type: "posts", title: "Articles", categories: ["economics-101"] },
+    ],
+  },
+  {
+    slug: "/blog/economics-101",
+    locale: "id",
+    status: "published",
+    title: "Ekonomi 101",
+    description: "Konsep dasar ekonomi dalam konteks Indonesia.",
+    navLabel: "Ekonomi 101",
+    section: "root",
+    content: [
+      { type: "hero", headline: "Ekonomi 101", subheadline: "Ide inti yang relevan untuk Indonesia." },
+      { type: "posts", title: "Artikel", categories: ["economics-101"] },
+    ],
+  },
+  {
+    slug: "/blog/market-pulse",
+    locale: "en",
+    status: "published",
+    title: "Market Pulse",
+    description: "Short-form market commentary and real-time analysis.",
+    navLabel: "Market Pulse",
+    section: "root",
+    content: [
+      { type: "hero", headline: "Market Pulse", subheadline: "Quick takes on Indonesian markets." },
+      { type: "posts", title: "Articles", categories: ["market-pulse"] },
+    ],
+  },
+  {
+    slug: "/blog/market-pulse",
+    locale: "id",
+    status: "published",
+    title: "Denyut Pasar",
+    description: "Komentar pasar dan analisis singkat.",
+    navLabel: "Denyut Pasar",
+    section: "root",
+    content: [
+      { type: "hero", headline: "Denyut Pasar", subheadline: "Update cepat pasar Indonesia." },
+      { type: "posts", title: "Artikel", categories: ["market-pulse"] },
+    ],
+  },
+  {
+    slug: "/blog/lab-notes",
+    locale: "en",
+    status: "published",
+    title: "Lab Notes",
+    description: "Methodology, data, and how we build our research.",
+    navLabel: "Lab Notes",
+    section: "root",
+    content: [
+      { type: "hero", headline: "Lab Notes", subheadline: "Behind the scenes at AndaraLab." },
+      { type: "posts", title: "Articles", categories: ["lab-notes"] },
+    ],
+  },
+  {
+    slug: "/blog/lab-notes",
+    locale: "id",
+    status: "published",
+    title: "Catatan Lab",
+    description: "Metodologi, data, dan proses riset kami.",
+    navLabel: "Catatan Lab",
+    section: "root",
+    content: [
+      { type: "hero", headline: "Catatan Lab", subheadline: "Di balik layar AndaraLab." },
+      { type: "posts", title: "Artikel", categories: ["lab-notes"] },
     ],
   },
   {
@@ -628,6 +905,32 @@ export const SEED_PAGES: SeedPage[] = [
     content: [
       { type: "hero", headline: "Hubungi Kami", subheadline: "Pertanyaan riset, kemitraan, dan dukungan langganan." },
       { type: "cta", heading: "Hubungi AndaraLab", body: "Email kami di research@andarlab.io untuk pertanyaan riset, informasi langganan, atau proposal kemitraan.", buttonText: "Kirim Email", buttonHref: "mailto:research@andarlab.io" },
+    ],
+  },
+  {
+    slug: "/macro",
+    locale: "en",
+    status: "published",
+    title: "Macro Foundations",
+    description: "Indonesia macroeconomic research — GDP, inflation, monetary policy, and structural analysis.",
+    navLabel: "Macro",
+    section: "root",
+    content: [
+      { type: "hero", headline: "Macro Foundations", subheadline: "In-depth macroeconomic research on Indonesia's growth, inflation, and monetary policy." },
+      { type: "featured", slugs: [], limit: 6 },
+    ],
+  },
+  {
+    slug: "/macro",
+    locale: "id",
+    status: "published",
+    title: "Fondasi Makro",
+    description: "Riset makroekonomi Indonesia — PDB, inflasi, kebijakan moneter, dan analisis struktural.",
+    navLabel: "Makro",
+    section: "root",
+    content: [
+      { type: "hero", headline: "Fondasi Makro", subheadline: "Riset makroekonomi mendalam tentang pertumbuhan, inflasi, dan kebijakan moneter Indonesia." },
+      { type: "featured", slugs: [], limit: 6 },
     ],
   },
 ];

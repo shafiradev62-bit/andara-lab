@@ -19,7 +19,7 @@ export default function MarketTicker() {
   return (
     <div className="bg-[#F9FAFB] border-b border-[#E5E7EB] overflow-hidden h-8 flex items-center">
       <div className="flex-shrink-0 flex items-center gap-2 px-3 border-r border-[#E5E7EB] h-full bg-[#F9FAFB] z-10">
-        <span className="live-dot w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
+        <span className="live-dot w-1.5 h-1.5 rounded-full bg-[#1a3a5c] inline-block" />
         <span className="text-[10.5px] font-semibold text-gray-400 uppercase tracking-widest">Live</span>
       </div>
       <div className="flex-1 overflow-hidden relative">

@@ -30,6 +30,11 @@ const allowedOrigins = [
   "http://localhost:5174",
   "http://localhost:4173",
   "http://localhost:3001",
+  "http://76.13.17.91",
+  "http://76.13.17.91:80",
+  "http://76.13.17.91:3000",
+  "http://76.13.17.91:3001",
+  "http://76.13.17.91:5173",
   // Vercel production & preview deployments
   "https://andaralab-ui.vercel.app",
   "https://andaralab-lkxp7b875-rahmis-projects-881d2cc1.vercel.app",
@@ -42,6 +47,8 @@ app.use(cors({
     if (allowedOrigins.includes(origin)) return callback(null, true);
     // Allow all Vercel preview/deployment URLs
     if (origin && origin.includes(".vercel.app")) return callback(null, true);
+    // Self-hosted deployments (same IP, any port)
+    if (/^https?:\/\/76\.13\.17\.91(?::\d+)?$/i.test(origin)) return callback(null, true);
     callback(new Error(`CORS: origin ${origin} not allowed`));
   },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],

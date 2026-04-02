@@ -212,9 +212,9 @@ function FilterBar({
           onClick={cycleFree}
           className={`px-3 py-2 text-[12px] font-medium border transition-colors ${
             showFreeOnly === null
-              ? "border-[#1a3a5c] text-[#1a3a5c] bg-blue-50"
+              ? "border-[#1a3a5c] text-[#1a3a5c] bg-slate-100"
               : showFreeOnly === true
-              ? "border-[#1a3a5c] text-[#1a3a5c] bg-blue-50"
+              ? "border-[#1a3a5c] text-[#1a3a5c] bg-slate-100"
               : "border-gray-200 text-gray-500 hover:border-gray-300"
           }`}
         >
@@ -258,7 +258,7 @@ function FilterBar({
               onClick={() => onToggleProvider(p)}
               className={`px-2.5 py-1 text-[12px] font-medium border transition-colors ${
                 active
-                  ? "border-[#1a3a5c] text-[#1a3a5c] bg-blue-50"
+                  ? "border-[#1a3a5c] text-[#1a3a5c] bg-slate-100"
                   : "border-gray-200 text-gray-500 hover:border-gray-300"
               }`}
             >
@@ -368,7 +368,7 @@ export default function ModelsPage() {
           {/* Publication metadata */}
           <div className="flex items-center gap-3 text-[11px] text-gray-400 font-medium mb-6">
             <span className="bg-[#1a3a5c] text-white px-2 py-0.5 font-semibold uppercase tracking-wide text-[10px]">Research</span>
-            <span>AndaraLab · AI &amp; Technology Research</span>
+            <span>AndaraLab · Technology Research</span>
             <span>·</span>
             <span>March 2026</span>
           </div>

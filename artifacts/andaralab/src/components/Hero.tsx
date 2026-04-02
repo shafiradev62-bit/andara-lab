@@ -63,7 +63,7 @@ export default function Hero() {
                   <div className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">{h.label}</div>
                   <div className="flex items-center gap-1">
                     <span className="text-[17px] font-bold text-gray-900">{h.value}</span>
-                    <span className={`text-[11px] font-semibold ${h.dir === "flat" ? "text-gray-400" : "text-green-600"}`}>
+                    <span className={`text-[11px] font-semibold ${h.dir === "flat" ? "text-gray-400" : "text-[#1a3a5c]"}`}>
                       {h.dir === "up" ? "▲" : h.dir === "down" ? "▼" : "—"}
                     </span>
                   </div>
@@ -98,7 +98,7 @@ export default function Hero() {
                 </div>
                 <div className="text-right">
                   <div className="text-[24px] font-bold text-gray-900">5.02%</div>
-                  <div className="text-[11px] text-green-600 font-semibold">▲ Q4 2024</div>
+                  <div className="text-[11px] text-[#1a3a5c] font-semibold">▲ Q4 2024</div>
                 </div>
               </div>
               <ResponsiveContainer width="100%" height={168}>

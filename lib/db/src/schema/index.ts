@@ -121,6 +121,7 @@ export const articlesTable = pgTable(
 //   hero      — full-width hero banner (title, subtitle, CTA)
 //   stats     — key metric cards
 //   featured  — featured article cards
+//   posts     — article grid filtered by category (from CMS)
 //   chart     — inline chart card
 //   cta       — call to action strip
 //   divider   — visual separator
@@ -130,6 +131,7 @@ export type ContentSection =
   | { type: "hero";      headline: string; subheadline?: string; ctaText?: string; ctaHref?: string }
   | { type: "stats";     items: { label: string; value: string; unit?: string }[] }
   | { type: "featured";  slugs: string[]; limit?: number }
+  | { type: "posts";     categories: string[]; title?: string }
   | { type: "chart";     datasetId: string; title?: string }
   | { type: "cta";       heading: string; body: string; buttonText: string; buttonHref: string }
   | { type: "divider" };

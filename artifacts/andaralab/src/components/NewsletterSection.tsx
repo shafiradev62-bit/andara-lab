@@ -37,7 +37,7 @@ export default function NewsletterSection() {
           <div>
             {submitted ? (
               <div className="flex flex-col items-center justify-center text-center py-8 border border-[#E5E7EB] bg-white">
-                <CheckCircle className="w-8 h-8 text-green-600 mb-3" />
+                <CheckCircle className="w-8 h-8 text-[#1a3a5c] mb-3" />
                 <p className="text-[15px] font-semibold text-gray-900 mb-1">You're subscribed!</p>
                 <p className="text-[13px] text-gray-400">First digest arrives Monday.</p>
               </div>

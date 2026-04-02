@@ -24,6 +24,9 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=8080
+      - DATA_DIR=/data
+    volumes:
+      - andaralab-data:/data
     networks:
       - andaralab-network
     restart: unless-stopped
@@ -31,3 +34,6 @@ services:
 networks:
   andaralab-network:
     driver: bridge
+
+volumes:
+  andaralab-data:

@@ -1,25 +1,7 @@
 import { ArrowRight, Clock } from "lucide-react";
 import { Link } from "wouter";
 import { usePosts } from "../lib/cms-store";
-
-const categoryColors: Record<string, string> = {
-  "Macro Outlooks": "text-blue-700 bg-blue-50",
-  "macro": "text-blue-700 bg-blue-50",
-  "Macro": "text-blue-700 bg-blue-50",
-  "Geopolitical": "text-purple-700 bg-purple-50",
-  "geopolitical": "text-purple-700 bg-purple-50",
-  "ESG": "text-green-700 bg-green-50",
-  "esg": "text-green-700 bg-green-50",
-  "Sectoral Intelligence": "text-orange-700 bg-orange-50",
-  "sectoral": "text-orange-700 bg-orange-50",
-  "Regional Monitor": "text-teal-700 bg-teal-50",
-  "regional": "text-teal-700 bg-teal-50",
-  "Market Pulse": "text-red-700 bg-red-50",
-  "market-pulse": "text-red-700 bg-red-50",
-  "Monetary": "text-indigo-700 bg-indigo-50",
-  "monetary": "text-indigo-700 bg-indigo-50",
-  "economics-101": "text-blue-700 bg-blue-50",
-};
+import { RESEARCH_TAG_PILL } from "../lib/research-tag-styles";
 
 function formatDate(dateStr?: string) {
   if (!dateStr) return "";
@@ -78,7 +60,7 @@ export default function FeaturedInsights() {
             )}
             <div className="flex-1 border border-[#E5E7EB] border-t-0 p-5 flex flex-col">
               <div className="flex items-center gap-2 mb-3">
-                <span className={`text-[10.5px] font-semibold px-2 py-0.5 uppercase tracking-wide ${categoryColors[hero.category] || "text-gray-600 bg-gray-50"}`}>
+                <span className={`text-[10.5px] font-semibold px-2 py-0.5 uppercase tracking-wide ${RESEARCH_TAG_PILL}`}>
                   {hero.category}
                 </span>
               </div>
@@ -113,7 +95,7 @@ export default function FeaturedInsights() {
                 className="group border border-[#E5E7EB] p-4 flex flex-col hover:border-gray-300 hover:shadow-sm transition-all flex-1"
               >
                 <div className="flex items-center gap-2 mb-2">
-                  <span className={`text-[10.5px] font-semibold px-2 py-0.5 uppercase tracking-wide ${categoryColors[post.category] || "text-gray-600 bg-gray-50"}`}>
+                  <span className={`text-[10.5px] font-semibold px-2 py-0.5 uppercase tracking-wide ${RESEARCH_TAG_PILL}`}>
                     {post.category}
                   </span>
                 </div>

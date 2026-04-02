@@ -2,6 +2,7 @@ import { ArrowRight, Clock, Tag, Loader2 } from "lucide-react";
 import { Link } from "wouter";
 import { usePosts } from "@/lib/cms-store";
 import { useLocale } from "@/lib/locale";
+import { RESEARCH_TAG_PILL } from "@/lib/research-tag-styles";
 
 function formatDate(dateStr?: string) {
   if (!dateStr) return "";
@@ -9,26 +10,6 @@ function formatDate(dateStr?: string) {
     return new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   } catch { return dateStr; }
 }
-
-const categoryColors: Record<string, string> = {
-  "macro-outlooks": "text-blue-700 bg-blue-50",
-  "macro": "text-blue-700 bg-blue-50",
-  "Macro Outlooks": "text-blue-700 bg-blue-50",
-  "geopolitical": "text-purple-700 bg-purple-50",
-  "Geopolitical": "text-purple-700 bg-purple-50",
-  "esg": "text-green-700 bg-green-50",
-  "ESG": "text-green-700 bg-green-50",
-  "sectoral": "text-orange-700 bg-orange-50",
-  "Sectoral Intelligence": "text-orange-700 bg-orange-50",
-  "regional": "text-teal-700 bg-teal-50",
-  "Regional Monitor": "text-teal-700 bg-teal-50",
-  "market-pulse": "text-red-700 bg-red-50",
-  "Market Pulse": "text-red-700 bg-red-50",
-  "economics-101": "text-blue-700 bg-blue-50",
-  "lab-notes": "text-gray-700 bg-gray-100",
-  "monetary": "text-indigo-700 bg-indigo-50",
-  "Monetary": "text-indigo-700 bg-indigo-50",
-};
 
 function SectionPageLayout({
   section,
@@ -114,7 +95,7 @@ function SectionPageLayout({
                 <div className="p-5">
                   <div className="flex items-center gap-3 mb-3">
                     {post.tag && (
-                      <span className={`inline-flex items-center gap-1 text-[10.5px] font-medium px-2 py-0.5 ${categoryColors[post.category] || "text-[#1a3a5c] bg-blue-50"}`}>
+                      <span className={`inline-flex items-center gap-1 text-[10.5px] font-medium px-2 py-0.5 ${RESEARCH_TAG_PILL}`}>
                         <Tag className="w-3 h-3" />{post.tag}
                       </span>
                     )}

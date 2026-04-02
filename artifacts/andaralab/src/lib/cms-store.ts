@@ -39,6 +39,7 @@ export type ContentSection =
   | { type: "hero";      headline: string; subheadline?: string; ctaText?: string; ctaHref?: string }
   | { type: "stats";     items: { label: string; value: string; unit?: string }[] }
   | { type: "featured";  slugs: string[]; limit?: number }
+  | { type: "posts";     categories: string[]; title?: string }
   | { type: "chart";     datasetId: string; title?: string }
   | { type: "cta";       heading: string; body: string; buttonText: string; buttonHref: string }
   | { type: "divider" };
@@ -261,15 +262,23 @@ export async function fetchPage(id: number): Promise<Page> {
 
 export async function fetchPageBySlug(slug: string, locale?: string): Promise<Page> {
   try {
-    const params = locale ? `?locale=${locale}` : "";
-    const res = await apiGet<PageApiResponse>(`/api/pages/slug/${encodeURIComponent(slug)}${params}`);
+    const params = new URLSearchParams();
+    params.set("path", slug);
+    if (locale) params.set("locale", locale);
+    const res = await apiGet<PageApiResponse>(`/api/pages/lookup?${params.toString()}`);
     return res.data;
-  } catch (error) {
-    console.warn('API unavailable, fetching from seed:', error);
-    const seedPages = getSeedPages();
-    const found = seedPages.find(p => p.slug === slug && (!locale || p.locale === locale));
-    if (!found) throw new Error(`Page ${slug} not found`);
-    return found;
+  } catch (lookupErr) {
+    try {
+      const q = locale ? `?locale=${encodeURIComponent(locale)}` : "";
+      const res = await apiGet<PageApiResponse>(`/api/pages/slug/${encodeURIComponent(slug)}${q}`);
+      return res.data;
+    } catch {
+      console.warn("API unavailable, fetching page from cache/seed:", lookupErr);
+      const seedPages = getSeedPages();
+      const found = seedPages.find((p) => p.slug === slug && (!locale || p.locale === locale));
+      if (!found) throw new Error(`Page ${slug} not found`);
+      return found;
+    }
   }
 }
 
@@ -590,20 +599,25 @@ export function usePage(id: number | null) {
 
 
 
-export function usePageBySlug(slug: string) {
+export function usePageBySlug(slug: string, locale?: string) {
   return useQuery({
-    queryKey: ["page", "slug", slug],
-    queryFn:  () => fetchPageBySlug(slug),
+    queryKey: ["page", "slug", slug, locale ?? "all"],
+    queryFn:  () => fetchPageBySlug(slug, locale),
     enabled:  Boolean(slug),
-    staleTime: 1000 * 60 * 2,
+    staleTime: 30_000,
   });
 }
+function invalidatePageSlugQueries(qc: ReturnType<typeof useQueryClient>) {
+  qc.invalidateQueries({ queryKey: ["page", "slug"] });
+}
+
 export function useCreatePage() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: createPage,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: QUERY_KEY.pages });
+      invalidatePageSlugQueries(qc);
     },
   });
 }
@@ -625,6 +639,7 @@ export function useUpdatePage() {
     onSettled: (_data, _err, { id }) => {
       qc.invalidateQueries({ queryKey: QUERY_KEY.page(id) });
       qc.invalidateQueries({ queryKey: QUERY_KEY.pages });
+      invalidatePageSlugQueries(qc);
     },
   });
 }
@@ -635,6 +650,7 @@ export function useDeletePage() {
     mutationFn: deletePageAPI,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: QUERY_KEY.pages });
+      invalidatePageSlugQueries(qc);
     },
   });
 }
@@ -645,6 +661,7 @@ export function useResetPages() {
     mutationFn: resetPages,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: QUERY_KEY.pages });
+      invalidatePageSlugQueries(qc);
     },
   });
 }

@@ -14,6 +14,7 @@ const contentSectionSchema: z.ZodType<import("../lib/seed-data.js").ContentSecti
     z.object({ type: z.literal("hero"),    headline: z.string(), subheadline: z.string().optional(), ctaText: z.string().optional(), ctaHref: z.string().optional() }),
     z.object({ type: z.literal("stats"),   items: z.array(z.object({ label: z.string(), value: z.string(), unit: z.string().optional() })) }),
     z.object({ type: z.literal("featured"), slugs: z.array(z.string()), limit: z.number().optional() }),
+    z.object({ type: z.literal("posts"), categories: z.array(z.string()), title: z.string().optional() }),
     z.object({ type: z.literal("chart"),   datasetId: z.string(), title: z.string().optional() }),
     z.object({ type: z.literal("cta"),    heading: z.string(), body: z.string(), buttonText: z.string(), buttonHref: z.string() }),
     z.object({ type: z.literal("divider") }),
@@ -94,6 +95,16 @@ router.get("/slug/:slug", (req: Request, res: Response) => {
   const locale = queryStr(req, "locale");
   const page = pageStore.getBySlug(paramStr(req, "slug"), locale);
   if (!page) return problem(res, 404, "Not Found", `Page with slug '${req.params.slug}' does not exist`);
+  res.json({ data: { ...page, linkedIdRecord: pageStore.getLinked(page.id) ?? null } });
+});
+
+/** Resolve page by full path without encoding "/" in the URL path (avoids reverse-proxy issues with %2F). */
+router.get("/lookup", (req: Request, res: Response) => {
+  const pathRaw = queryStr(req, "path");
+  const locale = queryStr(req, "locale");
+  if (!pathRaw) return problem(res, 400, "Bad Request", "Query parameter 'path' is required (e.g. /macro)");
+  const page = pageStore.getBySlug(pathRaw, locale);
+  if (!page) return problem(res, 404, "Not Found", `No published page for path '${pathRaw}'`);
   res.json({ data: { ...page, linkedIdRecord: pageStore.getLinked(page.id) ?? null } });
 });
 

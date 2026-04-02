@@ -1,10 +1,10 @@
-// In-memory data store
+// Persistent file-based data store
 //
-// Architecture note:
-// - In production: replace with Drizzle ORM + PostgreSQL
-//   (swap the Map operations below for db.select/insert/update/delete calls)
-// - The interface is intentionally thin so the swap is a one-file change.
+// Data is saved to /data/*.json on disk so it survives container restarts.
+// Falls back to seed data on first run or if files are missing/corrupt.
 
+import fs from "fs";
+import path from "path";
 import {
   SEED_DATASETS,
   SEED_PAGES,
@@ -16,7 +16,7 @@ import {
 
 export type { SeedDataset as Dataset };
 
-// ─── Record Types (what the store actually holds) ─────────────────────────────
+// ─── Record Types ─────────────────────────────────────────────────────────────
 
 export interface PageRecord extends SeedPage {
   id: number;
@@ -30,7 +30,7 @@ export interface BlogPostRecord extends SeedBlogPost {
   updatedAt: string;
 }
 
-// ─── Clone utility ────────────────────────────────────────────────────────────
+// ─── Utilities ────────────────────────────────────────────────────────────────
 
 function cloneDeep<T>(v: T): T {
   return JSON.parse(JSON.stringify(v));
@@ -42,6 +42,40 @@ function now() {
 
 function nextId(map: Map<number, unknown>): number {
   return map.size === 0 ? 1 : Math.max(...[...map.keys()]) + 1;
+}
+
+// ─── File persistence helpers ─────────────────────────────────────────────────
+
+const DATA_DIR = process.env.DATA_DIR || "/data";
+
+function ensureDataDir() {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+}
+
+function readJson<T>(filename: string, fallback: T): T {
+  ensureDataDir();
+  const filepath = path.join(DATA_DIR, filename);
+  try {
+    if (fs.existsSync(filepath)) {
+      const raw = fs.readFileSync(filepath, "utf-8");
+      return JSON.parse(raw) as T;
+    }
+  } catch {
+    console.warn(`[store] Failed to read ${filepath}, using fallback`);
+  }
+  return fallback;
+}
+
+function writeJson<T>(filename: string, data: T): void {
+  ensureDataDir();
+  const filepath = path.join(DATA_DIR, filename);
+  try {
+    fs.writeFileSync(filepath, JSON.stringify(data, null, 2), "utf-8");
+  } catch (e) {
+    console.error(`[store] Failed to write ${filepath}:`, e);
+  }
 }
 
 // ─── Dataset Store ─────────────────────────────────────────────────────────────
@@ -56,12 +90,26 @@ export interface DatasetStore {
   categories(): string[];
 }
 
-class InMemoryDatasetStore implements DatasetStore {
+class PersistentDatasetStore implements DatasetStore {
   private datasets: Map<string, SeedDataset>;
+  private readonly FILE = "datasets.json";
 
   constructor() {
     this.datasets = new Map();
-    this.seed();
+    this.load();
+  }
+
+  private load() {
+    const saved = readJson<SeedDataset[]>(this.FILE, []);
+    if (saved.length > 0) {
+      this.datasets = new Map(saved.map((d) => [d.id, d]));
+    } else {
+      this.seed();
+    }
+  }
+
+  private save() {
+    writeJson(this.FILE, [...this.datasets.values()]);
   }
 
   private seed() {
@@ -69,6 +117,7 @@ class InMemoryDatasetStore implements DatasetStore {
     for (const ds of SEED_DATASETS) {
       this.datasets.set(ds.id, cloneDeep(ds));
     }
+    this.save();
   }
 
   list(filter?: { category?: string }): SeedDataset[] {
@@ -80,9 +129,10 @@ class InMemoryDatasetStore implements DatasetStore {
   get(id: string): SeedDataset | undefined { return this.datasets.get(id); }
 
   create(data: Omit<SeedDataset, "id" | "createdAt" | "updatedAt">): SeedDataset {
-    const id = `ds-${now()}-${Math.random().toString(36).slice(2, 6)}`;
+    const id = `ds-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
     const record: SeedDataset = { ...cloneDeep(data), id, createdAt: now(), updatedAt: now() };
     this.datasets.set(id, record);
+    this.save();
     return record;
   }
 
@@ -91,11 +141,18 @@ class InMemoryDatasetStore implements DatasetStore {
     if (!existing) return null;
     const updated: SeedDataset = { ...existing, ...cloneDeep(data), updatedAt: now() };
     this.datasets.set(id, updated);
+    this.save();
     return updated;
   }
 
-  delete(id: string): boolean { return this.datasets.delete(id); }
+  delete(id: string): boolean {
+    const result = this.datasets.delete(id);
+    if (result) this.save();
+    return result;
+  }
+
   reset() { this.seed(); }
+
   categories(): string[] {
     return [...new Set([...this.datasets.values()].map((d) => d.category))].sort();
   }
@@ -115,12 +172,26 @@ export interface PageStore {
   linkPages(idA: number, idB: number): void;
 }
 
-class InMemoryPageStore implements PageStore {
+class PersistentPageStore implements PageStore {
   private pages: Map<number, PageRecord>;
+  private readonly FILE = "pages.json";
 
   constructor() {
     this.pages = new Map();
-    this.seed();
+    this.load();
+  }
+
+  private load() {
+    const saved = readJson<PageRecord[]>(this.FILE, []);
+    if (saved.length > 0) {
+      this.pages = new Map(saved.map((p) => [p.id, p]));
+    } else {
+      this.seed();
+    }
+  }
+
+  private save() {
+    writeJson(this.FILE, [...this.pages.values()]);
   }
 
   private seed() {
@@ -129,11 +200,12 @@ class InMemoryPageStore implements PageStore {
       const id = nextId(this.pages);
       this.pages.set(id, { ...cloneDeep(p), id, createdAt: now(), updatedAt: now() });
     }
+    this.save();
   }
 
   list(filter?: { locale?: string; status?: string; section?: string }): PageRecord[] {
     let all = [...this.pages.values()];
-    if (filter?.locale)   all = all.filter((p) => p.locale === filter.locale);
+    if (filter?.locale)  all = all.filter((p) => p.locale === filter.locale);
     if (filter?.status)  all = all.filter((p) => p.status === filter.status);
     if (filter?.section) all = all.filter((p) => p.section === filter.section);
     return all;
@@ -142,7 +214,10 @@ class InMemoryPageStore implements PageStore {
   get(id: number): PageRecord | undefined { return this.pages.get(id); }
 
   getBySlug(slug: string, locale?: string): PageRecord | undefined {
-    const norm = slug.replace(new RegExp("^/"), ""); const matches = [...this.pages.values()].filter((p) => p.slug === norm || p.slug === "/" + norm);
+    const norm = slug.startsWith("/") ? slug : "/" + slug;
+    const matches = [...this.pages.values()].filter(
+      (p) => p.slug === norm || p.slug === norm.replace(/^\//, "")
+    );
     if (!matches.length) return undefined;
     if (locale) {
       const localized = matches.find((p) => p.locale === locale);
@@ -161,6 +236,7 @@ class InMemoryPageStore implements PageStore {
     const id = nextId(this.pages);
     const record: PageRecord = { ...cloneDeep(data), id, createdAt: now(), updatedAt: now() };
     this.pages.set(id, record);
+    this.save();
     return record;
   }
 
@@ -169,10 +245,16 @@ class InMemoryPageStore implements PageStore {
     if (!existing) return null;
     const updated: PageRecord = { ...existing, ...cloneDeep(data), updatedAt: now() };
     this.pages.set(id, updated);
+    this.save();
     return updated;
   }
 
-  delete(id: number): boolean { return this.pages.delete(id); }
+  delete(id: number): boolean {
+    const result = this.pages.delete(id);
+    if (result) this.save();
+    return result;
+  }
+
   reset() { this.seed(); }
 
   linkPages(idA: number, idB: number): void {
@@ -181,6 +263,7 @@ class InMemoryPageStore implements PageStore {
     if (a && b) {
       this.pages.set(idA, { ...a, linkedId: String(idB), updatedAt: now() });
       this.pages.set(idB, { ...b, linkedId: String(idA), updatedAt: now() });
+      this.save();
     }
   }
 }
@@ -199,12 +282,26 @@ export interface BlogPostStore {
   linkPosts(idA: number, idB: number): void;
 }
 
-class InMemoryBlogPostStore implements BlogPostStore {
+class PersistentBlogPostStore implements BlogPostStore {
   private posts: Map<number, BlogPostRecord>;
+  private readonly FILE = "posts.json";
 
   constructor() {
     this.posts = new Map();
-    this.seed();
+    this.load();
+  }
+
+  private load() {
+    const saved = readJson<BlogPostRecord[]>(this.FILE, []);
+    if (saved.length > 0) {
+      this.posts = new Map(saved.map((p) => [p.id, p]));
+    } else {
+      this.seed();
+    }
+  }
+
+  private save() {
+    writeJson(this.FILE, [...this.posts.values()]);
   }
 
   private seed() {
@@ -213,12 +310,13 @@ class InMemoryBlogPostStore implements BlogPostStore {
       const id = nextId(this.posts);
       this.posts.set(id, { ...cloneDeep(p), id, createdAt: now(), updatedAt: now() });
     }
+    this.save();
   }
 
   list(filter?: { locale?: string; status?: string; category?: string }): BlogPostRecord[] {
     let all = [...this.posts.values()];
     if (filter?.locale)   all = all.filter((p) => p.locale === filter.locale);
-    if (filter?.status)  all = all.filter((p) => p.status === filter.status);
+    if (filter?.status)   all = all.filter((p) => p.status === filter.status);
     if (filter?.category) all = all.filter((p) => p.category === filter.category);
     return all;
   }
@@ -226,7 +324,10 @@ class InMemoryBlogPostStore implements BlogPostStore {
   get(id: number): BlogPostRecord | undefined { return this.posts.get(id); }
 
   getBySlug(slug: string, locale?: string): BlogPostRecord | undefined {
-    const norm = slug.replace(new RegExp("^/"), ""); const matches = [...this.posts.values()].filter((p) => p.slug === norm || p.slug === "/" + norm);
+    const norm = slug.startsWith("/") ? slug : "/" + slug;
+    const matches = [...this.posts.values()].filter(
+      (p) => p.slug === norm || p.slug === norm.replace(/^\//, "")
+    );
     if (!matches.length) return undefined;
     if (locale) {
       const localized = matches.find((p) => p.locale === locale);
@@ -245,6 +346,7 @@ class InMemoryBlogPostStore implements BlogPostStore {
     const id = nextId(this.posts);
     const record: BlogPostRecord = { ...cloneDeep(data), id, createdAt: now(), updatedAt: now() };
     this.posts.set(id, record);
+    this.save();
     return record;
   }
 
@@ -253,10 +355,16 @@ class InMemoryBlogPostStore implements BlogPostStore {
     if (!existing) return null;
     const updated: BlogPostRecord = { ...existing, ...cloneDeep(data), updatedAt: now() };
     this.posts.set(id, updated);
+    this.save();
     return updated;
   }
 
-  delete(id: number): boolean { return this.posts.delete(id); }
+  delete(id: number): boolean {
+    const result = this.posts.delete(id);
+    if (result) this.save();
+    return result;
+  }
+
   reset() { this.seed(); }
 
   linkPosts(idA: number, idB: number): void {
@@ -265,12 +373,13 @@ class InMemoryBlogPostStore implements BlogPostStore {
     if (a && b) {
       this.posts.set(idA, { ...a, linkedId: String(idB), updatedAt: now() });
       this.posts.set(idB, { ...b, linkedId: String(idA), updatedAt: now() });
+      this.save();
     }
   }
 }
 
 // ─── Singleton exports ─────────────────────────────────────────────────────────
 
-export const datasetStore: DatasetStore  = new InMemoryDatasetStore();
-export const pageStore: PageStore          = new InMemoryPageStore();
-export const blogPostStore: BlogPostStore  = new InMemoryBlogPostStore();
+export const datasetStore: DatasetStore   = new PersistentDatasetStore();
+export const pageStore: PageStore         = new PersistentPageStore();
+export const blogPostStore: BlogPostStore = new PersistentBlogPostStore();

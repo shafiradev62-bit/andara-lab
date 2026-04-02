@@ -57,7 +57,7 @@ export default function ContactPage() {
           <div className="md:col-span-2 border border-[#E5E7EB] p-8">
             {submitted ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
-                <CheckCircle className="w-12 h-12 text-green-500 mb-4" />
+                <CheckCircle className="w-12 h-12 text-[#1a3a5c] mb-4" />
                 <h3 className="text-[18px] font-semibold text-gray-900 mb-2">Message Sent</h3>
                 <p className="text-[13.5px] text-gray-500">We'll get back to you within 1-2 business days.</p>
                 <button

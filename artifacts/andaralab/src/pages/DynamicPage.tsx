@@ -3,6 +3,17 @@ import { Link } from "wouter";
 import { usePageBySlug, useDatasets, usePosts } from "@/lib/cms-store";
 import type { ContentSection } from "@/lib/cms-store";
 import InteractiveChart from "@/components/InteractiveChart";
+import { useLocale } from "@/lib/locale";
+import { RESEARCH_TAG_PILL } from "@/lib/research-tag-styles";
+
+function formatDate(dateStr?: string) {
+  if (!dateStr) return "";
+  try {
+    return new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  } catch {
+    return dateStr;
+  }
+}
 
 function HeroSection({ headline, subheadline, ctaText, ctaHref }: any) {
   return (
@@ -31,11 +42,12 @@ function TextSection({ content }: any) {
 }
 
 function StatsSection({ items }: any) {
+  const list = Array.isArray(items) ? items : [];
   return (
     <section className="bg-gray-50 border-y border-[#E5E7EB] py-12">
       <div className="max-w-[1200px] mx-auto px-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {items.map((item, i) => (
+          {list.map((item, i) => (
             <div key={i} className="text-center">
               <div className="text-[28px] font-bold text-gray-900 mb-1">
                 {item.value}{item.unit && <span className="text-[16px] font-normal text-gray-500 ml-1">{item.unit}</span>}
@@ -71,7 +83,8 @@ function DividerSection() {
 
 function FeaturedSection({ slugs, limit }: any) {
   const { data: allPosts = [] } = usePosts({ status: "published" });
-  const targetSlugs: string[] = limit ? slugs.slice(0, limit) : slugs;
+  const raw = Array.isArray(slugs) ? slugs : [];
+  const targetSlugs: string[] = limit ? raw.slice(0, limit) : raw;
   // Match by slug from CMS posts, fallback to first N published posts if slugs not found
   const matched = targetSlugs
     .map((s: string) => allPosts.find((p) => p.slug === s))
@@ -88,7 +101,7 @@ function FeaturedSection({ slugs, limit }: any) {
             {post.image && <div className="h-[180px] overflow-hidden"><img src={post.image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" /></div>}
             <div className="p-4">
               <div className="flex items-center gap-2 mb-2">
-                {post.tag && <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[#1a3a5c] bg-blue-50 px-2 py-0.5"><Tag className="w-3 h-3" />{post.tag}</span>}
+                {post.tag && <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[#1a3a5c] bg-slate-100 px-2 py-0.5"><Tag className="w-3 h-3" />{post.tag}</span>}
                 {post.readTime && <span className="flex items-center gap-1 text-[11px] text-gray-400"><Clock className="w-3 h-3" />{post.readTime}</span>}
               </div>
               <h3 className="text-[14px] font-semibold text-gray-900 group-hover:text-[#1a3a5c] transition-colors">{post.title}</h3>
@@ -96,6 +109,94 @@ function FeaturedSection({ slugs, limit }: any) {
           </Link>
         ))}
       </div>
+    </section>
+  );
+}
+
+function PostsSection({ categories, title }: { categories: string[]; title?: string }) {
+  const { locale } = useLocale();
+  const cats = Array.isArray(categories) ? categories : [];
+  const { data: allPosts = [], isLoading } = usePosts({ status: "published" });
+
+  const posts = allPosts
+    .filter((p) => {
+      const matchLocale = p.locale === locale || p.locale === "en";
+      const matchCat = cats.some((c) => p.category?.toLowerCase() === c.toLowerCase());
+      return matchLocale && matchCat;
+    })
+    .sort(
+      (a, b) =>
+        new Date(b.publishedAt || b.createdAt).getTime() -
+        new Date(a.publishedAt || a.createdAt).getTime()
+    );
+
+  return (
+    <section className="max-w-[1200px] mx-auto px-6 py-10">
+      {title && <h2 className="text-[18px] font-semibold text-gray-900 mb-6">{title}</h2>}
+      {isLoading && (
+        <div className="flex items-center justify-center py-24 gap-3 text-gray-400">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span className="text-[13.5px]">Loading articles…</span>
+        </div>
+      )}
+      {!isLoading && posts.length === 0 && (
+        <div className="text-center py-16 text-gray-400 text-[14px]">No articles match this section yet.</div>
+      )}
+      {!isLoading && posts.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {posts.map((post, i) => (
+            <Link
+              key={post.id}
+              href={`/article/${post.slug}`}
+              className={`border border-[#E5E7EB] hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer group ${i === 0 ? "md:col-span-2" : ""}`}
+            >
+              {post.image && i === 0 && (
+                <div className="h-[220px] overflow-hidden">
+                  <img
+                    src={post.image}
+                    alt={post.title}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                </div>
+              )}
+              <div className="p-5">
+                <div className="flex items-center gap-3 mb-3">
+                  {post.tag && (
+                    <span
+                      className={`inline-flex items-center gap-1 text-[10.5px] font-medium px-2 py-0.5 ${
+                        RESEARCH_TAG_PILL
+                      }`}
+                    >
+                      <Tag className="w-3 h-3" />
+                      {post.tag}
+                    </span>
+                  )}
+                  {post.readTime && (
+                    <span className="flex items-center gap-1 text-[11px] text-gray-400">
+                      <Clock className="w-3 h-3" />
+                      {post.readTime}
+                    </span>
+                  )}
+                  <span className="text-[11px] text-gray-400">{formatDate(post.publishedAt || post.createdAt)}</span>
+                </div>
+                <h2
+                  className={`font-semibold text-gray-900 mb-2 leading-snug group-hover:text-[#1a3a5c] transition-colors ${
+                    i === 0 ? "text-[20px]" : "text-[15px]"
+                  }`}
+                >
+                  {post.title}
+                </h2>
+                {post.excerpt && (
+                  <p className="text-[13px] text-gray-500 leading-relaxed mb-4">{post.excerpt}</p>
+                )}
+                <span className="flex items-center gap-1.5 text-[12.5px] font-medium text-gray-700 group-hover:text-[#1a3a5c] transition-colors">
+                  Read More <ArrowRight className="w-3.5 h-3.5" />
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
@@ -129,13 +230,14 @@ function SectionBlock({ section }: { section: ContentSection }) {
     case "cta":      return <CTASection {...section} />;
     case "divider":  return <DividerSection />;
     case "featured": return <FeaturedSection slugs={section.slugs} limit={section.limit} />;
+    case "posts":    return <PostsSection categories={section.categories} title={section.title} />;
     case "chart":    return <ChartSection datasetId={section.datasetId} title={section.title} />;
     default:         return null;
   }
 }
 
-export default function DynamicPage({ pageSlug }: { pageSlug: string }) {
-  const { data: page, isLoading, error } = usePageBySlug(pageSlug);
+export default function DynamicPage({ pageSlug, locale }: { pageSlug: string; locale?: "en" | "id" }) {
+  const { data: page, isLoading, error } = usePageBySlug(pageSlug, locale);
 
   if (isLoading) return (
     <div className="flex items-center justify-center py-32">
@@ -155,14 +257,16 @@ export default function DynamicPage({ pageSlug }: { pageSlug: string }) {
     </div>
   );
 
+  const blocks = Array.isArray(page.content) ? page.content : [];
+
   return (
     <>
-      {page.content.length === 0 && (
+      {blocks.length === 0 && (
         <div className="max-w-[1200px] mx-auto px-6 py-16 text-center text-gray-400">
           <p className="text-[14px]">This page has no content yet.</p>
         </div>
       )}
-      {page.content.map((section: ContentSection, i: number) => (
+      {blocks.map((section: ContentSection, i: number) => (
         <SectionBlock key={i} section={section} />
       ))}
     </>

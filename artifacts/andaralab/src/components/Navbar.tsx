@@ -1,56 +1,112 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { Link, useLocation } from "wouter";
 import { ChevronDown, Menu, X } from "lucide-react";
 import { useLocale } from "@/lib/locale";
+import { usePages } from "@/lib/cms-store";
 
-const navItems = [
-  { label: "Home", href: "/" },
-  { label: "About Us", href: "/about" },
-  {
-    label: "Macro Foundations",
-    children: [
-      { label: "Macro Outlooks", href: "/macro/macro-outlooks" },
-      { label: "Policy & Monetary Watch", href: "/macro/policy-monetary" },
-      { label: "Geopolitical & Structural Analysis", href: "/macro/geopolitical" },
-    ],
-  },
-  {
-    label: "Sectoral Intelligence",
-    children: [
-      { label: "Strategic Industry Deep-dives", href: "/sectoral/deep-dives" },
-      { label: "Regional Economic Monitor", href: "/sectoral/regional" },
-      { label: "ESG", href: "/sectoral/esg" },
-    ],
-  },
-  {
-    label: "Data Hub",
-    children: [
-      { label: "Interactive Charts", href: "/data" },
-      { label: "LLM Model Comparison", href: "/data/models" },
-      { label: "Economic Calendar", href: "/data/economic-calendar" },
-      { label: "Market Dashboard", href: "/data/market-dashboard" },
-    ],
-  },
-  {
-    label: "Blog",
-    children: [
-      { label: "Economics 101", href: "/blog/economics-101" },
-      { label: "Market Pulse", href: "/blog/market-pulse" },
-      { label: "Lab Notes", href: "/blog/lab-notes" },
-    ],
-  },
-  { label: "Contact", href: "/contact" },
-];
+type NavChild = { label: string; href: string };
+type NavItem =
+  | { label: string; href: string }
+  | { label: string; children: NavChild[] };
+
+function isMacroSection(section?: string) {
+  return section === "Macro Foundations" || section === "Fondasi Makro";
+}
+
+function isSectoralSection(section?: string) {
+  return section === "Sectoral Intelligence" || section === "Intelijen Sektoral";
+}
 
 export default function Navbar() {
   const [location] = useLocation();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
-  const { locale, setLocale } = useLocale();
+  const { locale, setLocale, t } = useLocale();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { data: cmsPages = [] } = usePages({ status: "published", locale });
 
-  const isActive = (item: (typeof navItems)[0]) => {
+  const navItems: NavItem[] = useMemo(() => {
+    const pub = cmsPages.filter((p) => p.locale === locale && p.status === "published");
+
+    const macroSubPages = pub
+      .filter((p) => isMacroSection(p.section) && p.slug.startsWith("/macro/"))
+      .sort((a, b) => (a.navLabel || a.title).localeCompare(b.navLabel || b.title))
+      .map((p) => ({ label: p.navLabel || p.title, href: p.slug }));
+
+    const macroLanding = pub.find((p) => p.slug === "/macro" && isMacroSection(p.section));
+    const macroChildren: NavChild[] = [];
+    if (macroLanding && !macroSubPages.some((c) => c.href === "/macro")) {
+      macroChildren.push({ label: macroLanding.navLabel || macroLanding.title, href: "/macro" });
+    }
+    macroChildren.push(...macroSubPages);
+
+    const sectoralChildren = pub
+      .filter((p) => isSectoralSection(p.section) && p.slug.startsWith("/sectoral/"))
+      .sort((a, b) => (a.navLabel || a.title).localeCompare(b.navLabel || b.title))
+      .map((p) => ({ label: p.navLabel || p.title, href: p.slug }));
+
+    const blogChildren = pub
+      .filter(
+        (p) =>
+          p.slug.startsWith("/blog/") &&
+          p.slug !== "/blog" &&
+          (p.section === "root" || !p.section)
+      )
+      .sort((a, b) => (a.navLabel || a.title).localeCompare(b.navLabel || b.title))
+      .map((p) => ({ label: p.navLabel || p.title, href: p.slug }));
+
+    const sectoralLanding = pub.find(
+      (p) => p.slug === "/sectoral/deep-dives" && isSectoralSection(p.section)
+    );
+    const macroNavTitle = macroLanding?.section || t("nav_macro");
+    const sectoralNavTitle = sectoralLanding?.section || t("nav_sectoral");
+
+    const fallbackMacro: NavChild[] = [
+      { label: t("nav_macro_outlooks"), href: "/macro/macro-outlooks" },
+      { label: t("nav_policy_monetary"), href: "/macro/policy-monetary" },
+      { label: t("nav_geopolitical"), href: "/macro/geopolitical" },
+    ];
+    const fallbackSectoral: NavChild[] = [
+      { label: t("nav_deep_dives"), href: "/sectoral/deep-dives" },
+      { label: t("nav_regional"), href: "/sectoral/regional" },
+      { label: t("nav_esg"), href: "/sectoral/esg" },
+    ];
+    const fallbackBlog: NavChild[] = [
+      { label: t("nav_economics_101"), href: "/blog/economics-101" },
+      { label: t("nav_market_pulse"), href: "/blog/market-pulse" },
+      { label: t("nav_lab_notes"), href: "/blog/lab-notes" },
+    ];
+
+    return [
+      { label: t("nav_home"), href: "/" },
+      { label: t("nav_about"), href: "/about" },
+      {
+        label: macroNavTitle,
+        children: macroChildren.length > 0 ? macroChildren : fallbackMacro,
+      },
+      {
+        label: sectoralNavTitle,
+        children: sectoralChildren.length > 0 ? sectoralChildren : fallbackSectoral,
+      },
+      {
+        label: t("nav_data"),
+        children: [
+          { label: t("nav_interactive_charts"), href: "/data" },
+          { label: t("nav_model_comparison"), href: "/data/models" },
+          { label: t("nav_economic_calendar"), href: "/data/economic-calendar" },
+          { label: t("nav_market_dashboard"), href: "/data/market-dashboard" },
+        ],
+      },
+      {
+        label: t("nav_blog"),
+        children: blogChildren.length > 0 ? blogChildren : fallbackBlog,
+      },
+      { label: t("nav_contact"), href: "/contact" },
+    ];
+  }, [cmsPages, locale, t]);
+
+  const isActive = (item: NavItem) => {
     if ("href" in item && !("children" in item)) return location === item.href;
     if ("children" in item) return (item as any).children?.some((c: any) => location.startsWith(c.href));
     return false;
@@ -76,7 +132,6 @@ export default function Navbar() {
           </div>
           <div className="flex items-center gap-2">
             <span className="text-[15px] font-bold text-gray-900 tracking-tight">AndaraLab</span>
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-700">Auto-Deployed</span>
           </div>
         </Link>
 
@@ -161,7 +216,7 @@ export default function Navbar() {
             href="/contact"
             className="text-[12.5px] font-medium text-white bg-[#1a3a5c] px-4 py-1.5 hover:bg-[#14305a] transition-colors whitespace-nowrap"
           >
-            Get in Touch
+            {t("nav_get_in_touch")}
           </Link>
         </div>
 
@@ -235,7 +290,7 @@ export default function Navbar() {
               onClick={() => setMobileOpen(false)}
               className="text-[12.5px] font-medium text-white bg-[#1a3a5c] px-4 py-1.5"
             >
-              Get in Touch
+              {t("nav_get_in_touch")}
             </Link>
           </div>
         </div>
