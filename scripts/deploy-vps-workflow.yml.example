@@ -1,7 +1,5 @@
-# Copy to .github/workflows/deploy-vps.yml after granting your GitHub PAT the
-# `workflow` scope (otherwise `git push` is rejected for workflow files).
-#
-# Secrets: VPS_HOST, VPS_USER, VPS_SSH_KEY, optional VPS_APP_DIR (default /opt/andara-lab)
+# Copy to `.github/workflows/deploy-vps.yml` and push using a token with `workflow` scope.
+# Repo secrets: VPS_HOST, VPS_USER, VPS_SSH_KEY, optional VPS_APP_DIR
 
 name: Deploy to VPS
 

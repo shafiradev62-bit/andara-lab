@@ -268,11 +268,14 @@ export async function fetchPageBySlug(slug: string, locale?: string): Promise<Pa
     const res = await apiGet<PageApiResponse>(`/api/pages/lookup?${params.toString()}`);
     return res.data;
   } catch (lookupErr) {
+    const lookup404 = (lookupErr as Error & { apiStatus?: number }).apiStatus === 404;
     try {
       const q = locale ? `?locale=${encodeURIComponent(locale)}` : "";
       const res = await apiGet<PageApiResponse>(`/api/pages/slug/${encodeURIComponent(slug)}${q}`);
       return res.data;
-    } catch {
+    } catch (slugErr) {
+      const slug404 = (slugErr as Error & { apiStatus?: number }).apiStatus === 404;
+      if (lookup404 && slug404) throw slugErr;
       console.warn("API unavailable, fetching page from cache/seed:", lookupErr);
       const seedPages = getSeedPages();
       const norm = slug.startsWith("/") ? slug : `/${slug}`;
@@ -327,10 +330,8 @@ export async function createPage(data: Omit<Page, "id" | "createdAt" | "updatedA
 export async function updatePage(id: number, data: Partial<Omit<Page, "id" | "createdAt" | "updatedAt">>): Promise<Page> {
   try {
     const res = await apiPut<PageApiResponse>(`/api/pages/${id}`, data);
-    // Update localStorage cache
     const currentPages = getSeedPages();
-    const updatedPages = currentPages.map(p => p.id === id ? { ...p, ...data } : p);
-    savePagesToStorage(updatedPages as Page[]);
+    savePagesToStorage(currentPages.map((p) => (p.id === id ? res.data : p)));
     return res.data;
   } catch (error) {
     console.warn('API unavailable for updatePage, updating localStorage only:', error);
@@ -420,6 +421,45 @@ export async function fetchPost(id: number): Promise<BlogPost> {
   }
 }
 
+/** Public article view: published only via API (matches page lookup semantics). */
+export async function fetchPostBySlug(slug: string, locale?: string): Promise<BlogPost> {
+  try {
+    const q = new URLSearchParams();
+    if (locale) q.set("locale", locale);
+    const qs = q.toString() ? `?${q.toString()}` : "";
+    const res = await apiGet<PostApiResponse>(`/api/blog/slug/${encodeURIComponent(slug)}${qs}`);
+    return res.data;
+  } catch (apiErr) {
+    if ((apiErr as Error & { apiStatus?: number }).apiStatus === 404) throw apiErr;
+    console.warn("API unavailable for fetchPostBySlug, using cache/seed:", apiErr);
+    const seedPosts = getSeedPosts();
+    const norm = slug.startsWith("/") ? slug : `/${slug}`;
+    const matchSlug = (p: BlogPost) =>
+      p.slug === slug || p.slug === norm || p.slug === norm.replace(/^\//, "");
+    const published = seedPosts.filter((p) => matchSlug(p) && p.status === "published");
+    const pickNewest = (rows: BlogPost[]) =>
+      [...rows].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0];
+    let pick: BlogPost | undefined;
+    if (locale) {
+      const forLocale = published.filter((p) => p.locale === locale);
+      if (forLocale.length) pick = pickNewest(forLocale);
+    }
+    if (!pick && published.length) pick = pickNewest(published);
+    if (pick) return pick;
+    const draftMatch = seedPosts.find(
+      (p) => matchSlug(p) && p.status === "draft" && (!locale || p.locale === locale)
+    );
+    if (draftMatch) {
+      const err = new Error(
+        "This post is still a draft. In Admin → Blog, choose Published and save."
+      ) as Error & { apiDetail?: string };
+      err.apiDetail = err.message;
+      throw err;
+    }
+    throw new Error(`Post ${slug} not found`);
+  }
+}
+
 export async function createPost(data: Omit<BlogPost, "id" | "createdAt" | "updatedAt">): Promise<BlogPost> {
   try {
     const res = await apiPost<PostApiResponse>("/api/blog", data);
@@ -444,8 +484,7 @@ export async function updatePost(id: number, data: Partial<Omit<BlogPost, "id" |
   try {
     const res = await apiPut<PostApiResponse>(`/api/blog/${id}`, data);
     const currentPosts = getSeedPosts();
-    const updated = currentPosts.map(p => p.id === id ? { ...p, ...data } : p);
-    savePostsToStorage(updated as BlogPost[]);
+    savePostsToStorage(currentPosts.map((p) => (p.id === id ? res.data : p)));
     return res.data;
   } catch (error) {
     console.warn('API unavailable, updating localStorage only:', error);
@@ -619,16 +658,38 @@ export function usePage(id: number | null) {
 
 
 
+function noRetryOn404(failureCount: number, err: Error) {
+  const status = (err as Error & { apiStatus?: number }).apiStatus;
+  if (status === 404) return false;
+  return failureCount < 2;
+}
+
 export function usePageBySlug(slug: string, locale?: string) {
   return useQuery({
     queryKey: ["page", "slug", slug, locale ?? "all"],
     queryFn:  () => fetchPageBySlug(slug, locale),
     enabled:  Boolean(slug),
     staleTime: 30_000,
+    retry: noRetryOn404,
   });
 }
+
 function invalidatePageSlugQueries(qc: ReturnType<typeof useQueryClient>) {
   qc.invalidateQueries({ queryKey: ["page", "slug"] });
+}
+
+export function usePostBySlug(slug: string, locale?: string) {
+  return useQuery({
+    queryKey: ["post", "slug", slug, locale ?? "all"],
+    queryFn: () => fetchPostBySlug(slug, locale),
+    enabled: Boolean(slug),
+    staleTime: 30_000,
+    retry: noRetryOn404,
+  });
+}
+
+function invalidatePostSlugQueries(qc: ReturnType<typeof useQueryClient>) {
+  qc.invalidateQueries({ queryKey: ["post", "slug"] });
 }
 
 export function useCreatePage() {
@@ -711,6 +772,7 @@ export function useCreatePost() {
     mutationFn: createPost,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: QUERY_KEY.posts });
+      invalidatePostSlugQueries(qc);
     },
   });
 }
@@ -732,6 +794,7 @@ export function useUpdatePost() {
     onSettled: (_data, _err, { id }) => {
       qc.invalidateQueries({ queryKey: QUERY_KEY.post(id) });
       qc.invalidateQueries({ queryKey: QUERY_KEY.posts });
+      invalidatePostSlugQueries(qc);
     },
   });
 }
@@ -742,6 +805,7 @@ export function useDeletePost() {
     mutationFn: deletePostAPI,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: QUERY_KEY.posts });
+      invalidatePostSlugQueries(qc);
     },
   });
 }
@@ -752,6 +816,7 @@ export function useResetPosts() {
     mutationFn: resetPosts,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: QUERY_KEY.posts });
+      invalidatePostSlugQueries(qc);
     },
   });
 }

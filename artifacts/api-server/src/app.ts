@@ -40,11 +40,18 @@ const allowedOrigins = [
   "https://andaralab-lkxp7b875-rahmis-projects-881d2cc1.vercel.app",
 ];
 
+/** Comma-separated extra origins (e.g. https://lab.example.com,http://10.0.0.5:8080) */
+const extraOrigins = (process.env.CORS_ORIGINS ?? "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (e.g., mobile apps, curl)
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
+    if (extraOrigins.includes(origin)) return callback(null, true);
     // Allow all Vercel preview/deployment URLs
     if (origin && origin.includes(".vercel.app")) return callback(null, true);
     // Self-hosted deployments (same IP, any port)

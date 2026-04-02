@@ -1,6 +1,6 @@
 import { Link, useParams } from "wouter";
 import { ArrowLeft, ArrowRight, Clock, Loader2 } from "lucide-react";
-import { usePosts } from "@/lib/cms-store";
+import { usePosts, usePostBySlug } from "@/lib/cms-store";
 import { useLocale } from "@/lib/locale";
 
 function formatDate(dateStr?: string) {
@@ -13,15 +13,12 @@ function formatDate(dateStr?: string) {
 export default function ArticlePage() {
   const params = useParams<{ slug: string }>();
   const { locale } = useLocale();
-  const { data: posts = [], isLoading } = usePosts({ status: "published" });
-
   const slug = params.slug || "";
+  const { data: post, isLoading: postLoading, error: postError } = usePostBySlug(slug, locale);
+  const { data: posts = [] } = usePosts({ status: "published" });
 
-  // Find post by slug — prefer matching locale, fallback to any locale
-  const post = posts.find((p) => p.slug === slug && p.locale === locale)
-    ?? posts.find((p) => p.slug === slug);
+  const isLoading = postLoading;
 
-  // Related: same category, different slug
   const related = post
     ? posts
         .filter((p) => p.category === post.category && p.slug !== post.slug && p.status === "published")
@@ -38,11 +35,18 @@ export default function ArticlePage() {
   }
 
   if (!post) {
+    const apiDetail =
+      postError && postError instanceof Error
+        ? (postError as Error & { apiDetail?: string }).apiDetail
+        : undefined;
+    const hint =
+      apiDetail ||
+      "This article doesn't exist, is still a draft in the CMS, or may have been moved.";
     return (
       <div className="max-w-[1200px] mx-auto px-6 py-24 text-center">
         <div className="text-[72px] font-bold text-gray-100 mb-4">404</div>
         <h1 className="text-[24px] font-semibold text-gray-900 mb-3">Article not found</h1>
-        <p className="text-gray-500 mb-8">This article doesn't exist or may have been moved.</p>
+        <p className="text-gray-500 mb-8 max-w-lg mx-auto leading-relaxed">{hint}</p>
         <Link href="/" className="text-[13.5px] font-medium text-white bg-[#1a3a5c] px-6 py-2.5">
           Go Home
         </Link>
@@ -52,6 +56,7 @@ export default function ArticlePage() {
 
   const categoryHref = `/blog/${post.category}`;
   const publishedDate = formatDate(post.publishedAt || post.createdAt);
+  const bodyParagraphs = Array.isArray(post.body) ? post.body : [];
 
   return (
     <div className="bg-white">
@@ -114,7 +119,7 @@ export default function ArticlePage() {
             )}
 
             <div className="prose max-w-none">
-              {post.body.map((para, i) => (
+              {bodyParagraphs.map((para, i) => (
                 <p key={i} className="text-[14.5px] text-gray-700 leading-[1.8] mb-5">
                   {para}
                 </p>
