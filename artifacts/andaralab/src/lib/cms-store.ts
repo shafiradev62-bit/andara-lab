@@ -588,6 +588,16 @@ export function usePage(id: number | null) {
   });
 }
 
+
+
+export function usePageBySlug(slug: string) {
+  return useQuery({
+    queryKey: ["page", "slug", slug],
+    queryFn:  () => fetchPageBySlug(slug),
+    enabled:  Boolean(slug),
+    staleTime: 1000 * 60 * 2,
+  });
+}
 export function useCreatePage() {
   const qc = useQueryClient();
   return useMutation({

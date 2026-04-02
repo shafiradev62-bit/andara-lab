@@ -7,7 +7,11 @@ import { API_BASE_URL } from "./config";
 // Initialize base URL once at module load
 setBaseUrl(API_BASE_URL);
 
-function url(path: string) {
+function url(path: string): string {
+  // Handle relative URLs (e.g. "/api") by prepending window.location.origin
+  if (API_BASE_URL.startsWith("/")) {
+    return `${window.location.origin}${API_BASE_URL}${path}`;
+  }
   return new URL(path, API_BASE_URL).toString();
 }
 

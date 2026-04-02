@@ -10,6 +10,7 @@ import DataHubPage from "@/pages/DataHubPage";
 import ModelsPage from "@/pages/ModelsPage";
 import AdminPage from "@/pages/AdminPage";
 import ArticlePage from "@/pages/ArticlePage";
+import DynamicPage from "@/pages/DynamicPage";
 import { LocaleProvider } from "@/lib/locale";
 import {
   MacroOutlooksPage,
@@ -69,7 +70,7 @@ export default function App() {
             </Route>
             <Route path="/about">
               <Layout>
-                <AboutPage />
+                <DynamicPage pageSlug="/about" />
               </Layout>
             </Route>
 
@@ -106,6 +107,9 @@ export default function App() {
               <Layout withNewsletter={false}><DataHubPage /></Layout>
             </Route>
 
+            <Route path="/blog">
+              <Layout><BlogPage /></Layout>
+            </Route>
             <Route path="/blog/economics-101">
               <Layout><BlogPage sub="economics-101" /></Layout>
             </Route>

@@ -1,34 +1,7 @@
-import { ArrowRight, TrendingUp, TrendingDown, Calendar, BarChart2 } from "lucide-react";
+import { ArrowRight, Calendar, BarChart2 } from "lucide-react";
 import { Link } from "wouter";
-import {
-  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer,
-} from "recharts";
-
-const calendarItems = [
-  { date: "Mar 28", event: "US GDP Growth Q4", impact: "High", country: "🇺🇸", actual: "2.3%", previus: "2.1%" },
-  { date: "Mar 30", event: "BI Rate Decision", impact: "High", country: "🇮🇩", actual: "6.00%", previus: "6.00%" },
-  { date: "Apr 2", event: "Nonfarm Payrolls", impact: "High", country: "🇺🇸", actual: "—", previus: "275K" },
-  { date: "Apr 4", event: "Indonesia CPI", impact: "Med", country: "🇮🇩", actual: "—", previus: "2.51%" },
-  { date: "Apr 10", event: "World Bank Indo Outlook", impact: "Med", country: "🌏", actual: "—", previus: "—" },
-];
-
-const jciSpark = [
-  { t: "Jan", v: 7050 },
-  { t: "Feb", v: 7120 },
-  { t: "Mar 1", v: 6980 },
-  { t: "Mar 8", v: 7180 },
-  { t: "Mar 15", v: 7200 },
-  { t: "Mar 22", v: 7214 },
-];
-
-const marketItems = [
-  { label: "JCI (IHSG)", value: "7,214", change: "+1.14%", positive: true },
-  { label: "IDR/USD", value: "15,890", change: "+0.32%", positive: false },
-  { label: "BI Rate", value: "6.00%", change: "Unchanged", positive: null },
-  { label: "US 10Y Yield", value: "4.28%", change: "-0.05%", positive: true },
-  { label: "Brent Crude", value: "$82.4", change: "+0.78%", positive: true },
-  { label: "Gold", value: "$2,285", change: "+0.63%", positive: true },
-];
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { useDatasets, usePosts } from "../lib/cms-store";
 
 function SparkTooltip({ active, payload }: any) {
   if (!active || !payload?.length) return null;
@@ -39,14 +12,67 @@ function SparkTooltip({ active, payload }: any) {
   );
 }
 
+function getLastTwo(rows: Record<string, string | number>[], key: string) {
+  const vals = rows
+    .map((r) => { const v = r[key]; return typeof v === "number" ? v : parseFloat(String(v)); })
+    .filter((v) => !isNaN(v));
+  const last = vals[vals.length - 1] ?? 0;
+  const prev = vals.length > 1 ? vals[vals.length - 2] : last;
+  return { last, prev };
+}
+
+function formatChange(last: number, prev: number, isRate = false): { label: string; positive: boolean | null } {
+  const diff = last - prev;
+  if (Math.abs(diff) < 0.001) return { label: "Unchanged", positive: null };
+  const sign = diff > 0 ? "+" : "";
+  return { label: isRate ? `${sign}${diff.toFixed(2)}%` : `${sign}${diff.toFixed(2)}`, positive: diff > 0 };
+}
+
+function formatDate(dateStr?: string) {
+  if (!dateStr) return "";
+  try { return new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }); }
+  catch { return dateStr; }
+}
+
 export default function DataHub() {
+  const { data: datasets = [] } = useDatasets();
+  const { data: posts = [] } = usePosts({ status: "published" });
+
+  const biRateDs = datasets.find((d) => d.id === "bi-rate");
+  const idrUsdDs = datasets.find((d) => d.id === "idr-usd");
+  const tradeDs  = datasets.find((d) => d.id === "trade-balance");
+
+  const biRate = biRateDs
+    ? (() => { const { last, prev } = getLastTwo(biRateDs.rows, "BI Rate"); const { label, positive } = formatChange(last, prev, true); return { label: "BI Rate", value: `${last}%`, change: label, positive }; })()
+    : { label: "BI Rate", value: "—", change: "—", positive: null as null };
+
+  const idrUsd = idrUsdDs
+    ? (() => { const { last, prev } = getLastTwo(idrUsdDs.rows, "IDR/USD"); const { label, positive } = formatChange(last, prev); return { label: "IDR/USD", value: last.toLocaleString(), change: label, positive }; })()
+    : { label: "IDR/USD", value: "—", change: "—", positive: null as null };
+
+  const tradeBalance = tradeDs
+    ? (() => { const { last, prev } = getLastTwo(tradeDs.rows, "Balance"); const { label, positive } = formatChange(last, prev); return { label: "Trade Balance", value: `+${last}B`, change: label, positive }; })()
+    : { label: "Trade Balance", value: "—", change: "—", positive: null as null };
+
+  const jciSpark = idrUsdDs
+    ? idrUsdDs.rows
+        .map((r) => ({ t: String(r[idrUsdDs.columns[0]]), v: typeof r["IDR/USD"] === "number" ? r["IDR/USD"] as number : parseFloat(String(r["IDR/USD"])) }))
+        .filter((p) => !isNaN(p.v))
+    : [];
+
+  const marketItems = [idrUsd, biRate, tradeBalance];
+
+  const recentPosts = [...posts]
+    .sort((a, b) => new Date(b.publishedAt || b.createdAt).getTime() - new Date(a.publishedAt || a.createdAt).getTime())
+    .slice(0, 5);
+
   return (
     <section className="py-12 bg-white border-t border-[#E5E7EB]">
       <div className="max-w-[1200px] mx-auto px-6">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-[22px] font-semibold text-gray-900">Data Hub Snapshot</h2>
-            <p className="text-[13px] text-gray-400 mt-0.5">Live market data and upcoming economic releases</p>
+            <p className="text-[13px] text-gray-400 mt-0.5">Latest research and market data from CMS</p>
           </div>
           <Link href="/data" className="flex items-center gap-1 text-[12.5px] font-medium text-[#1a3a5c] hover:underline">
             Explore full Data Hub <ArrowRight className="w-3.5 h-3.5" />
@@ -54,62 +80,58 @@ export default function DataHub() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-          {/* Economic Calendar — wider */}
+          {/* Latest Articles panel */}
           <div className="md:col-span-3 border border-[#E5E7EB] bg-white">
             <div className="px-4 py-3 border-b border-[#E5E7EB] flex items-center gap-2">
               <Calendar className="w-4 h-4 text-gray-400" />
-              <span className="text-[13.5px] font-semibold text-gray-900">Economic Calendar</span>
-              <span className="ml-auto text-[11px] text-gray-400">Apr 2026</span>
-              <Link href="/data/economic-calendar" className="text-[11.5px] text-[#1a3a5c] font-medium hover:underline ml-2">
+              <span className="text-[13.5px] font-semibold text-gray-900">Latest Research</span>
+              <Link href="/blog/market-pulse" className="text-[11.5px] text-[#1a3a5c] font-medium hover:underline ml-auto">
                 See all →
               </Link>
             </div>
-            <table className="w-full">
-              <thead>
-                <tr className="text-[10.5px] uppercase tracking-wide text-gray-400 border-b border-[#F3F4F6]">
-                  <th className="text-left px-4 py-2 font-semibold">Date</th>
-                  <th className="text-left py-2 font-semibold">Event</th>
-                  <th className="text-right px-4 py-2 font-semibold">Actual</th>
-                  <th className="text-right px-4 py-2 font-semibold">Prev</th>
-                  <th className="text-right px-4 py-2 font-semibold">Impact</th>
-                </tr>
-              </thead>
-              <tbody>
-                {calendarItems.map((item, i) => (
-                  <tr key={i} className="border-b border-[#F3F4F6] hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3">
-                      <span className="text-[12px] font-medium text-gray-500">{item.country} {item.date}</span>
-                    </td>
-                    <td className="py-3 pr-2">
-                      <span className="text-[12.5px] text-gray-800 font-medium">{item.event}</span>
-                    </td>
-                    <td className="text-right px-4 py-3">
-                      <span className={`text-[12px] font-semibold ${item.actual === "—" ? "text-gray-300" : "text-gray-900"}`}>
-                        {item.actual}
-                      </span>
-                    </td>
-                    <td className="text-right px-4 py-3">
-                      <span className="text-[11.5px] text-gray-400">{item.previus}</span>
-                    </td>
-                    <td className="text-right px-4 py-3">
-                      <span
-                        className={`text-[10px] font-semibold px-1.5 py-0.5 inline-block ${
-                          item.impact === "High" ? "text-red-600 bg-red-50" : "text-yellow-700 bg-yellow-50"
-                        }`}
-                      >
-                        {item.impact}
-                      </span>
-                    </td>
+            {recentPosts.length === 0 ? (
+              <div className="px-4 py-8 text-center text-gray-400 text-[13px]">
+                No articles yet.{" "}
+                <Link href="/admin" className="text-[#1a3a5c] hover:underline">Add in CMS →</Link>
+              </div>
+            ) : (
+              <table className="w-full">
+                <thead>
+                  <tr className="text-[10.5px] uppercase tracking-wide text-gray-400 border-b border-[#F3F4F6]">
+                    <th className="text-left px-4 py-2 font-semibold">Date</th>
+                    <th className="text-left py-2 font-semibold">Title</th>
+                    <th className="text-right px-4 py-2 font-semibold">Category</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {recentPosts.map((post) => (
+                    <tr key={post.id} className="border-b border-[#F3F4F6] hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-3">
+                        <span className="text-[12px] font-medium text-gray-500 whitespace-nowrap">
+                          {formatDate(post.publishedAt || post.createdAt)}
+                        </span>
+                      </td>
+                      <td className="py-3 pr-2">
+                        <Link href={`/article/${post.slug}`} className="text-[12.5px] text-gray-800 font-medium hover:text-[#1a3a5c] transition-colors line-clamp-1">
+                          {post.title}
+                        </Link>
+                      </td>
+                      <td className="text-right px-4 py-3">
+                        <span className="text-[10.5px] font-semibold px-1.5 py-0.5 inline-block text-[#1a3a5c] bg-blue-50">
+                          {post.category}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
             <div className="px-4 py-3 border-t border-[#E5E7EB]">
               <Link
-                href="/data/economic-calendar"
+                href="/blog/market-pulse"
                 className="flex items-center gap-1.5 justify-center text-[12.5px] font-medium text-white bg-[#1a3a5c] px-5 py-2 w-full hover:bg-[#14305a] transition-colors"
               >
-                Full Economic Calendar <ArrowRight className="w-3.5 h-3.5" />
+                All Research <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
           </div>
@@ -124,39 +146,56 @@ export default function DataHub() {
               </Link>
             </div>
 
-            {/* JCI mini chart */}
-            <div className="px-4 pt-3 pb-2 border-b border-[#F3F4F6]">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-[11px] text-gray-400">JCI (IHSG) — 1 Month</span>
-                <span className="text-[11px] font-semibold text-green-600">▲ +1.14%</span>
+            {jciSpark.length > 1 && (
+              <div className="px-4 pt-3 pb-2 border-b border-[#F3F4F6]">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[11px] text-gray-400">IDR/USD — Historical</span>
+                  <span className={`text-[11px] font-semibold ${idrUsd.positive === false ? "text-red-500" : idrUsd.positive === true ? "text-green-600" : "text-gray-400"}`}>
+                    {idrUsd.positive === false ? "▼" : idrUsd.positive === true ? "▲" : ""} {idrUsd.change}
+                  </span>
+                </div>
+                <ResponsiveContainer width="100%" height={60}>
+                  <LineChart data={jciSpark} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
+                    <Line type="monotone" dataKey="v" stroke="#1a3a5c" strokeWidth={1.5} dot={false} activeDot={{ r: 3, fill: "#1a3a5c" }} />
+                    <XAxis dataKey="t" hide />
+                    <YAxis domain={["auto", "auto"]} hide />
+                    <Tooltip content={<SparkTooltip />} />
+                  </LineChart>
+                </ResponsiveContainer>
               </div>
-              <ResponsiveContainer width="100%" height={60}>
-                <LineChart data={jciSpark} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
-                  <Line type="monotone" dataKey="v" stroke="#1a3a5c" strokeWidth={1.5} dot={false} activeDot={{ r: 3, fill: "#1a3a5c" }} />
-                  <XAxis dataKey="t" hide />
-                  <YAxis domain={["auto", "auto"]} hide />
-                  <Tooltip content={<SparkTooltip />} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+            )}
 
-            {/* Market items */}
             <div className="divide-y divide-[#F3F4F6] flex-1">
               {marketItems.map((item) => (
                 <div key={item.label} className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 transition-colors">
                   <span className="text-[12.5px] text-gray-600">{item.label}</span>
                   <div className="flex items-center gap-2">
                     <span className="text-[13px] font-semibold text-gray-900">{item.value}</span>
-                    <span
-                      className={`text-[11px] font-semibold ${
-                        item.positive === null ? "text-gray-400" : item.positive ? "text-green-600" : "text-red-500"
-                      }`}
-                    >
+                    <span className={`text-[11px] font-semibold ${item.positive === null ? "text-gray-400" : item.positive ? "text-green-600" : "text-red-500"}`}>
                       {item.positive === true && "▲ "}{item.positive === false && "▼ "}{item.change}
                     </span>
                   </div>
                 </div>
               ))}
+              {datasets
+                .filter((d) => !["bi-rate", "idr-usd", "trade-balance"].includes(d.id))
+                .slice(0, 3)
+                .map((ds) => {
+                  const valueKey = ds.columns[1];
+                  const { last, prev } = getLastTwo(ds.rows, valueKey);
+                  const { label, positive } = formatChange(last, prev);
+                  return (
+                    <div key={ds.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 transition-colors">
+                      <span className="text-[12.5px] text-gray-600 truncate max-w-[120px]">{ds.title}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[13px] font-semibold text-gray-900">{last.toLocaleString()}{ds.unit === "%" ? "%" : ""}</span>
+                        <span className={`text-[11px] font-semibold ${positive === null ? "text-gray-400" : positive ? "text-green-600" : "text-red-500"}`}>
+                          {positive === true && "▲ "}{positive === false && "▼ "}{label}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
             </div>
 
             <div className="px-4 py-3 border-t border-[#E5E7EB]">

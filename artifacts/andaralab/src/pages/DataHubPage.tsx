@@ -4,24 +4,21 @@ import { useDatasets } from "@/lib/cms-store";
 import InteractiveChart from "@/components/InteractiveChart";
 import { BarChart2, LineChart as LineChartIcon, TrendingUp, Calendar, Table as TableIcon, ArrowRight, ExternalLink, AlertCircle, Loader2 } from "lucide-react";
 
-const calendarItems = [
-  { date: "Mar 28", event: "GDP Growth Q4", impact: "High", country: "🇺🇸", actual: "2.3%", forecast: "2.1%" },
-  { date: "Mar 30", event: "BI Rate Decision", impact: "High", country: "🇮🇩", actual: "6.00%", forecast: "6.00%" },
-  { date: "Apr 2", event: "Nonfarm Payrolls", impact: "High", country: "🇺🇸", actual: "—", forecast: "185K" },
-  { date: "Apr 4", event: "CPI Indonesia", impact: "Med", country: "🇮🇩", actual: "—", forecast: "2.5%" },
-  { date: "Apr 7", event: "US Unemployment", impact: "High", country: "🇺🇸", actual: "—", forecast: "4.1%" },
-  { date: "Apr 10", event: "China CPI", impact: "Med", country: "🇨🇳", actual: "—", forecast: "0.4%" },
-  { date: "Apr 14", event: "US CPI (Mar)", impact: "High", country: "🇺🇸", actual: "—", forecast: "3.1%" },
-];
+function getLastTwo(rows: Record<string, string | number>[], key: string) {
+  const vals = rows.map((r) => {
+    const v = r[key];
+    return typeof v === "number" ? v : parseFloat(String(v));
+  }).filter((v) => !isNaN(v));
+  const last = vals[vals.length - 1] ?? 0;
+  const prev = vals.length > 1 ? vals[vals.length - 2] : last;
+  return { last, prev };
+}
 
-const marketCards = [
-  { label: "IDR/USD", value: "15,890", change: "+0.32%", positive: false, sub: "vs yesterday" },
-  { label: "JCI (IHSG)", value: "7,214", change: "+1.14%", positive: true, sub: "pts" },
-  { label: "BI Rate", value: "6.00%", change: "0.00%", positive: true, sub: "unchanged" },
-  { label: "US 10Y Yield", value: "4.28%", change: "-0.05%", positive: true, sub: "bps" },
-  { label: "Brent Crude", value: "$82.4", change: "+0.8%", positive: true, sub: "per barrel" },
-  { label: "Gold", value: "$2,285", change: "+0.6%", positive: true, sub: "per oz" },
-];
+function fmtChange(last: number, prev: number): { label: string; positive: boolean | null } {
+  const diff = last - prev;
+  if (Math.abs(diff) < 0.001) return { label: "Unchanged", positive: null };
+  return { label: `${diff > 0 ? "+" : ""}${diff.toFixed(2)}`, positive: diff > 0 };
+}
 
 export default function DataHubPage() {
   const [location] = useLocation();
@@ -221,32 +218,40 @@ export default function DataHubPage() {
       {/* Calendar Tab */}
       {activeTab === "calendar" && (
         <div className="max-w-[1200px] mx-auto px-6 py-10">
-          <h2 className="text-[18px] font-semibold text-gray-900 mb-6">Economic Calendar — April 2026</h2>
-          <div className="border border-[#E5E7EB]">
-            <div className="grid grid-cols-5 border-b border-[#E5E7EB] bg-gray-50 text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide px-4 py-2.5">
-              <div>Date</div><div>Event</div><div>Impact</div><div>Actual</div><div>Forecast</div>
+          <h2 className="text-[18px] font-semibold text-gray-900 mb-2">Economic Calendar</h2>
+          <p className="text-[13px] text-gray-400 mb-6">
+            Economic calendar data can be managed via the CMS.{" "}
+            <Link href="/admin" className="text-[#1a3a5c] hover:underline">Open Admin →</Link>
+          </p>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-24 gap-3 text-gray-400">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span className="text-[13.5px]">Loading…</span>
             </div>
-            {calendarItems.map((item, i) => (
-              <div
-                key={i}
-                className={`grid grid-cols-5 px-4 py-3.5 items-center ${i < calendarItems.length - 1 ? "border-b border-[#F3F4F6]" : ""} hover:bg-gray-50`}
-              >
-                <div className="text-[13px] font-semibold text-gray-700">
-                  {item.date} {item.country}
-                </div>
-                <div className="text-[13px] text-gray-800">{item.event}</div>
-                <div>
-                  <span className={`text-[11px] font-semibold px-2 py-0.5 ${
-                    item.impact === "High" ? "text-red-600 bg-red-50" : "text-yellow-700 bg-yellow-50"
-                  }`}>
-                    {item.impact}
-                  </span>
-                </div>
-                <div className="text-[13px] font-semibold text-gray-900">{item.actual}</div>
-                <div className="text-[13px] text-gray-500">{item.forecast}</div>
+          ) : (
+            <div className="border border-[#E5E7EB]">
+              <div className="grid grid-cols-4 border-b border-[#E5E7EB] bg-gray-50 text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide px-4 py-2.5">
+                <div>Dataset</div><div>Category</div><div>Last Updated</div><div>Unit</div>
               </div>
-            ))}
-          </div>
+              {datasets.length === 0 && (
+                <div className="px-4 py-8 text-center text-gray-400 text-[13px]">
+                  No datasets available. <Link href="/admin" className="text-[#1a3a5c] hover:underline">Add in CMS →</Link>
+                </div>
+              )}
+              {datasets.map((ds, i) => (
+                <div
+                  key={ds.id}
+                  className={`grid grid-cols-4 px-4 py-3.5 items-center ${i < datasets.length - 1 ? "border-b border-[#F3F4F6]" : ""} hover:bg-gray-50 cursor-pointer`}
+                  onClick={() => { setSelectedChart(ds.id); setActiveTab("charts"); }}
+                >
+                  <div className="text-[13px] font-semibold text-gray-800">{ds.title}</div>
+                  <div className="text-[12.5px] text-gray-500">{ds.category}</div>
+                  <div className="text-[12px] text-gray-400">{ds.updatedAt?.slice(0, 10) ?? "—"}</div>
+                  <div className="text-[12px] text-gray-500">{ds.unit}</div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -254,30 +259,64 @@ export default function DataHubPage() {
       {activeTab === "market" && (
         <div className="max-w-[1200px] mx-auto px-6 py-10">
           <h2 className="text-[18px] font-semibold text-gray-900 mb-6">Market Overview</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-10">
-            {marketCards.map((card) => (
-              <div key={card.label} className="border border-[#E5E7EB] p-5">
-                <div className="text-[11.5px] text-gray-400 mb-1.5">{card.label}</div>
-                <div className="text-[24px] font-bold text-gray-900 mb-1">{card.value}</div>
-                <div className="flex items-center gap-1.5">
-                  <span className={`text-[12px] font-semibold ${card.positive ? "text-green-600" : "text-red-500"}`}>
-                    {card.positive ? "▲" : "▼"} {card.change}
-                  </span>
-                  <span className="text-[11px] text-gray-400">{card.sub}</span>
-                </div>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-24 gap-3 text-gray-400">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span className="text-[13.5px]">Loading…</span>
+            </div>
+          ) : (
+            <>
+              {/* Market cards from CMS datasets */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-10">
+                {datasets
+                  .filter((ds) => ["bi-rate", "idr-usd", "trade-balance", "gdp-growth", "inflation-rate", "sovereign-bond-yield"].includes(ds.id))
+                  .map((ds) => {
+                    const valueKey = ds.columns[1];
+                    const { last, prev } = getLastTwo(ds.rows, valueKey);
+                    const { label, positive } = fmtChange(last, prev);
+                    const lastRow = ds.rows[ds.rows.length - 1];
+                    const periodKey = ds.columns[0];
+                    return (
+                      <div
+                        key={ds.id}
+                        className="border border-[#E5E7EB] p-5 cursor-pointer hover:border-[#1a3a5c] transition-colors"
+                        onClick={() => { setSelectedChart(ds.id); setActiveTab("charts"); }}
+                      >
+                        <div className="text-[11.5px] text-gray-400 mb-1.5">{ds.title}</div>
+                        <div className="text-[24px] font-bold text-gray-900 mb-1">
+                          {last.toLocaleString()}{ds.unit === "%" ? "%" : ""}
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className={`text-[12px] font-semibold ${positive === null ? "text-gray-400" : positive ? "text-green-600" : "text-red-500"}`}>
+                            {positive === true && "▲ "}{positive === false && "▼ "}{label}
+                          </span>
+                          <span className="text-[11px] text-gray-400">{String(lastRow?.[periodKey] ?? "")}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                {datasets.filter((ds) => ["bi-rate", "idr-usd", "trade-balance", "gdp-growth", "inflation-rate", "sovereign-bond-yield"].includes(ds.id)).length === 0 && (
+                  <div className="col-span-full text-center py-8 text-gray-400 text-[13px]">
+                    No market datasets found. <Link href="/admin" className="text-[#1a3a5c] hover:underline">Add in CMS →</Link>
+                  </div>
+                )}
               </div>
-            ))}
-          </div>
-          <h3 className="text-[16px] font-semibold text-gray-900 mb-5">Featured Charts</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {datasets.slice(0, 4).map((ds) => (
-              <div key={ds.id} className="border border-[#E5E7EB] p-5">
-                <h4 className="text-[14px] font-semibold text-gray-900 mb-1">{ds.title}</h4>
-                <p className="text-[12px] text-gray-400 mb-4">{ds.description}</p>
-                <InteractiveChart dataset={ds} height={200} />
+              <h3 className="text-[16px] font-semibold text-gray-900 mb-5">All Datasets</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {datasets.map((ds) => (
+                  <div
+                    key={ds.id}
+                    className="border border-[#E5E7EB] p-5 cursor-pointer hover:border-[#1a3a5c] transition-colors"
+                    onClick={() => { setSelectedChart(ds.id); setActiveTab("charts"); }}
+                  >
+                    <h4 className="text-[14px] font-semibold text-gray-900 mb-1">{ds.title}</h4>
+                    <p className="text-[12px] text-gray-400 mb-4">{ds.description}</p>
+                    <InteractiveChart dataset={ds} height={200} />
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </>
+          )}
         </div>
       )}
     </div>

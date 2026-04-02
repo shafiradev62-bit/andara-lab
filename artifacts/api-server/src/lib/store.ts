@@ -142,7 +142,7 @@ class InMemoryPageStore implements PageStore {
   get(id: number): PageRecord | undefined { return this.pages.get(id); }
 
   getBySlug(slug: string, locale?: string): PageRecord | undefined {
-    const matches = [...this.pages.values()].filter((p) => p.slug === slug);
+    const norm = slug.replace(new RegExp("^/"), ""); const matches = [...this.pages.values()].filter((p) => p.slug === norm || p.slug === "/" + norm);
     if (!matches.length) return undefined;
     if (locale) {
       const localized = matches.find((p) => p.locale === locale);
@@ -226,7 +226,7 @@ class InMemoryBlogPostStore implements BlogPostStore {
   get(id: number): BlogPostRecord | undefined { return this.posts.get(id); }
 
   getBySlug(slug: string, locale?: string): BlogPostRecord | undefined {
-    const matches = [...this.posts.values()].filter((p) => p.slug === slug);
+    const norm = slug.replace(new RegExp("^/"), ""); const matches = [...this.posts.values()].filter((p) => p.slug === norm || p.slug === "/" + norm);
     if (!matches.length) return undefined;
     if (locale) {
       const localized = matches.find((p) => p.locale === locale);

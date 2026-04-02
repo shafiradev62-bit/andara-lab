@@ -8,6 +8,7 @@ RUN npm install -g pnpm@latest
 
 # Copy package files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY tsconfig.base.json ./
 COPY lib/ ./lib/
 COPY artifacts/andaralab/ ./artifacts/andaralab/
 
@@ -15,6 +16,10 @@ WORKDIR /app/artifacts/andaralab
 
 # Install dependencies
 RUN pnpm install --no-frozen-lockfile
+
+# Set API base URL for production (relative path for nginx proxy)
+# Overwrite .env.production so Vite picks it up (it overrides .env in production mode)
+RUN printf 'VITE_API_BASE_URL=/api\n' > .env.production
 
 # Build the frontend
 RUN pnpm run build
@@ -49,9 +54,11 @@ server {
         try_files \$uri \$uri/ /index.html;
     }
 
-    # API proxy (if backend is on same server)
+    # API proxy — route to backend container via Docker service name
+    # resolver 127.0.0.11 enables Docker's embedded DNS to resolve container hostnames
+    resolver 127.0.0.11 valid=30s ipv6=off;
     location /api/ {
-        proxy_pass http://localhost:3001/;
+        proxy_pass http://backend:8080/api/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';

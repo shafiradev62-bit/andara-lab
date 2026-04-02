@@ -1,60 +1,9 @@
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { Link } from "wouter";
-
-const metrics = [
-  {
-    label: "GDP Growth",
-    value: "5.02%",
-    sub: "Indonesia Q4 2024",
-    change: "+0.08pp",
-    up: true,
-    href: "/macro/macro-outlooks",
-    sparkColor: "#1a3a5c",
-    spark: [4.94, 4.98, 5.03, 5.17, 4.94, 5.04, 5.11, 5.02],
-  },
-  {
-    label: "Inflation (CPI)",
-    value: "2.51%",
-    sub: "Indonesia Aug 2024",
-    change: "-0.01pp",
-    up: true,
-    href: "/macro/policy-monetary",
-    sparkColor: "#6B7280",
-    spark: [2.57, 2.75, 3.05, 3.0, 2.84, 2.51, 2.13, 2.12],
-  },
-  {
-    label: "BI Rate",
-    value: "6.00%",
-    sub: "Unchanged",
-    change: "0.00pp",
-    up: null,
-    href: "/macro/policy-monetary",
-    sparkColor: "#9CA3AF",
-    spark: [5.75, 5.75, 5.75, 6.0, 6.0, 6.25, 6.25, 6.0],
-  },
-  {
-    label: "IDR/USD",
-    value: "15,890",
-    sub: "Spot rate",
-    change: "+0.32%",
-    up: false,
-    href: "/data/market-dashboard",
-    sparkColor: "#9CA3AF",
-    spark: [15620, 15680, 15721, 16100, 16015, 16373, 16200, 15890],
-  },
-  {
-    label: "Trade Balance",
-    value: "+$2.3B",
-    sub: "Jun 2024",
-    change: "-0.3B",
-    up: false,
-    href: "/sectoral/deep-dives",
-    sparkColor: "#9CA3AF",
-    spark: [2.4, 1.5, 2.6, 2.6, 2.6, 2.3, 2.1, 2.3],
-  },
-];
+import { useDatasets } from "../lib/cms-store";
 
 function MiniSparkline({ data, color }: { data: number[]; color: string }) {
+  if (data.length < 2) return null;
   const min = Math.min(...data);
   const max = Math.max(...data);
   const range = max - min || 1;
@@ -79,7 +28,96 @@ function MiniSparkline({ data, color }: { data: number[]; color: string }) {
   );
 }
 
+// Extract numeric values from a dataset's rows for sparkline
+function extractSparkValues(rows: Record<string, string | number>[], valueKey: string): number[] {
+  return rows
+    .map((r) => {
+      const v = r[valueKey];
+      return typeof v === "number" ? v : parseFloat(String(v));
+    })
+    .filter((v) => !isNaN(v));
+}
+
+// Get last value and change from spark data
+function getLastAndChange(spark: number[]): { value: string; change: string; up: boolean | null } {
+  if (spark.length === 0) return { value: "—", change: "—", up: null };
+  const last = spark[spark.length - 1];
+  const prev = spark.length > 1 ? spark[spark.length - 2] : last;
+  const diff = last - prev;
+  const up = diff > 0.001 ? true : diff < -0.001 ? false : null;
+  const changeStr = diff === 0 ? "0.00" : (diff > 0 ? "+" : "") + diff.toFixed(2);
+  return { value: last.toLocaleString(), change: changeStr, up };
+}
+
 export default function KeyMetrics() {
+  const { data: datasets = [], isLoading } = useDatasets();
+
+  // Map dataset IDs to metric config
+  const metricConfigs = [
+    { id: "gdp-growth",     label: "GDP Growth",     valueKey: "GDP Growth",  unit: "%", color: "#1a3a5c", href: "/macro/macro-outlooks",   suffix: "%" },
+    { id: "inflation-rate", label: "Inflation (CPI)", valueKey: "Inflation",   unit: "%", color: "#6B7280", href: "/macro/policy-monetary",  suffix: "%" },
+  ];
+
+  const dynamicMetrics = metricConfigs.map((cfg) => {
+    const ds = datasets.find((d) => d.id === cfg.id);
+    if (!ds) return null;
+    const spark = extractSparkValues(ds.rows, cfg.valueKey);
+    const { value, change, up } = getLastAndChange(spark);
+    const sub = ds.rows.length > 0 ? String(ds.rows[ds.rows.length - 1][ds.columns[0]] ?? "") : "";
+    return {
+      label: cfg.label,
+      value: value + cfg.suffix,
+      sub,
+      change: change + (cfg.suffix === "%" ? "pp" : ""),
+      up,
+      href: cfg.href,
+      sparkColor: cfg.color,
+      spark,
+    };
+  }).filter(Boolean) as {
+    label: string; value: string; sub: string; change: string;
+    up: boolean | null; href: string; sparkColor: string; spark: number[];
+  }[];
+
+  // Static metrics that aren't in datasets (BI Rate, IDR/USD, Trade Balance)
+  const staticMetrics = [
+    {
+      label: "BI Rate",
+      value: "6.00%",
+      sub: "Unchanged",
+      change: "0.00pp",
+      up: null as null,
+      href: "/macro/policy-monetary",
+      sparkColor: "#9CA3AF",
+      spark: [5.75, 5.75, 5.75, 6.0, 6.0, 6.25, 6.25, 6.0],
+    },
+    {
+      label: "IDR/USD",
+      value: "15,890",
+      sub: "Spot rate",
+      change: "+0.32%",
+      up: false as false,
+      href: "/data/market-dashboard",
+      sparkColor: "#9CA3AF",
+      spark: [15620, 15680, 15721, 16100, 16015, 16373, 16200, 15890],
+    },
+    {
+      label: "Trade Balance",
+      value: "+$2.3B",
+      sub: "Jun 2024",
+      change: "-0.3B",
+      up: false as false,
+      href: "/sectoral/deep-dives",
+      sparkColor: "#9CA3AF",
+      spark: [2.4, 1.5, 2.6, 2.6, 2.6, 2.3, 2.1, 2.3],
+    },
+  ];
+
+  // Merge: dynamic metrics first, then static ones
+  const metrics = isLoading
+    ? staticMetrics
+    : [...(dynamicMetrics.length > 0 ? dynamicMetrics : []), ...staticMetrics].slice(0, 5);
+
   return (
     <section className="border-b border-[#E5E7EB] bg-white">
       <div className="max-w-[1200px] mx-auto px-6 py-0">
@@ -103,11 +141,7 @@ export default function KeyMetrics() {
                   ) : (
                     <TrendingDown className="w-3 h-3 text-red-500" />
                   )}
-                  <span
-                    className={`text-[10.5px] font-semibold ${
-                      m.up === null ? "text-gray-400" : m.up ? "text-green-600" : "text-red-500"
-                    }`}
-                  >
+                  <span className={`text-[10.5px] font-semibold ${m.up === null ? "text-gray-400" : m.up ? "text-green-600" : "text-red-500"}`}>
                     {m.change}
                   </span>
                   <span className="text-[10px] text-gray-400 truncate">{m.sub}</span>

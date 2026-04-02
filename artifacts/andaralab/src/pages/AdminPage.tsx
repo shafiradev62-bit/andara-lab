@@ -79,7 +79,7 @@ function StatusBadge({ status }: { status: string }) {
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide ${
       status === "published"
-        ? "bg-emerald-50 text-emerald-700"
+        ? "bg-gray-900 text-white"
         : "bg-gray-100 text-gray-500"
     }`}>
       {status === "published" ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
@@ -91,7 +91,7 @@ function StatusBadge({ status }: { status: string }) {
 function LocaleBadge({ locale }: { locale: string }) {
   return (
     <span className={`text-[10.5px] font-semibold uppercase px-1.5 py-0.5 ${
-      locale === "id" ? "bg-orange-50 text-orange-700" : "bg-blue-50 text-blue-700"
+      locale === "id" ? "bg-gray-700 text-white" : "bg-gray-900 text-white"
     }`}>
       {locale === "id" ? "ID" : "EN"}
     </span>
@@ -248,7 +248,7 @@ function DatasetEditor({
           <div className="flex items-center justify-between mb-4">
             <p className="text-[13px] text-gray-600">First column = X-axis labels. Remaining columns = data series.</p>
             <div className="flex gap-2">
-              <button onClick={addColumn} className="flex items-center gap-1 text-[12px] font-medium text-[#1a3a5c] border border-[#1a3a5c] px-3 py-1.5 hover:bg-blue-50">
+              <button onClick={addColumn} className="flex items-center gap-1 text-[12px] font-medium text-gray-700 border border-gray-300 px-3 py-1.5 hover:bg-gray-50">
                 <Plus className="w-3.5 h-3.5" /> Add Series
               </button>
               <button onClick={addRow} className="flex items-center gap-1 text-[12px] font-medium text-white bg-[#1a3a5c] px-3 py-1.5 hover:bg-[#14305a]">
@@ -327,14 +327,23 @@ function PageEditor({
   const createMut = useCreatePage();
   const isSaving = updateMut.isPending || createMut.isPending;
   const [draft, setDraft] = useState<Partial<Page>>(page ?? {});
+  const [savedSlug, setSavedSlug] = useState<string | null>(null);
   const isUpdating = draft !== null && !isNew;
 
   const handleSave = () => {
     if (!draft) return;
     if (isNew) {
-      createMut.mutate(draft as any, { onSuccess: onBack });
+      createMut.mutate(draft as any, {
+        onSuccess: (res: any) => {
+          setSavedSlug(res.data?.slug ?? draft.slug ?? null);
+        },
+      });
     } else if (page?.id) {
-      updateMut.mutate({ id: page.id, data: draft }, { onSuccess: onBack });
+      updateMut.mutate({ id: page.id, data: draft }, {
+        onSuccess: () => {
+          setSavedSlug(draft.slug ?? page.slug ?? null);
+        },
+      });
     }
   };
 
@@ -428,11 +437,11 @@ function PageEditor({
 
         {/* Linked page info */}
         {!isNew && page?.linkedIdRecord && (
-          <div className="md:col-span-2 bg-blue-50 border border-blue-100 p-4 flex items-start gap-3">
-            <Link2 className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+          <div className="md:col-span-2 bg-gray-50 border border-gray-200 p-4 flex items-start gap-3">
+            <Link2 className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
             <div>
-              <p className="text-[12.5px] font-semibold text-blue-800">Linked translation</p>
-              <p className="text-[12px] text-blue-600 mt-0.5">
+              <p className="text-[12.5px] font-semibold text-gray-700">Linked translation</p>
+              <p className="text-[12px] text-gray-500 mt-0.5">
                 This page is linked to the <LocaleBadge locale={page.linkedIdRecord.locale} /> version:
                 <strong className="ml-1">{page.linkedIdRecord.title}</strong>
               </p>
@@ -448,8 +457,39 @@ function PageEditor({
           {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           {isSaving ? "Saving…" : "Save Page"}
         </button>
-        {updateMut.isSuccess && <span className="text-[12px] text-green-600 flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5" /> Saved</span>}
+        {(updateMut.isSuccess || createMut.isSuccess) && !savedSlug && (
+          <span className="text-[12px] text-gray-600 flex items-center gap-1">
+            <CheckCircle className="w-3.5 h-3.5" /> Saved
+          </span>
+        )}
       </div>
+
+      {/* Post-save success panel */}
+      {savedSlug && (
+        <div className="mt-4 bg-gray-50 border border-gray-200 p-4">
+          <p className="text-[12.5px] font-semibold text-gray-700 mb-2 flex items-center gap-1">
+            <CheckCircle className="w-4 h-4 text-gray-700" />
+            Page saved successfully
+          </p>
+          <div className="flex items-center gap-3">
+            <a
+              href={savedSlug}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[12.5px] font-medium text-[#1a3a5c] underline"
+            >
+              View on site → {window.location.origin}{savedSlug}
+            </a>
+            <span className="text-gray-300">·</span>
+            <button
+              onClick={() => { setSavedSlug(null); onBack(); }}
+              className="text-[12.5px] text-gray-500 hover:text-gray-800 underline"
+            >
+              Back to list
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -467,13 +507,22 @@ function PostEditor({
   const createMut = useCreatePost();
   const isSaving = updateMut.isPending || createMut.isPending;
   const [draft, setDraft] = useState<Partial<BlogPost>>(post ?? {});
+  const [savedSlug, setSavedSlug] = useState<string | null>(null);
 
   const handleSave = () => {
     if (!draft) return;
     if (isNew) {
-      createMut.mutate(draft as any, { onSuccess: onBack });
+      createMut.mutate(draft as any, {
+        onSuccess: (res: any) => {
+          setSavedSlug(res.data?.slug ?? draft.slug ?? null);
+        },
+      });
     } else if (post?.id) {
-      updateMut.mutate({ id: post.id, data: draft }, { onSuccess: onBack });
+      updateMut.mutate({ id: post.id, data: draft }, {
+        onSuccess: () => {
+          setSavedSlug(draft.slug ?? post.slug ?? null);
+        },
+      });
     }
   };
 
@@ -594,8 +643,39 @@ function PostEditor({
           {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           {isSaving ? "Saving…" : "Save Post"}
         </button>
-        {updateMut.isSuccess && <span className="text-[12px] text-green-600 flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5" /> Saved</span>}
+        {(updateMut.isSuccess || createMut.isSuccess) && !savedSlug && (
+          <span className="text-[12px] text-gray-600 flex items-center gap-1">
+            <CheckCircle className="w-3.5 h-3.5" /> Saved
+          </span>
+        )}
       </div>
+
+      {/* Post-save success panel */}
+      {savedSlug && (
+        <div className="mt-4 bg-gray-50 border border-gray-200 p-4">
+          <p className="text-[12.5px] font-semibold text-gray-700 mb-2 flex items-center gap-1">
+            <CheckCircle className="w-4 h-4 text-gray-700" />
+            Post saved successfully
+          </p>
+          <div className="flex items-center gap-3">
+            <a
+              href="/blog"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[12.5px] font-medium text-[#1a3a5c] underline"
+            >
+              View on site → {window.location.origin}/blog
+            </a>
+            <span className="text-gray-300">·</span>
+            <button
+              onClick={() => { setSavedSlug(null); onBack(); }}
+              className="text-[12.5px] text-gray-500 hover:text-gray-800 underline"
+            >
+              Back to list
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -660,7 +740,7 @@ function DataHubTab() {
             </div>
             <div className="flex items-center gap-2">
               <button onClick={handleReset} disabled={resetMut.isPending}
-                className="flex items-center gap-1.5 text-[12px] font-medium text-amber-600 border border-amber-200 bg-amber-50 px-3 py-1.5 hover:bg-amber-100 disabled:opacity-50">
+                className="flex items-center gap-1.5 text-[12px] font-medium text-gray-500 border border-gray-300 bg-white px-3 py-1.5 hover:bg-gray-50 disabled:opacity-50">
                 {resetMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
                 Reset to Seed
               </button>
@@ -697,7 +777,7 @@ function DataHubTab() {
                   </div>
                   <div className="col-span-2 text-[12.5px] text-gray-600">{ds.category}</div>
                   <div className="col-span-2">
-                    <span className="text-[11.5px] font-medium text-[#1a3a5c] bg-blue-50 px-2 py-0.5 capitalize">{ds.chartType}</span>
+                    <span className="text-[11.5px] font-medium text-gray-700 bg-gray-100 px-2 py-0.5 capitalize">{ds.chartType}</span>
                   </div>
                   <div className="col-span-2 text-[12.5px] text-gray-600">{ds.rows.length} rows</div>
                   <div className="col-span-2 flex items-center gap-2">
@@ -711,9 +791,9 @@ function DataHubTab() {
             </div>
           )}
 
-          <div className="mt-5 bg-blue-50 border border-blue-100 p-4 flex items-start gap-3">
-            <AlertCircle className="w-4 h-4 text-[#1a3a5c] flex-shrink-0 mt-0.5" />
-            <p className="text-[12px] text-[#1a3a5c] leading-relaxed">
+          <div className="mt-5 bg-gray-50 border border-gray-200 p-4 flex items-start gap-3">
+            <AlertCircle className="w-4 h-4 text-gray-500 flex-shrink-0 mt-0.5" />
+            <p className="text-[12px] text-gray-600 leading-relaxed">
               All data is served via the <strong>REST API</strong> backed by an in-memory store.
               Click "Reset to Seed" to restore original datasets.
               In production, replace the store with PostgreSQL + Drizzle ORM.
@@ -741,6 +821,7 @@ function PagesTab() {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [editPage, setEditPage] = useState<Page | null>(null);
   const [isNewPage, setIsNewPage] = useState(false);
+  const [deleteSuccess, setDeleteSuccess] = useState<string | null>(null);
 
   const filter: any = {};
   if (localeFilter !== "all") filter.locale = localeFilter;
@@ -752,7 +833,11 @@ function PagesTab() {
 
   const handleDelete = (id: number, title: string) => {
     if (!confirm(`Delete page "${title}"?`)) return;
-    deleteMut.mutate(id, { onSuccess: () => { if (expandedId === id) setExpandedId(null); } });
+    deleteMut.mutate(id, { onSuccess: () => {
+      if (expandedId === id) setExpandedId(null);
+      setDeleteSuccess(`"${title}" deleted`);
+      setTimeout(() => setDeleteSuccess(null), 4000);
+    } });
   };
 
   const openNew = (locale: "en" | "id") => {
@@ -788,6 +873,15 @@ function PagesTab() {
 
   return (
     <div>
+      {deleteSuccess && (
+        <div className="mb-4 bg-gray-50 border border-gray-200 p-3 flex items-center justify-between">
+          <span className="text-[12.5px] text-gray-700">
+            <CheckCircle className="w-3.5 h-3.5 inline mr-1" />
+            {deleteSuccess}
+          </span>
+          <a href="/admin" className="text-[12px] text-[#1a3a5c] underline">Refresh list</a>
+        </div>
+      )}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-[20px] font-semibold text-gray-900">Pages</h2>
@@ -797,7 +891,7 @@ function PagesTab() {
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => resetMut.mutate(undefined)} disabled={resetMut.isPending}
-            className="flex items-center gap-1.5 text-[12px] font-medium text-amber-600 border border-amber-200 bg-amber-50 px-3 py-1.5 hover:bg-amber-100 disabled:opacity-50">
+            className="flex items-center gap-1.5 text-[12px] font-medium text-gray-500 border border-gray-300 bg-white px-3 py-1.5 hover:bg-gray-50 disabled:opacity-50">
             {resetMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
             Reset
           </button>
@@ -806,7 +900,7 @@ function PagesTab() {
             <Plus className="w-4 h-4" /> New Page (EN)
           </button>
           <button onClick={() => openNew("id")}
-            className="flex items-center gap-2 text-[13px] font-medium text-white bg-orange-600 px-4 py-2 hover:bg-orange-700">
+            className="flex items-center gap-2 text-[13px] font-medium text-white bg-gray-700 px-4 py-2 hover:bg-gray-800">
             <Plus className="w-4 h-4" /> New Page (ID)
           </button>
         </div>
@@ -818,14 +912,14 @@ function PagesTab() {
         {[["all", "All"], ["en", "English"], ["id", "Indonesia"]].map(([v, label]) => (
           <button key={v} onClick={() => setLocaleFilter(v)}
             className={`px-3 py-1 text-[12px] font-medium border ${
-              localeFilter === v ? "border-[#1a3a5c] bg-blue-50 text-[#1a3a5c]" : "border-gray-200 text-gray-500 hover:bg-gray-50"
+              localeFilter === v ? "border-[#1a3a5c] bg-[#1a3a5c] text-white" : "border-gray-200 text-gray-500 hover:bg-gray-50"
             }`}>{label}</button>
         ))}
         <div className="h-4 w-px bg-gray-200 mx-1" />
         {[["all", "All"], ["published", "Published"], ["draft", "Draft"]].map(([v, label]) => (
           <button key={v} onClick={() => setStatusFilter(v)}
             className={`px-3 py-1 text-[12px] font-medium border ${
-              statusFilter === v ? "border-[#1a3a5c] bg-blue-50 text-[#1a3a5c]" : "border-gray-200 text-gray-500 hover:bg-gray-50"
+              statusFilter === v ? "border-[#1a3a5c] bg-[#1a3a5c] text-white" : "border-gray-200 text-gray-500 hover:bg-gray-50"
             }`}>{label}</button>
         ))}
       </div>
@@ -937,6 +1031,7 @@ function BlogTab() {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [editPost, setEditPost] = useState<BlogPost | null>(null);
   const [isNewPost, setIsNewPost] = useState(false);
+  const [deleteSuccess, setDeleteSuccess] = useState<string | null>(null);
 
   const filter: any = {};
   if (localeFilter !== "all") filter.locale = localeFilter;
@@ -949,7 +1044,11 @@ function BlogTab() {
 
   const handleDelete = (id: number, title: string) => {
     if (!confirm(`Delete post "${title}"?`)) return;
-    deleteMut.mutate(id, { onSuccess: () => { if (expandedId === id) setExpandedId(null); } });
+    deleteMut.mutate(id, { onSuccess: () => {
+      if (expandedId === id) setExpandedId(null);
+      setDeleteSuccess(`"${title}" deleted`);
+      setTimeout(() => setDeleteSuccess(null), 4000);
+    } });
   };
 
   if (editPost !== null || isNewPost) {
@@ -974,6 +1073,15 @@ function BlogTab() {
 
   return (
     <div>
+      {deleteSuccess && (
+        <div className="mb-4 bg-gray-50 border border-gray-200 p-3 flex items-center justify-between">
+          <span className="text-[12.5px] text-gray-700">
+            <CheckCircle className="w-3.5 h-3.5 inline mr-1" />
+            {deleteSuccess}
+          </span>
+          <a href="/admin" className="text-[12px] text-[#1a3a5c] underline">Refresh list</a>
+        </div>
+      )}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-[20px] font-semibold text-gray-900">Blog Posts</h2>
@@ -983,7 +1091,7 @@ function BlogTab() {
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => resetMut.mutate(undefined)} disabled={resetMut.isPending}
-            className="flex items-center gap-1.5 text-[12px] font-medium text-amber-600 border border-amber-200 bg-amber-50 px-3 py-1.5 hover:bg-amber-100 disabled:opacity-50">
+            className="flex items-center gap-1.5 text-[12px] font-medium text-gray-500 border border-gray-300 bg-white px-3 py-1.5 hover:bg-gray-50 disabled:opacity-50">
             {resetMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
             Reset
           </button>
@@ -992,7 +1100,7 @@ function BlogTab() {
             <Plus className="w-4 h-4" /> New Post (EN)
           </button>
           <button onClick={() => { const p = newPost("id"); setEditPost(p as any); setIsNewPost(true); }}
-            className="flex items-center gap-2 text-[13px] font-medium text-white bg-orange-600 px-4 py-2 hover:bg-orange-700">
+            className="flex items-center gap-2 text-[13px] font-medium text-white bg-gray-700 px-4 py-2 hover:bg-gray-800">
             <Plus className="w-4 h-4" /> New Post (ID)
           </button>
         </div>
@@ -1004,7 +1112,7 @@ function BlogTab() {
         {[["all", "All"], ["en", "English"], ["id", "Indonesia"]].map(([v, label]) => (
           <button key={v} onClick={() => setLocaleFilter(v)}
             className={`px-3 py-1 text-[12px] font-medium border ${
-              localeFilter === v ? "border-[#1a3a5c] bg-blue-50 text-[#1a3a5c]" : "border-gray-200 text-gray-500 hover:bg-gray-50"
+              localeFilter === v ? "border-[#1a3a5c] bg-[#1a3a5c] text-white" : "border-gray-200 text-gray-500 hover:bg-gray-50"
             }`}>{label}</button>
         ))}
         <div className="h-4 w-px bg-gray-200 mx-1" />
@@ -1012,7 +1120,7 @@ function BlogTab() {
         {[["all", "All"], ["published", "Published"], ["draft", "Draft"]].map(([v, label]) => (
           <button key={v} onClick={() => setStatusFilter(v)}
             className={`px-3 py-1 text-[12px] font-medium border ${
-              statusFilter === v ? "border-[#1a3a5c] bg-blue-50 text-[#1a3a5c]" : "border-gray-200 text-gray-500 hover:bg-gray-50"
+              statusFilter === v ? "border-[#1a3a5c] bg-[#1a3a5c] text-white" : "border-gray-200 text-gray-500 hover:bg-gray-50"
             }`}>{label}</button>
         ))}
         <div className="h-4 w-px bg-gray-200 mx-1" />
@@ -1020,7 +1128,7 @@ function BlogTab() {
         {[["all", "All"], ...BLOG_CATEGORIES.map((c) => [c, c] as [string, string])].map(([v, label]) => (
           <button key={v} onClick={() => setCategoryFilter(v)}
             className={`px-3 py-1 text-[12px] font-medium border ${
-              categoryFilter === v ? "border-[#1a3a5c] bg-blue-50 text-[#1a3a5c]" : "border-gray-200 text-gray-500 hover:bg-gray-50"
+              categoryFilter === v ? "border-[#1a3a5c] bg-[#1a3a5c] text-white" : "border-gray-200 text-gray-500 hover:bg-gray-50"
             }`}>{label}</button>
         ))}
       </div>
@@ -1139,7 +1247,7 @@ export default function AdminPage() {
               <button key={t.key} onClick={() => setActiveTab(t.key)}
                 className={`flex items-center gap-1.5 px-4 py-1.5 text-[13px] font-medium border transition-colors ${
                   activeTab === t.key
-                    ? "border-[#1a3a5c] bg-blue-50 text-[#1a3a5c]"
+                    ? "border-[#1a3a5c] bg-[#1a3a5c] text-white"
                     : "border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50"
                 }`}>
                 {t.icon}
