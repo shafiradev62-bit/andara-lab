@@ -1,10 +1,12 @@
+import { useEffect } from "react";
 import { ArrowRight, BarChart2, Clock, Tag, Loader2 } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { usePageBySlug, useDatasets, usePosts } from "@/lib/cms-store";
 import type { ContentSection } from "@/lib/cms-store";
 import InteractiveChart from "@/components/InteractiveChart";
 import { useLocale } from "@/lib/locale";
 import { RESEARCH_TAG_PILL } from "@/lib/research-tag-styles";
+import { applyDocumentSeo, seoFromCmsPage } from "@/lib/document-meta";
 
 function formatDate(dateStr?: string) {
   if (!dateStr) return "";
@@ -237,7 +239,23 @@ function SectionBlock({ section }: { section: ContentSection }) {
 }
 
 export default function DynamicPage({ pageSlug, locale }: { pageSlug: string; locale?: "en" | "id" }) {
+  const { t } = useLocale();
+  const [pathname] = useLocation();
   const { data: page, isLoading, error } = usePageBySlug(pageSlug, locale);
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (error || !page) {
+      applyDocumentSeo({
+        title: t("meta_not_found_title"),
+        description: t("meta_not_found_description"),
+        pathname: pathname || pageSlug,
+      });
+      return;
+    }
+    const { title, description } = seoFromCmsPage(page);
+    applyDocumentSeo({ title, description, pathname: pathname || page.slug });
+  }, [isLoading, error, page, pathname, pageSlug, t]);
 
   if (isLoading) return (
     <div className="flex items-center justify-center py-32">
@@ -281,7 +299,7 @@ export default function DynamicPage({ pageSlug, locale }: { pageSlug: string; lo
         </div>
       )}
       {blocks.map((section: ContentSection, i: number) => (
-        <SectionBlock key={i} section={section} />
+        <SectionBlock key={`${section.type}-${i}`} section={section} />
       ))}
     </>
   );

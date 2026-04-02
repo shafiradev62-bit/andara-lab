@@ -16,33 +16,55 @@ function url(path: string): string {
 }
 
 async function rf<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(url(path), {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      ...init?.headers,
-    },
-  });
-  if (!res.ok) {
-    const body = await res.text().catch(() => null);
-    let detail: string | undefined;
-    try {
-      const j = JSON.parse(body || "{}") as { detail?: string };
-      if (typeof j.detail === "string") detail = j.detail;
-    } catch {
-      /* not JSON */
+  const method = (init?.method ?? "GET").toUpperCase();
+
+  const once = async (): Promise<T> => {
+    const res = await fetch(url(path), {
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        ...init?.headers,
+      },
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => null);
+      let detail: string | undefined;
+      try {
+        const j = JSON.parse(body || "{}") as { detail?: string };
+        if (typeof j.detail === "string") detail = j.detail;
+      } catch {
+        /* not JSON */
+      }
+      const err = new Error(detail ?? `HTTP ${res.status} ${res.statusText}${body && !detail ? `: ${body}` : ""}`) as Error & {
+        apiDetail?: string;
+        apiStatus?: number;
+      };
+      err.apiDetail = detail;
+      err.apiStatus = res.status;
+      throw err;
     }
-    const err = new Error(detail ?? `HTTP ${res.status} ${res.statusText}${body && !detail ? `: ${body}` : ""}`) as Error & {
-      apiDetail?: string;
-      apiStatus?: number;
-    };
-    err.apiDetail = detail;
-    err.apiStatus = res.status;
-    throw err;
+    if (res.status === 204) return undefined as T;
+    return res.json() as Promise<T>;
+  };
+
+  try {
+    return await once();
+  } catch (e) {
+    const status = (e as Error & { apiStatus?: number }).apiStatus;
+    const transient =
+      method === "GET" &&
+      (status === 502 ||
+        status === 503 ||
+        status === 504 ||
+        status === 429 ||
+        e instanceof TypeError);
+    if (transient) {
+      await new Promise((r) => setTimeout(r, 400));
+      return await once();
+    }
+    throw e;
   }
-  if (res.status === 204) return undefined as T;
-  return res.json() as Promise<T>;
 }
 
 // ─── Typed API helpers ────────────────────────────────────────────────────────

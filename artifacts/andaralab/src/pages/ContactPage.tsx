@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Mail, MapPin, Phone, Send, CheckCircle } from "lucide-react";
+import { useLocale } from "@/lib/locale";
+import { applyDocumentSeo } from "@/lib/document-meta";
 
 export default function ContactPage() {
+  const { t } = useLocale();
   const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({
     name: "", email: "", organization: "", subject: "", message: "",
@@ -11,6 +14,14 @@ export default function ContactPage() {
     e.preventDefault();
     setSubmitted(true);
   };
+
+  useEffect(() => {
+    applyDocumentSeo({
+      title: t("nav_contact"),
+      description: t("meta_contact_description"),
+      pathname: "/contact",
+    });
+  }, [t]);
 
   return (
     <div className="bg-white">

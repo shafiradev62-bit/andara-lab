@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Switch, Route, useLocation } from "wouter";
 // v2 - dynamic CMS routing
 import Navbar from "@/components/Navbar";
@@ -48,9 +49,19 @@ function CmsDynamicPage() {
   return <CmsPage slug={location} />;
 }
 
+/** SPA: reset scroll on route change (no layout change). */
+function ScrollToTop() {
+  const [pathname] = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [pathname]);
+  return null;
+}
+
 export default function App() {
   return (
     <LocaleProvider>
+      <ScrollToTop />
       <Switch>
         <Route path="/admin">
           <AdminLayout>

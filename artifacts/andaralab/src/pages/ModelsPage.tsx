@@ -1,6 +1,8 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { MODELS, AIModel, ModelProvider } from "@/data/models-data";
 import { Search, X, ChevronUp, ChevronDown } from "lucide-react";
+import { useLocale } from "@/lib/locale";
+import { applyDocumentSeo } from "@/lib/document-meta";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -305,11 +307,20 @@ function sortColLabel(col: keyof AIModel): string {
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function ModelsPage() {
+  const { t } = useLocale();
   const [search, setSearch] = useState("");
   const [selectedProviders, setSelectedProviders] = useState<ModelProvider[]>([]);
   const [showFreeOnly, setShowFreeOnly] = useState<boolean | null>(null);
   const [sort, setSort] = useState<{ col: keyof AIModel; dir: SortDir }>({ col: "name", dir: "asc" });
   const [view, setView] = useState<"table" | "list">("table");
+
+  useEffect(() => {
+    applyDocumentSeo({
+      title: t("nav_model_comparison"),
+      description: t("meta_models_description"),
+      pathname: "/data/models",
+    });
+  }, [t]);
 
   const toggleProvider = useCallback((p: ModelProvider) => {
     setSelectedProviders((prev) =>

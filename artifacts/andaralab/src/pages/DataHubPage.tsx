@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, Link } from "wouter";
 import { useDatasets } from "@/lib/cms-store";
+import { useLocale } from "@/lib/locale";
+import { applyDocumentSeo } from "@/lib/document-meta";
 import InteractiveChart from "@/components/InteractiveChart";
 import { BarChart2, LineChart as LineChartIcon, TrendingUp, Calendar, Table as TableIcon, ArrowRight, ExternalLink, AlertCircle, Loader2 } from "lucide-react";
 
@@ -22,11 +24,22 @@ function fmtChange(last: number, prev: number): { label: string; positive: boole
 
 export default function DataHubPage() {
   const [location] = useLocation();
+  const { t } = useLocale();
   const [activeTab, setActiveTab] = useState<"charts" | "calendar" | "market">("charts");
   const [selectedChart, setSelectedChart] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<"chart" | "table">("chart");
 
   const { data: datasets = [], isLoading, error } = useDatasets();
+
+  useEffect(() => {
+    const path =
+      location && location !== "/" ? (location.startsWith("/") ? location : `/${location}`) : "/data";
+    applyDocumentSeo({
+      title: t("data_hub_title"),
+      description: t("meta_data_description"),
+      pathname: path,
+    });
+  }, [location, t]);
 
   const isCalendar = location.includes("economic-calendar");
   const isDashboard = location.includes("market-dashboard");

@@ -1,7 +1,9 @@
+import { useEffect } from "react";
 import { Link, useParams } from "wouter";
 import { ArrowLeft, ArrowRight, Clock, Loader2 } from "lucide-react";
 import { usePosts, usePostBySlug } from "@/lib/cms-store";
 import { useLocale } from "@/lib/locale";
+import { applyDocumentSeo, truncateMeta } from "@/lib/document-meta";
 
 function formatDate(dateStr?: string) {
   if (!dateStr) return "";
@@ -12,12 +14,32 @@ function formatDate(dateStr?: string) {
 
 export default function ArticlePage() {
   const params = useParams<{ slug: string }>();
-  const { locale } = useLocale();
+  const { locale, t } = useLocale();
   const slug = params.slug || "";
   const { data: post, isLoading: postLoading, error: postError } = usePostBySlug(slug, locale);
   const { data: posts = [] } = usePosts({ status: "published" });
 
   const isLoading = postLoading;
+
+  useEffect(() => {
+    if (postLoading) return;
+    const path = `/article/${slug}`;
+    if (!post) {
+      applyDocumentSeo({
+        title: t("meta_article_not_found_title"),
+        description: t("meta_article_not_found_description"),
+        pathname: path,
+      });
+      return;
+    }
+    const firstPara = Array.isArray(post.body) && post.body.length ? String(post.body[0]) : "";
+    const description = (post.excerpt && post.excerpt.trim()) || truncateMeta(firstPara) || undefined;
+    applyDocumentSeo({
+      title: post.title,
+      description,
+      pathname: path,
+    });
+  }, [postLoading, post, slug, t]);
 
   const related = post
     ? posts

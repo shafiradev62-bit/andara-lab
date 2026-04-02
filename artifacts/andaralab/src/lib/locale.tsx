@@ -93,6 +93,19 @@ const translations = {
     market_pulse: "Market Pulse",
     lab_notes: "Lab Notes",
 
+    // SEO / document meta (no visual layout)
+    meta_site_description:
+      "Independent macroeconomic research, sectoral intelligence, and interactive data for Indonesia and emerging markets.",
+    meta_contact_description:
+      "Contact AndaraLab for research partnerships, media inquiries, and data collaborations.",
+    meta_data_description: "Interactive economic charts, calendar, and market intelligence dashboards.",
+    meta_models_description:
+      "Compare large language models for research: context length, pricing, and capabilities — curated by AndaraLab.",
+    meta_not_found_title: "Page not found",
+    meta_not_found_description: "This page does not exist or is still unpublished in the CMS.",
+    meta_article_not_found_title: "Article not found",
+    meta_article_not_found_description: "This article does not exist or is still a draft in the CMS.",
+
     // Generic
     back: "Back",
     loading: "Loading…",
@@ -170,6 +183,19 @@ const translations = {
     market_pulse: "Pulsa Pasar",
     lab_notes: "Catatan Lab",
 
+    // SEO / document meta
+    meta_site_description:
+      "Riset makro independen, intelijen sektoral, dan data interaktif untuk Indonesia dan pasar berkembang.",
+    meta_contact_description:
+      "Hubungi AndaraLab untuk kemitraan riset, media, dan kolaborasi data.",
+    meta_data_description: "Grafik ekonomi interaktif, kalender ekonomi, dan dashboard intelijen pasar.",
+    meta_models_description:
+      "Bandingkan model bahasa besar untuk riset: panjang konteks, harga, dan kemampuan — kurasi AndaraLab.",
+    meta_not_found_title: "Halaman tidak ditemukan",
+    meta_not_found_description: "Halaman ini tidak ada atau belum dipublikasikan di CMS.",
+    meta_article_not_found_title: "Artikel tidak ditemukan",
+    meta_article_not_found_description: "Artikel ini tidak ada atau masih berstatus draf di CMS.",
+
     // Generic
     back: "Kembali",
     loading: "Memuat…",
@@ -206,6 +232,10 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
   }, [locale]);
 
   const setLocale = useCallback((l: Locale) => setLocaleState(l), []);
+
+  useEffect(() => {
+    document.documentElement.lang = locale === "id" ? "id" : "en";
+  }, [locale]);
 
   const t = useCallback(
     (key: string): string => {
