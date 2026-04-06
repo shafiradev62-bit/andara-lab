@@ -1,6 +1,5 @@
 import { ArrowRight } from "lucide-react";
 import { Link } from "wouter";
-import { useLocale } from "../lib/locale";
 
 const pillars = [
   { text: "28+ Years of Data" },
@@ -9,11 +8,8 @@ const pillars = [
 ];
 
 export default function Hero() {
-  const { locale } = useLocale();
-  const isId = locale === "id";
-
   return (
-    <section className="bg-white border-b border-[#F0F0F0]">
+    <section className="bg-white border-b border-[#F5F5F5]">
       <div className="max-w-[1200px] mx-auto px-6 py-16 md:py-20">
         <div className="max-w-2xl">
 
@@ -29,24 +25,24 @@ export default function Hero() {
           </h1>
 
           {/* Subheadline */}
-          <p className="text-[15.5px] text-gray-400 leading-relaxed mb-8 max-w-[480px]">
+          <p className="text-[16px] text-gray-500 leading-relaxed mb-8 max-w-[480px]">
             AndaraLab transforms Indonesia's complex economic data into
             high-precision strategic intelligence — from macro policy shifts to
             sectoral deep-dives across 8 key industries.
           </p>
 
           {/* Pillar strip */}
-          <div className="flex flex-wrap gap-5 mb-10 pb-8 border-b border-[#F0F0F0]">
+          <div className="flex flex-wrap gap-5 mb-10 pb-8 border-b border-[#F5F5F5]">
             {pillars.map((p) => (
               <div key={p.text} className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
-                <span className="text-[13px] font-medium text-gray-500">{p.text}</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-gray-300 flex-shrink-0" />
+                <span className="text-[13px] font-medium text-gray-600">{p.text}</span>
               </div>
             ))}
           </div>
 
-          {/* CTA buttons */}
-          <div className="flex flex-wrap items-center gap-3">
+          {/* CTA */}
+          <div className="flex flex-wrap items-center gap-4">
             <Link
               href="/analisis"
               className="inline-flex items-center gap-2 text-white text-[13px] font-semibold bg-gray-900 px-6 py-3 hover:bg-gray-700 transition-colors"
@@ -56,13 +52,13 @@ export default function Hero() {
             </Link>
             <Link
               href="/macro/macro-outlooks"
-              className="inline-flex items-center gap-2 border border-gray-200 text-gray-700 text-[13px] font-medium px-6 py-3 hover:border-gray-400 hover:text-gray-900 transition-colors"
+              className="inline-flex items-center gap-2 text-gray-600 text-[13px] font-medium hover:text-gray-900 transition-colors"
             >
               Macro Outlooks
             </Link>
             <Link
               href="/data"
-              className="inline-flex items-center gap-2 text-gray-500 text-[13px] font-medium hover:text-gray-900 transition-colors"
+              className="inline-flex items-center gap-2 text-gray-400 text-[13px] font-medium hover:text-gray-900 transition-colors"
             >
               Data Hub <ArrowRight className="w-3.5 h-3.5" />
             </Link>
