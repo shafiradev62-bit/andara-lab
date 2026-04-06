@@ -25,7 +25,7 @@ export default function AboutPage() {
       <section className="border-b border-[#E5E7EB] py-16">
         <div className="max-w-[1200px] mx-auto px-6">
           <div className="max-w-[720px]">
-            <div className="text-[11px] font-semibold uppercase tracking-widest text-[#1a3a5c] mb-4">
+            <div className="text-[11px] font-semibold uppercase tracking-widest text-gray-900 mb-4">
               About AndaraLab
             </div>
             <h1 className="text-[38px] font-bold text-gray-900 leading-tight mb-6">
@@ -61,7 +61,7 @@ export default function AboutPage() {
             {pillars.map((p) => (
               <div key={p.title} className="border border-[#E5E7EB] p-6">
                 <div className="w-10 h-10 bg-[#f0f4f9] flex items-center justify-center mb-4">
-                  <p.icon className="w-5 h-5 text-[#1a3a5c]" />
+                  <p.icon className="w-5 h-5 text-gray-900" />
                 </div>
                 <h3 className="text-[16px] font-semibold text-gray-900 mb-3">
                   {p.title}
@@ -78,7 +78,7 @@ export default function AboutPage() {
       <section className="py-16 border-b border-[#E5E7EB]">
         <div className="max-w-[1200px] mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
           <div>
-            <div className="text-[11px] font-semibold uppercase tracking-widest text-[#1a3a5c] mb-4">
+            <div className="text-[11px] font-semibold uppercase tracking-widest text-gray-900 mb-4">
               PT. Andara Investasi Cerdas
             </div>
             <h2 className="text-[26px] font-bold text-gray-900 leading-tight mb-5">
@@ -97,7 +97,7 @@ export default function AboutPage() {
             </p>
             <Link
               href="/contact"
-              className="inline-flex items-center gap-2 text-[13.5px] font-medium text-white bg-[#1a3a5c] px-6 py-2.5 hover:bg-[#14305a] transition-colors"
+              className="inline-flex items-center gap-2 text-[13.5px] font-medium text-white bg-gray-900 px-6 py-2.5 hover:bg-gray-700 transition-colors"
             >
               Get in Touch
               <ArrowRight className="w-4 h-4" />
@@ -105,10 +105,10 @@ export default function AboutPage() {
           </div>
           <div className="h-[280px] bg-[#f0f4f9] flex items-center justify-center border border-[#E5E7EB]">
             <div className="text-center px-8">
-              <div className="text-[48px] font-bold text-[#1a3a5c] mb-2">2+</div>
+              <div className="text-[48px] font-bold text-gray-900 mb-2">2+</div>
               <div className="text-[13px] text-gray-500">Years of Research Excellence</div>
               <div className="h-px bg-[#E5E7EB] my-4" />
-              <div className="text-[48px] font-bold text-[#1a3a5c] mb-2">100+</div>
+              <div className="text-[48px] font-bold text-gray-900 mb-2">100+</div>
               <div className="text-[13px] text-gray-500">Data Points Tracked Monthly</div>
             </div>
           </div>

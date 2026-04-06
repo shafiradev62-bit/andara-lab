@@ -42,7 +42,7 @@ export default function LatestInsights() {
       <div className="max-w-[1200px] mx-auto px-6">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-[22px] font-semibold text-gray-900">Latest Insights</h2>
-          <Link href="/blog" className="text-[12.5px] font-medium text-[#1a3a5c] hover:underline flex items-center gap-1">
+          <Link href="/blog" className="text-[12.5px] font-medium text-gray-900 hover:underline flex items-center gap-1">
             View all <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
@@ -60,7 +60,7 @@ export default function LatestInsights() {
                   {post.category}
                 </span>
               </div>
-              <h3 className="text-[14.5px] font-semibold text-gray-900 leading-snug mb-2.5 group-hover:text-[#1a3a5c] transition-colors flex-1">
+              <h3 className="text-[14.5px] font-semibold text-gray-900 leading-snug mb-2.5 group-hover:text-gray-900 transition-colors flex-1">
                 {post.title}
               </h3>
               {post.excerpt && (
@@ -80,7 +80,7 @@ export default function LatestInsights() {
                     </>
                   )}
                 </div>
-                <span className="text-[12px] font-medium text-[#1a3a5c] flex items-center gap-1 group-hover:gap-2 transition-all">
+                <span className="text-[12px] font-medium text-gray-900 flex items-center gap-1 group-hover:gap-2 transition-all">
                   Read <ArrowRight className="w-3 h-3" />
                 </span>
               </div>
@@ -103,7 +103,7 @@ export default function LatestInsights() {
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-[13.5px] font-medium text-gray-900 truncate group-hover:text-[#1a3a5c] transition-colors">
+                  <div className="text-[13.5px] font-medium text-gray-900 truncate group-hover:text-gray-900 transition-colors">
                     {post.title}
                   </div>
                 </div>
@@ -114,7 +114,7 @@ export default function LatestInsights() {
                       <Clock className="w-3 h-3" /> {post.readTime}
                     </span>
                   )}
-                  <ArrowRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#1a3a5c] transition-colors" />
+                  <ArrowRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-900 transition-colors" />
                 </div>
               </Link>
             ))}

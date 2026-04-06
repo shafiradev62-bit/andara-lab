@@ -128,7 +128,7 @@ export default function Navbar() {
           href="/"
           className="flex items-center gap-2 mr-6 flex-shrink-0"
         >
-          <div className="w-7 h-7 bg-[#1a3a5c] flex items-center justify-center">
+          <div className="w-7 h-7 bg-gray-900 flex items-center justify-center rounded-md">
             <span className="text-white text-[11px] font-bold">AL</span>
           </div>
           <div className="flex items-center gap-2">
@@ -150,7 +150,7 @@ export default function Navbar() {
                   href={(item as any).href}
                   className={`flex items-center px-3 py-5 text-[13px] font-medium border-b-2 transition-colors whitespace-nowrap ${
                     isActive(item)
-                      ? "border-[#1a3a5c] text-gray-900"
+                      ? "border-gray-900 text-gray-900"
                       : "border-transparent text-gray-600 hover:text-gray-900"
                   }`}
                 >
@@ -161,7 +161,7 @@ export default function Navbar() {
                   <button
                     className={`flex items-center gap-1 px-3 py-5 text-[13px] font-medium border-b-2 transition-colors whitespace-nowrap ${
                       isActive(item)
-                        ? "border-[#1a3a5c] text-gray-900"
+                        ? "border-gray-900 text-gray-900"
                         : "border-transparent text-gray-600 hover:text-gray-900"
                     }`}
                   >
@@ -183,7 +183,7 @@ export default function Navbar() {
                           onClick={() => setOpenMenu(null)}
                           className={`block px-4 py-2.5 text-[13px] transition-colors border-b border-[#F9FAFB] last:border-0 ${
                             location === child.href
-                              ? "text-[#1a3a5c] font-medium bg-blue-50"
+                              ? "text-gray-900 font-medium bg-gray-100"
                               : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
                           }`}
                         >
@@ -206,7 +206,7 @@ export default function Navbar() {
                 key={l}
                 onClick={() => setLocale(l)}
                 className={`px-2.5 py-1 font-medium transition-colors ${
-                  locale === l ? "bg-[#1a3a5c] text-white" : "hover:text-gray-800"
+                  locale === l ? "bg-gray-900 text-white" : "hover:text-gray-800"
                 }`}
               >
                 {l.toUpperCase()}
@@ -215,7 +215,7 @@ export default function Navbar() {
           </div>
           <Link
             href="/contact"
-            className="text-[12.5px] font-medium text-white bg-[#1a3a5c] px-4 py-1.5 hover:bg-[#14305a] transition-colors whitespace-nowrap"
+            className="text-[12.5px] font-medium text-white bg-gray-900 px-4 py-1.5 hover:bg-gray-700 transition-colors whitespace-nowrap"
           >
             {t("nav_get_in_touch")}
           </Link>
@@ -280,7 +280,7 @@ export default function Navbar() {
                 <button
                   key={l}
                   onClick={() => setLocale(l)}
-                  className={`px-2.5 py-1 font-medium transition-colors ${locale === l ? "bg-[#1a3a5c] text-white" : "hover:text-gray-800"}`}
+                  className={`px-2.5 py-1 font-medium transition-colors ${locale === l ? "bg-gray-900 text-white" : "hover:text-gray-800"}`}
                 >
                   {l.toUpperCase()}
                 </button>
@@ -289,7 +289,7 @@ export default function Navbar() {
             <Link
               href="/contact"
               onClick={() => setMobileOpen(false)}
-              className="text-[12.5px] font-medium text-white bg-[#1a3a5c] px-4 py-1.5"
+              className="text-[12.5px] font-medium text-white bg-gray-900 px-4 py-1.5"
             >
               {t("nav_get_in_touch")}
             </Link>

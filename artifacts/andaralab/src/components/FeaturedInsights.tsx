@@ -77,8 +77,8 @@ export default function FeaturedInsights() {
         {/* Section header */}
         <div className="mb-10">
           <div className="flex items-center gap-2 mb-3">
-            <Star className="w-4 h-4 text-[#1a3a5c]" />
-            <span className="text-[11px] font-bold uppercase tracking-widest text-[#1a3a5c]">
+            <Star className="w-4 h-4 text-gray-900" />
+            <span className="text-[11px] font-bold uppercase tracking-widest text-gray-900">
               {config?.sectionLabel ?? (locale === "id" ? "Riset Pilihan" : "Featured Research")}
             </span>
           </div>
@@ -91,7 +91,7 @@ export default function FeaturedInsights() {
             </div>
             <Link
               href="/blog"
-              className="flex-shrink-0 text-[12.5px] font-medium text-[#1a3a5c] hover:underline flex items-center gap-1"
+              className="flex-shrink-0 text-[12.5px] font-medium text-gray-900 hover:underline flex items-center gap-1"
             >
               {locale === "id" ? "Lihat semua" : "View all"} <ArrowRight className="w-3.5 h-3.5" />
             </Link>
@@ -118,7 +118,7 @@ export default function FeaturedInsights() {
                   {hero.category}
                 </span>
               </div>
-              <h3 className="text-[17px] font-bold text-gray-900 leading-snug mb-3 group-hover:text-[#1a3a5c] transition-colors flex-1">
+              <h3 className="text-[17px] font-bold text-gray-900 leading-snug mb-3 group-hover:text-gray-900 transition-colors flex-1">
                 {hero.title}
               </h3>
               {hero.excerpt && (
@@ -153,7 +153,7 @@ export default function FeaturedInsights() {
                     {post.category}
                   </span>
                 </div>
-                <h3 className="text-[13.5px] font-semibold text-gray-900 leading-snug mb-2 group-hover:text-[#1a3a5c] transition-colors flex-1">
+                <h3 className="text-[13.5px] font-semibold text-gray-900 leading-snug mb-2 group-hover:text-gray-900 transition-colors flex-1">
                   {post.title}
                 </h3>
                 <div className="flex items-center gap-2 text-[11px] text-gray-400 mt-auto pt-3 border-t border-[#F3F4F6]">

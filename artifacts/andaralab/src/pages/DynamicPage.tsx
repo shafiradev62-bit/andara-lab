@@ -25,7 +25,7 @@ function HeroSection({ headline, subheadline, ctaText, ctaHref }: any) {
           <h1 className="text-[38px] font-bold text-gray-900 leading-tight mb-4">{headline}</h1>
           {subheadline && <p className="text-[16px] text-gray-500 leading-relaxed mb-6">{subheadline}</p>}
           {ctaText && ctaHref && (
-            <Link href={ctaHref} className="inline-flex items-center gap-2 text-[13.5px] font-medium text-white bg-[#1a3a5c] px-5 py-2.5 hover:bg-[#14305a]">
+            <Link href={ctaHref} className="inline-flex items-center gap-2 text-[13.5px] font-medium text-white bg-gray-900 px-5 py-2.5 hover:bg-gray-700">
               {ctaText} <ArrowRight className="w-4 h-4" />
             </Link>
           )}
@@ -65,13 +65,13 @@ function StatsSection({ items }: any) {
 
 function CTASection({ heading, body, buttonText, buttonHref }: any) {
   return (
-    <section className="bg-[#1a3a5c] py-12">
+    <section className="bg-gray-900 py-12">
       <div className="max-w-[1200px] mx-auto px-6 flex items-center justify-between">
         <div>
           <h3 className="text-[20px] font-semibold text-white mb-2">{heading}</h3>
           <p className="text-[14px] text-gray-300">{body}</p>
         </div>
-        <Link href={buttonHref} className="flex-shrink-0 inline-flex items-center gap-2 text-[13px] font-medium text-[#1a3a5c] bg-white px-5 py-2.5 hover:bg-gray-100">
+        <Link href={buttonHref} className="flex-shrink-0 inline-flex items-center gap-2 text-[13px] font-medium text-gray-900 bg-white px-5 py-2.5 hover:bg-gray-100">
           {buttonText} <ArrowRight className="w-4 h-4" />
         </Link>
       </div>
@@ -103,10 +103,10 @@ function FeaturedSection({ slugs, limit }: any) {
             {post.image && <div className="h-[180px] overflow-hidden"><img src={post.image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" /></div>}
             <div className="p-4">
               <div className="flex items-center gap-2 mb-2">
-                {post.tag && <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[#1a3a5c] bg-slate-100 px-2 py-0.5"><Tag className="w-3 h-3" />{post.tag}</span>}
+                {post.tag && <span className="inline-flex items-center gap-1 text-[10px] font-medium text-gray-900 bg-slate-100 px-2 py-0.5"><Tag className="w-3 h-3" />{post.tag}</span>}
                 {post.readTime && <span className="flex items-center gap-1 text-[11px] text-gray-400"><Clock className="w-3 h-3" />{post.readTime}</span>}
               </div>
-              <h3 className="text-[14px] font-semibold text-gray-900 group-hover:text-[#1a3a5c] transition-colors">{post.title}</h3>
+              <h3 className="text-[14px] font-semibold text-gray-900 group-hover:text-gray-900 transition-colors">{post.title}</h3>
             </div>
           </Link>
         ))}
@@ -182,7 +182,7 @@ function PostsSection({ categories, title }: { categories: string[]; title?: str
                   <span className="text-[11px] text-gray-400">{formatDate(post.publishedAt || post.createdAt)}</span>
                 </div>
                 <h2
-                  className={`font-semibold text-gray-900 mb-2 leading-snug group-hover:text-[#1a3a5c] transition-colors ${
+                  className={`font-semibold text-gray-900 mb-2 leading-snug group-hover:text-gray-900 transition-colors ${
                     i === 0 ? "text-[20px]" : "text-[15px]"
                   }`}
                 >
@@ -191,7 +191,7 @@ function PostsSection({ categories, title }: { categories: string[]; title?: str
                 {post.excerpt && (
                   <p className="text-[13px] text-gray-500 leading-relaxed mb-4">{post.excerpt}</p>
                 )}
-                <span className="flex items-center gap-1.5 text-[12.5px] font-medium text-gray-700 group-hover:text-[#1a3a5c] transition-colors">
+                <span className="flex items-center gap-1.5 text-[12.5px] font-medium text-gray-700 group-hover:text-gray-900 transition-colors">
                   Read More <ArrowRight className="w-3.5 h-3.5" />
                 </span>
               </div>
@@ -285,7 +285,7 @@ export default function DynamicPage({ pageSlug, locale }: { pageSlug: string; lo
           {locale === "id" ? "Halaman tidak ditemukan" : "Page not found"}
         </h1>
         <p className="text-gray-500 mb-8 max-w-lg mx-auto leading-relaxed">{hint}</p>
-        <Link href="/" className="text-[13px] font-medium text-white bg-[#1a3a5c] px-6 py-2.5 hover:bg-[#14305a]">
+        <Link href="/" className="text-[13px] font-medium text-white bg-gray-900 px-6 py-2.5 hover:bg-gray-700">
           {locale === "id" ? "Ke beranda" : "Go Home"}
         </Link>
       </div>

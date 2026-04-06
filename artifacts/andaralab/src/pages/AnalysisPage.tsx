@@ -164,7 +164,7 @@ export default function AnalysisPage() {
           {" "}·{" "}
           <a
             href="/admin"
-            className="underline hover:text-[#1a3a5c] transition-colors"
+            className="underline hover:text-gray-900 transition-colors"
           >
             {locale === "id" ? "Kelola di CMS Admin →" : "Manage in CMS Admin →"}
           </a>

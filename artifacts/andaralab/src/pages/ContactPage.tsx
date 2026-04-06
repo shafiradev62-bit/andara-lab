@@ -27,7 +27,7 @@ export default function ContactPage() {
     <div className="bg-white">
       <section className="border-b border-[#E5E7EB] py-16">
         <div className="max-w-[1200px] mx-auto px-6">
-          <div className="text-[11px] font-semibold uppercase tracking-widest text-[#1a3a5c] mb-4">
+          <div className="text-[11px] font-semibold uppercase tracking-widest text-gray-900 mb-4">
             Contact
           </div>
           <h1 className="text-[38px] font-bold text-gray-900 mb-4">
@@ -53,7 +53,7 @@ export default function ContactPage() {
               ].map((c) => (
                 <div key={c.label} className="flex items-start gap-3">
                   <div className="w-9 h-9 bg-[#f0f4f9] flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <c.icon className="w-4 h-4 text-[#1a3a5c]" />
+                    <c.icon className="w-4 h-4 text-gray-900" />
                   </div>
                   <div>
                     <div className="text-[11.5px] text-gray-400 font-medium mb-0.5">{c.label}</div>
@@ -68,12 +68,12 @@ export default function ContactPage() {
           <div className="md:col-span-2 border border-[#E5E7EB] p-8">
             {submitted ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
-                <CheckCircle className="w-12 h-12 text-[#1a3a5c] mb-4" />
+                <CheckCircle className="w-12 h-12 text-gray-900 mb-4" />
                 <h3 className="text-[18px] font-semibold text-gray-900 mb-2">Message Sent</h3>
                 <p className="text-[13.5px] text-gray-500">We'll get back to you within 1-2 business days.</p>
                 <button
                   onClick={() => setSubmitted(false)}
-                  className="mt-6 text-[13px] text-[#1a3a5c] font-medium hover:underline"
+                  className="mt-6 text-[13px] text-gray-900 font-medium hover:underline"
                 >
                   Send another message
                 </button>
@@ -92,7 +92,7 @@ export default function ContactPage() {
                         type={field === "email" ? "email" : "text"}
                         value={form[field]}
                         onChange={(e) => setForm({ ...form, [field]: e.target.value })}
-                        className="w-full border border-[#E5E7EB] px-3 py-2.5 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c] transition-colors bg-white"
+                        className="w-full border border-[#E5E7EB] px-3 py-2.5 text-[13.5px] text-gray-900 focus:outline-none focus:border-gray-900 transition-colors bg-white"
                         placeholder={field === "name" ? "Your name" : field === "email" ? "your@email.com" : "Company or institution"}
                       />
                     </div>
@@ -106,7 +106,7 @@ export default function ContactPage() {
                     required
                     value={form.subject}
                     onChange={(e) => setForm({ ...form, subject: e.target.value })}
-                    className="w-full border border-[#E5E7EB] px-3 py-2.5 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c] transition-colors bg-white"
+                    className="w-full border border-[#E5E7EB] px-3 py-2.5 text-[13.5px] text-gray-900 focus:outline-none focus:border-gray-900 transition-colors bg-white"
                   >
                     <option value="">Select subject</option>
                     <option>Research Partnership</option>
@@ -124,13 +124,13 @@ export default function ContactPage() {
                     rows={5}
                     value={form.message}
                     onChange={(e) => setForm({ ...form, message: e.target.value })}
-                    className="w-full border border-[#E5E7EB] px-3 py-2.5 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c] transition-colors bg-white resize-none"
+                    className="w-full border border-[#E5E7EB] px-3 py-2.5 text-[13.5px] text-gray-900 focus:outline-none focus:border-gray-900 transition-colors bg-white resize-none"
                     placeholder="Describe your inquiry..."
                   />
                 </div>
                 <button
                   type="submit"
-                  className="flex items-center gap-2 text-[13.5px] font-medium text-white bg-[#1a3a5c] px-6 py-2.5 hover:bg-[#14305a] transition-colors"
+                  className="flex items-center gap-2 text-[13.5px] font-medium text-white bg-gray-900 px-6 py-2.5 hover:bg-gray-700 transition-colors"
                 >
                   <Send className="w-4 h-4" />
                   Send Message

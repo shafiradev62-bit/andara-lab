@@ -69,7 +69,7 @@ function SectionPageLayout({
         {!isLoading && posts.length === 0 && (
           <div className="text-center py-24 text-gray-400">
             <p className="text-[14px] mb-2">No articles published yet.</p>
-            <Link href="/admin" className="text-[13px] text-[#1a3a5c] hover:underline">
+            <Link href="/admin" className="text-[13px] text-gray-900 hover:underline">
               Add articles in the CMS →
             </Link>
           </div>
@@ -106,13 +106,13 @@ function SectionPageLayout({
                     )}
                     <span className="text-[11px] text-gray-400">{formatDate(post.publishedAt || post.createdAt)}</span>
                   </div>
-                  <h2 className={`font-semibold text-gray-900 mb-2 leading-snug group-hover:text-[#1a3a5c] transition-colors ${i === 0 ? "text-[20px]" : "text-[15px]"}`}>
+                  <h2 className={`font-semibold text-gray-900 mb-2 leading-snug group-hover:text-gray-900 transition-colors ${i === 0 ? "text-[20px]" : "text-[15px]"}`}>
                     {post.title}
                   </h2>
                   {post.excerpt && (
                     <p className="text-[13px] text-gray-500 leading-relaxed mb-4">{post.excerpt}</p>
                   )}
-                  <span className="flex items-center gap-1.5 text-[12.5px] font-medium text-gray-700 group-hover:text-[#1a3a5c] transition-colors">
+                  <span className="flex items-center gap-1.5 text-[12.5px] font-medium text-gray-700 group-hover:text-gray-900 transition-colors">
                     Read More <ArrowRight className="w-3.5 h-3.5" />
                   </span>
                 </div>

@@ -6,7 +6,7 @@ import { useDatasets, usePosts } from "../lib/cms-store";
 function SparkTooltip({ active, payload }: any) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-[#1a3a5c] text-white text-[11px] px-2 py-1 font-semibold">
+    <div className="bg-gray-900 text-white text-[11px] px-2 py-1 font-semibold">
       {payload[0].value.toLocaleString()}
     </div>
   );
@@ -74,7 +74,7 @@ export default function DataHub() {
             <h2 className="text-[22px] font-semibold text-gray-900">Data Hub Snapshot</h2>
             <p className="text-[13px] text-gray-400 mt-0.5">Latest research and market data from CMS</p>
           </div>
-          <Link href="/data" className="flex items-center gap-1 text-[12.5px] font-medium text-[#1a3a5c] hover:underline">
+          <Link href="/data" className="flex items-center gap-1 text-[12.5px] font-medium text-gray-900 hover:underline">
             Explore full Data Hub <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
@@ -85,14 +85,14 @@ export default function DataHub() {
             <div className="px-4 py-3 border-b border-[#E5E7EB] flex items-center gap-2">
               <Calendar className="w-4 h-4 text-gray-400" />
               <span className="text-[13.5px] font-semibold text-gray-900">Latest Research</span>
-              <Link href="/blog/market-pulse" className="text-[11.5px] text-[#1a3a5c] font-medium hover:underline ml-auto">
+              <Link href="/blog/market-pulse" className="text-[11.5px] text-gray-900 font-medium hover:underline ml-auto">
                 See all →
               </Link>
             </div>
             {recentPosts.length === 0 ? (
               <div className="px-4 py-8 text-center text-gray-400 text-[13px]">
                 No articles yet.{" "}
-                <Link href="/admin" className="text-[#1a3a5c] hover:underline">Add in CMS →</Link>
+                <Link href="/admin" className="text-gray-900 hover:underline">Add in CMS →</Link>
               </div>
             ) : (
               <table className="w-full">
@@ -112,12 +112,12 @@ export default function DataHub() {
                         </span>
                       </td>
                       <td className="py-3 pr-2">
-                        <Link href={`/article/${post.slug}`} className="text-[12.5px] text-gray-800 font-medium hover:text-[#1a3a5c] transition-colors line-clamp-1">
+                        <Link href={`/article/${post.slug}`} className="text-[12.5px] text-gray-800 font-medium hover:text-gray-900 transition-colors line-clamp-1">
                           {post.title}
                         </Link>
                       </td>
                       <td className="text-right px-4 py-3">
-                        <span className="text-[10.5px] font-semibold px-1.5 py-0.5 inline-block text-[#1a3a5c] bg-blue-50">
+                        <span className="text-[10.5px] font-semibold px-1.5 py-0.5 inline-block text-gray-900 bg-gray-100">
                           {post.category}
                         </span>
                       </td>
@@ -129,7 +129,7 @@ export default function DataHub() {
             <div className="px-4 py-3 border-t border-[#E5E7EB]">
               <Link
                 href="/blog/market-pulse"
-                className="flex items-center gap-1.5 justify-center text-[12.5px] font-medium text-white bg-[#1a3a5c] px-5 py-2 w-full hover:bg-[#14305a] transition-colors"
+                className="flex items-center gap-1.5 justify-center text-[12.5px] font-medium text-white bg-gray-900 px-5 py-2 w-full hover:bg-gray-700 transition-colors"
               >
                 All Research <ArrowRight className="w-3.5 h-3.5" />
               </Link>
@@ -141,7 +141,7 @@ export default function DataHub() {
             <div className="px-4 py-3 border-b border-[#E5E7EB] flex items-center gap-2">
               <BarChart2 className="w-4 h-4 text-gray-400" />
               <span className="text-[13.5px] font-semibold text-gray-900">Market Overview</span>
-              <Link href="/data/market-dashboard" className="text-[11.5px] text-[#1a3a5c] font-medium hover:underline ml-auto">
+              <Link href="/data/market-dashboard" className="text-[11.5px] text-gray-900 font-medium hover:underline ml-auto">
                 Live →
               </Link>
             </div>
@@ -201,7 +201,7 @@ export default function DataHub() {
             <div className="px-4 py-3 border-t border-[#E5E7EB]">
               <Link
                 href="/data/market-dashboard"
-                className="flex items-center gap-1.5 justify-center text-[12.5px] font-medium text-white bg-[#1a3a5c] px-5 py-2 w-full hover:bg-[#14305a] transition-colors"
+                className="flex items-center gap-1.5 justify-center text-[12.5px] font-medium text-white bg-gray-900 px-5 py-2 w-full hover:bg-gray-700 transition-colors"
               >
                 Market Dashboard <ArrowRight className="w-3.5 h-3.5" />
               </Link>

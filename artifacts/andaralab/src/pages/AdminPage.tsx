@@ -179,7 +179,7 @@ function DatasetEditor({
         {(["meta", "chart", "data", "preview"] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)}
             className={`px-5 py-2.5 text-[13px] font-medium border-b-2 capitalize transition-colors ${
-              tab === t ? "border-[#1a3a5c] text-gray-900" : "border-transparent text-gray-500 hover:text-gray-800"
+              tab === t ? "border-gray-900 text-gray-900" : "border-transparent text-gray-500 hover:text-gray-800"
             }`}>
             {t === "meta" ? "Metadata" : t === "chart" ? "Chart Labels" : t === "data" ? "Table Data" : "Preview"}
           </button>
@@ -199,11 +199,11 @@ function DatasetEditor({
               {textarea ? (
                 <textarea rows={2} value={(effective as any)[field] ?? ""}
                   onChange={(e) => patch({ [field]: e.target.value })}
-                  className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c] resize-none" />
+                  className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-gray-900 resize-none" />
               ) : (
                 <input type="text" value={(effective as any)[field] ?? ""}
                   onChange={(e) => patch({ [field]: e.target.value })}
-                  className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c]" />
+                  className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-gray-900" />
               )}
             </div>
           ))}
@@ -211,7 +211,7 @@ function DatasetEditor({
             <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Category</label>
             <select value={effective.category}
               onChange={(e) => patch({ category: e.target.value })}
-              className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c] bg-white">
+              className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-gray-900 bg-white">
               {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
             </select>
           </div>
@@ -220,7 +220,7 @@ function DatasetEditor({
             <div className="flex gap-2">
               {(["line", "bar", "area"] as const).map((t) => (
                 <button key={t} onClick={() => patch({ chartType: t })}
-                  className={`flex items-center gap-1.5 px-4 py-2 text-[12.5px] font-medium border capitalize ${effective.chartType === t ? "bg-[#1a3a5c] text-white border-[#1a3a5c]" : "border-[#E5E7EB] text-gray-600 hover:border-gray-400"}`}>
+                  className={`flex items-center gap-1.5 px-4 py-2 text-[12.5px] font-medium border capitalize ${effective.chartType === t ? "bg-gray-900 text-white border-gray-900" : "border-[#E5E7EB] text-gray-600 hover:border-gray-400"}`}>
                   {t === "line" ? <LineChart className="w-3.5 h-3.5" /> : t === "bar" ? <BarChart2 className="w-3.5 h-3.5" /> : <TrendingUp className="w-3.5 h-3.5" />}
                   {t}
                 </button>
@@ -250,11 +250,11 @@ function DatasetEditor({
               {textarea ? (
                 <textarea rows={2} value={(effective as any)[field] ?? ""}
                   onChange={(e) => patch({ [field]: e.target.value })}
-                  className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c] resize-none" />
+                  className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-gray-900 resize-none" />
               ) : (
                 <input type="text" value={(effective as any)[field] ?? ""}
                   onChange={(e) => patch({ [field]: e.target.value })}
-                  className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c]" />
+                  className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-gray-900" />
               )}
             </div>
           ))}
@@ -270,7 +270,7 @@ function DatasetEditor({
               <button onClick={addColumn} className="flex items-center gap-1 text-[12px] font-medium text-gray-700 border border-gray-300 px-3 py-1.5 hover:bg-gray-50">
                 <Plus className="w-3.5 h-3.5" /> Add Series
               </button>
-              <button onClick={addRow} className="flex items-center gap-1 text-[12px] font-medium text-white bg-[#1a3a5c] px-3 py-1.5 hover:bg-[#14305a]">
+              <button onClick={addRow} className="flex items-center gap-1 text-[12px] font-medium text-white bg-gray-900 px-3 py-1.5 hover:bg-gray-700">
                 <Plus className="w-3.5 h-3.5" /> Add Row
               </button>
             </div>
@@ -422,7 +422,7 @@ function PageEditor({
           <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Slug (URL path)</label>
           <input type="text" value={draft.slug ?? ""}
             onChange={(e) => patch({ slug: e.target.value })}
-            className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c] font-mono" />
+            className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-gray-900 font-mono" />
           <p className="text-[10.5px] text-gray-400 mt-1">e.g. /macro/macro-outlooks or /about</p>
         </div>
 
@@ -432,7 +432,7 @@ function PageEditor({
             {(["en", "id"] as const).map((l) => (
               <button key={l} onClick={() => patch({ locale: l })}
                 className={`px-4 py-2 text-[12.5px] font-semibold border capitalize ${
-                  draft.locale === l ? "bg-[#1a3a5c] text-white border-[#1a3a5c]" : "border-[#E5E7EB] text-gray-600 hover:bg-gray-50"
+                  draft.locale === l ? "bg-gray-900 text-white border-gray-900" : "border-[#E5E7EB] text-gray-600 hover:bg-gray-50"
                 }`}>
                 {l === "en" ? "English" : "Bahasa Indonesia"}
               </button>
@@ -444,21 +444,21 @@ function PageEditor({
           <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Page Title</label>
           <input type="text" value={draft.title ?? ""}
             onChange={(e) => patch({ title: e.target.value })}
-            className="w-full border border-[#E5E7EB] px-3 py-2 text-[14px] font-medium text-gray-900 focus:outline-none focus:border-[#1a3a5c]" />
+            className="w-full border border-[#E5E7EB] px-3 py-2 text-[14px] font-medium text-gray-900 focus:outline-none focus:border-gray-900" />
         </div>
 
         <div className="md:col-span-2">
           <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Meta Description (SEO)</label>
           <textarea rows={2} value={draft.description ?? ""}
             onChange={(e) => patch({ description: e.target.value })}
-            className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c] resize-none" />
+            className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-gray-900 resize-none" />
         </div>
 
         <div>
           <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Navigation Label</label>
           <input type="text" value={draft.navLabel ?? ""}
             onChange={(e) => patch({ navLabel: e.target.value })}
-            className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c]" />
+            className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-gray-900" />
           <p className="text-[10.5px] text-gray-400 mt-1">Short label shown in the top navigation bar</p>
         </div>
 
@@ -466,7 +466,7 @@ function PageEditor({
           <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Section</label>
           <select value={draft.section ?? "root"}
             onChange={(e) => patch({ section: e.target.value })}
-            className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c] bg-white">
+            className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-gray-900 bg-white">
             {SECTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
@@ -479,7 +479,7 @@ function PageEditor({
             {(["draft", "published"] as const).map((s) => (
               <button key={s} type="button" onClick={() => patch({ status: s })}
                 className={`px-4 py-2 text-[12.5px] font-semibold border capitalize ${
-                  draft.status === s ? "bg-[#1a3a5c] text-white border-[#1a3a5c]" : "border-[#E5E7EB] text-gray-600 hover:bg-gray-50"
+                  draft.status === s ? "bg-gray-900 text-white border-gray-900" : "border-[#E5E7EB] text-gray-600 hover:bg-gray-50"
                 }`}>
                 {s === "published" ? "Published (live)" : "Draft (hidden)"}
               </button>
@@ -519,7 +519,7 @@ function PageEditor({
           onClick={handleSave}
           disabled={isSaving || !statusOk}
           title={!statusOk ? "Pilih Draft atau Published terlebih dahulu" : undefined}
-          className="flex items-center gap-2 text-[13px] font-medium text-white bg-[#1a3a5c] px-5 py-2 hover:bg-[#14305a] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 text-[13px] font-medium text-white bg-gray-900 px-5 py-2 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           {isSaving ? "Saving…" : "Save Page"}
@@ -543,7 +543,7 @@ function PageEditor({
               href={viewHref}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[12.5px] font-medium text-[#1a3a5c] underline"
+              className="text-[12.5px] font-medium text-gray-900 underline"
             >
               View on site → {window.location.origin}{viewHref}
             </a>
@@ -665,7 +665,7 @@ function PostEditor({
           <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Slug</label>
           <input type="text" value={draft.slug ?? ""}
             onChange={(e) => patch({ slug: e.target.value })}
-            className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c] font-mono" />
+            className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-gray-900 font-mono" />
           <p className="text-[10.5px] text-gray-400 mt-1">URL slug, e.g. my-post-title</p>
         </div>
 
@@ -675,7 +675,7 @@ function PostEditor({
             {(["en", "id"] as const).map((l) => (
               <button key={l} onClick={() => patch({ locale: l })}
                 className={`px-4 py-2 text-[12.5px] font-semibold border capitalize ${
-                  draft.locale === l ? "bg-[#1a3a5c] text-white border-[#1a3a5c]" : "border-[#E5E7EB] text-gray-600 hover:bg-gray-50"
+                  draft.locale === l ? "bg-gray-900 text-white border-gray-900" : "border-[#E5E7EB] text-gray-600 hover:bg-gray-50"
                 }`}>
                 {l === "en" ? "English" : "Bahasa Indonesia"}
               </button>
@@ -687,21 +687,21 @@ function PostEditor({
           <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Title</label>
           <input type="text" value={draft.title ?? ""}
             onChange={(e) => patch({ title: e.target.value })}
-            className="w-full border border-[#E5E7EB] px-3 py-2 text-[14px] font-medium text-gray-900 focus:outline-none focus:border-[#1a3a5c]" />
+            className="w-full border border-[#E5E7EB] px-3 py-2 text-[14px] font-medium text-gray-900 focus:outline-none focus:border-gray-900" />
         </div>
 
         <div className="md:col-span-2">
           <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Excerpt</label>
           <textarea rows={2} value={draft.excerpt ?? ""}
             onChange={(e) => patch({ excerpt: e.target.value })}
-            className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c] resize-none" />
+            className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-gray-900 resize-none" />
         </div>
 
         <div>
           <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Category</label>
           <select value={draft.category ?? "economics-101"}
             onChange={(e) => patch({ category: e.target.value })}
-            className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c] bg-white">
+            className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-gray-900 bg-white">
             {BLOG_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
@@ -710,14 +710,14 @@ function PostEditor({
           <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Tag</label>
           <input type="text" value={draft.tag ?? ""}
             onChange={(e) => patch({ tag: e.target.value })}
-            className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c]" />
+            className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-gray-900" />
         </div>
 
         <div>
           <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Read Time</label>
           <input type="text" value={draft.readTime ?? ""}
             onChange={(e) => patch({ readTime: e.target.value })}
-            className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c]"
+            className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-gray-900"
             placeholder="e.g. 5 min read" />
         </div>
 
@@ -729,7 +729,7 @@ function PostEditor({
             {(["draft", "published"] as const).map((s) => (
               <button key={s} type="button" onClick={() => patch({ status: s })}
                 className={`px-4 py-2 text-[12.5px] font-semibold border capitalize ${
-                  draft.status === s ? "bg-[#1a3a5c] text-white border-[#1a3a5c]" : "border-[#E5E7EB] text-gray-600 hover:bg-gray-50"
+                  draft.status === s ? "bg-gray-900 text-white border-gray-900" : "border-[#E5E7EB] text-gray-600 hover:bg-gray-50"
                 }`}>
                 {s === "published" ? "Published (live)" : "Draft (hidden)"}
               </button>
@@ -747,7 +747,7 @@ function PostEditor({
           </label>
           <textarea rows={bodyLines.length + 2} value={bodyLines.join("\n")}
             onChange={(e) => setBodyLines(e.target.value.split("\n"))}
-            className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c] resize-y font-mono leading-relaxed"
+            className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-gray-900 resize-y font-mono leading-relaxed"
             placeholder="Enter paragraph text… Each line becomes a new paragraph." />
           <p className="text-[10.5px] text-gray-400 mt-1">{bodyLines.length} paragraph{bodyLines.length !== 1 ? "s" : ""}</p>
         </div>
@@ -766,7 +766,7 @@ function PostEditor({
           onClick={handleSave}
           disabled={isSaving || !statusOk}
           title={!statusOk ? "Pilih Draft atau Published terlebih dahulu" : undefined}
-          className="flex items-center gap-2 text-[13px] font-medium text-white bg-[#1a3a5c] px-5 py-2 hover:bg-[#14305a] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 text-[13px] font-medium text-white bg-gray-900 px-5 py-2 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           {isSaving ? "Saving…" : "Save Post"}
@@ -790,7 +790,7 @@ function PostEditor({
               href={articleHref}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[12.5px] font-medium text-[#1a3a5c] underline"
+              className="text-[12.5px] font-medium text-gray-900 underline"
             >
               View article → {window.location.origin}{articleHref}
             </a>
@@ -898,7 +898,7 @@ function FeaturedInsightsTab() {
             {resetMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />} Reset
           </button>
           <button onClick={handleSave} disabled={isSaving}
-            className="flex items-center gap-1.5 text-[12px] font-semibold bg-[#1a3a5c] text-white px-4 py-1.5 hover:bg-[#14305a] disabled:opacity-50">
+            className="flex items-center gap-1.5 text-[12px] font-semibold bg-gray-900 text-white px-4 py-1.5 hover:bg-gray-700 disabled:opacity-50">
             {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />} Save Changes
           </button>
         </div>
@@ -909,7 +909,7 @@ function FeaturedInsightsTab() {
         {(["en", "id"] as const).map((loc) => (
           <button key={loc} onClick={() => setActiveLocale(loc)}
             className={`px-4 py-1.5 text-[12px] font-semibold rounded transition-colors ${
-              activeLocale === loc ? "bg-[#1a3a5c] text-white" : "text-gray-600 hover:text-gray-900"
+              activeLocale === loc ? "bg-gray-900 text-white" : "text-gray-600 hover:text-gray-900"
             }`}>
             {loc === "en" ? "English" : "Bahasa Indonesia"}
           </button>
@@ -927,18 +927,18 @@ function FeaturedInsightsTab() {
                   {field === "sectionLabel" ? "Section Label" : field.charAt(0).toUpperCase() + field.slice(1)}
                 </label>
                 <input value={draft[field]} onChange={(e) => patchMeta(field, e.target.value)}
-                  className="mt-1 w-full text-[13px] border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#1a3a5c]" />
+                  className="mt-1 w-full text-[13px] border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-gray-900" />
               </div>
             ))}
             <div>
               <label className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">Max Posts</label>
               <input type="number" min={1} max={10} value={draft.limit}
                 onChange={(e) => patchMeta("limit", Number(e.target.value))}
-                className="mt-1 w-full text-[13px] border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#1a3a5c]" />
+                className="mt-1 w-full text-[13px] border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-gray-900" />
             </div>
             <div className="flex items-center gap-2">
               <input type="checkbox" id="showOnHomepage" checked={draft.showOnHomepage}
-                onChange={(e) => setDraft({ ...draft, showOnHomepage: e.target.checked })} className="w-4 h-4 accent-[#1a3a5c]" />
+                onChange={(e) => setDraft({ ...draft, showOnHomepage: e.target.checked })} className="w-4 h-4 accent-gray-900" />
               <label htmlFor="showOnHomepage" className="text-[12.5px] text-gray-700">Show on Homepage</label>
             </div>
           </div>
@@ -967,7 +967,7 @@ function FeaturedInsightsTab() {
                   return (
                     <div key={item.slug} className="flex items-center gap-3 border border-gray-200 rounded px-3 py-2.5 hover:border-gray-300 transition-colors">
                       <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                        idx === 0 ? "bg-[#1a3a5c] text-white" : "bg-gray-100 text-gray-600"
+                        idx === 0 ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-600"
                       }`}>{item.order}</div>
                       <div className="flex-1 min-w-0">
                         {post ? (
@@ -1007,7 +1007,7 @@ function FeaturedInsightsTab() {
               <div className="flex flex-wrap gap-2">
                 {availablePosts.map((post) => (
                   <button key={post.slug} onClick={() => addSlug(post.slug)}
-                    className="flex items-center gap-1.5 text-[11.5px] font-medium border border-gray-300 rounded px-2.5 py-1 hover:border-[#1a3a5c] hover:text-[#1a3a5c] transition-colors bg-white text-gray-600">
+                    className="flex items-center gap-1.5 text-[11.5px] font-medium border border-gray-300 rounded px-2.5 py-1 hover:border-gray-900 hover:text-gray-900 transition-colors bg-white text-gray-600">
                     <Plus className="w-3 h-3" />
                     <span className="truncate max-w-[180px]">{post.title}</span>
                   </button>
@@ -1086,7 +1086,7 @@ function DataHubTab() {
                 Reset to Seed
               </button>
               <button onClick={openNew}
-                className="flex items-center gap-2 text-[13px] font-medium text-white bg-[#1a3a5c] px-4 py-2 hover:bg-[#14305a]">
+                className="flex items-center gap-2 text-[13px] font-medium text-white bg-gray-900 px-4 py-2 hover:bg-gray-700">
                 <Plus className="w-4 h-4" /> New Dataset
               </button>
             </div>
@@ -1122,7 +1122,7 @@ function DataHubTab() {
                   </div>
                   <div className="col-span-2 text-[12.5px] text-gray-600">{ds.rows.length} rows</div>
                   <div className="col-span-2 flex items-center gap-2">
-                    <button onClick={() => openEdit(ds)} className="text-[12px] font-medium text-[#1a3a5c] hover:underline">Edit</button>
+                    <button onClick={() => openEdit(ds)} className="text-[12px] font-medium text-gray-900 hover:underline">Edit</button>
                     <button onClick={() => handleDelete(ds.id)} disabled={deleteMut.isPending} className="text-gray-400 hover:text-red-500 disabled:opacity-40">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -1223,7 +1223,7 @@ function PagesTab() {
             <CheckCircle className="w-3.5 h-3.5 inline mr-1" />
             {deleteSuccess}
           </span>
-          <a href="/admin" className="text-[12px] text-[#1a3a5c] underline">Refresh list</a>
+          <a href="/admin" className="text-[12px] text-gray-900 underline">Refresh list</a>
         </div>
       )}
       <div className="flex items-center justify-between mb-6">
@@ -1240,7 +1240,7 @@ function PagesTab() {
             Reset
           </button>
           <button onClick={() => openNew("en")}
-            className="flex items-center gap-2 text-[13px] font-medium text-white bg-[#1a3a5c] px-4 py-2 hover:bg-[#14305a]">
+            className="flex items-center gap-2 text-[13px] font-medium text-white bg-gray-900 px-4 py-2 hover:bg-gray-700">
             <Plus className="w-4 h-4" /> New Page (EN)
           </button>
           <button onClick={() => openNew("id")}
@@ -1256,14 +1256,14 @@ function PagesTab() {
         {[["all", "All"], ["en", "English"], ["id", "Indonesia"]].map(([v, label]) => (
           <button key={v} onClick={() => setLocaleFilter(v)}
             className={`px-3 py-1 text-[12px] font-medium border ${
-              localeFilter === v ? "border-[#1a3a5c] bg-[#1a3a5c] text-white" : "border-gray-200 text-gray-500 hover:bg-gray-50"
+              localeFilter === v ? "border-gray-900 bg-gray-900 text-white" : "border-gray-200 text-gray-500 hover:bg-gray-50"
             }`}>{label}</button>
         ))}
         <div className="h-4 w-px bg-gray-200 mx-1" />
         {[["all", "All"], ["published", "Published"], ["draft", "Draft"]].map(([v, label]) => (
           <button key={v} onClick={() => setStatusFilter(v)}
             className={`px-3 py-1 text-[12px] font-medium border ${
-              statusFilter === v ? "border-[#1a3a5c] bg-[#1a3a5c] text-white" : "border-gray-200 text-gray-500 hover:bg-gray-50"
+              statusFilter === v ? "border-gray-900 bg-gray-900 text-white" : "border-gray-200 text-gray-500 hover:bg-gray-50"
             }`}>{label}</button>
         ))}
       </div>
@@ -1326,7 +1326,7 @@ function PagesTab() {
                     <StatusBadge status={anyPage.status} />
                   </div>
                   <div className="col-span-2 flex items-center gap-2">
-                    <button onClick={() => openEdit(anyPage)} className="text-[12px] font-medium text-[#1a3a5c] hover:underline">Edit</button>
+                    <button onClick={() => openEdit(anyPage)} className="text-[12px] font-medium text-gray-900 hover:underline">Edit</button>
                     <button onClick={() => handleDelete(anyPage.id, anyPage.title)} className="text-gray-400 hover:text-red-500">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -1348,7 +1348,7 @@ function PagesTab() {
                     <div className="col-span-2"><LocaleBadge locale={p.locale} /></div>
                     <div className="col-span-1"><StatusBadge status={p.status} /></div>
                     <div className="col-span-2 flex items-center gap-2">
-                      <button onClick={() => openEdit(p)} className="text-[12px] font-medium text-[#1a3a5c] hover:underline">Edit</button>
+                      <button onClick={() => openEdit(p)} className="text-[12px] font-medium text-gray-900 hover:underline">Edit</button>
                       {p.linkedIdRecord && (
                         <span className="text-[11px] text-gray-400 flex items-center gap-1">
                           <Link2 className="w-3 h-3" /> linked
@@ -1425,7 +1425,7 @@ function BlogTab() {
             <CheckCircle className="w-3.5 h-3.5 inline mr-1" />
             {deleteSuccess}
           </span>
-          <a href="/admin" className="text-[12px] text-[#1a3a5c] underline">Refresh list</a>
+          <a href="/admin" className="text-[12px] text-gray-900 underline">Refresh list</a>
         </div>
       )}
       <div className="flex items-center justify-between mb-6">
@@ -1442,7 +1442,7 @@ function BlogTab() {
             Reset
           </button>
           <button type="button" onClick={() => { setNewPostLocale("en"); setEditPost(null as any); setIsNewPost(true); }}
-            className="flex items-center gap-2 text-[13px] font-medium text-white bg-[#1a3a5c] px-4 py-2 hover:bg-[#14305a]">
+            className="flex items-center gap-2 text-[13px] font-medium text-white bg-gray-900 px-4 py-2 hover:bg-gray-700">
             <Plus className="w-4 h-4" /> New Post (EN)
           </button>
           <button type="button" onClick={() => { setNewPostLocale("id"); setEditPost(null as any); setIsNewPost(true); }}
@@ -1458,7 +1458,7 @@ function BlogTab() {
         {[["all", "All"], ["en", "English"], ["id", "Indonesia"]].map(([v, label]) => (
           <button key={v} onClick={() => setLocaleFilter(v)}
             className={`px-3 py-1 text-[12px] font-medium border ${
-              localeFilter === v ? "border-[#1a3a5c] bg-[#1a3a5c] text-white" : "border-gray-200 text-gray-500 hover:bg-gray-50"
+              localeFilter === v ? "border-gray-900 bg-gray-900 text-white" : "border-gray-200 text-gray-500 hover:bg-gray-50"
             }`}>{label}</button>
         ))}
         <div className="h-4 w-px bg-gray-200 mx-1" />
@@ -1466,7 +1466,7 @@ function BlogTab() {
         {[["all", "All"], ["published", "Published"], ["draft", "Draft"]].map(([v, label]) => (
           <button key={v} onClick={() => setStatusFilter(v)}
             className={`px-3 py-1 text-[12px] font-medium border ${
-              statusFilter === v ? "border-[#1a3a5c] bg-[#1a3a5c] text-white" : "border-gray-200 text-gray-500 hover:bg-gray-50"
+              statusFilter === v ? "border-gray-900 bg-gray-900 text-white" : "border-gray-200 text-gray-500 hover:bg-gray-50"
             }`}>{label}</button>
         ))}
         <div className="h-4 w-px bg-gray-200 mx-1" />
@@ -1474,7 +1474,7 @@ function BlogTab() {
         {[["all", "All"], ...BLOG_CATEGORIES.map((c) => [c, c] as [string, string])].map(([v, label]) => (
           <button key={v} onClick={() => setCategoryFilter(v)}
             className={`px-3 py-1 text-[12px] font-medium border ${
-              categoryFilter === v ? "border-[#1a3a5c] bg-[#1a3a5c] text-white" : "border-gray-200 text-gray-500 hover:bg-gray-50"
+              categoryFilter === v ? "border-gray-900 bg-gray-900 text-white" : "border-gray-200 text-gray-500 hover:bg-gray-50"
             }`}>{label}</button>
         ))}
       </div>
@@ -1534,7 +1534,7 @@ function BlogTab() {
                   <div className="col-span-1 text-[12px] text-gray-400">{anyPost.tag}</div>
                   <div className="col-span-2 flex items-center gap-2">
                     <button onClick={() => { setEditPost(anyPost); setIsNewPost(false); setExpandedId(null); }}
-                      className="text-[12px] font-medium text-[#1a3a5c] hover:underline">Edit</button>
+                      className="text-[12px] font-medium text-gray-900 hover:underline">Edit</button>
                     <button onClick={() => handleDelete(anyPost.id, anyPost.title)} className="text-gray-400 hover:text-red-500">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -1557,7 +1557,7 @@ function BlogTab() {
                     <div className="col-span-1 text-[12px] text-gray-400">{p.tag}</div>
                     <div className="col-span-2 flex items-center gap-2">
                       <button onClick={() => { setEditPost(p); setIsNewPost(false); }}
-                        className="text-[12px] font-medium text-[#1a3a5c] hover:underline">Edit</button>
+                        className="text-[12px] font-medium text-gray-900 hover:underline">Edit</button>
                       {p.linkedIdRecord && <span className="text-[11px] text-gray-400 flex items-center gap-1"><Link2 className="w-3 h-3" /> linked</span>}
                     </div>
                   </div>
@@ -1674,7 +1674,7 @@ function WidgetEditor({
             type="text"
             value={widget.title ?? ""}
             onChange={(e) => patch({ title: e.target.value })}
-            className="w-full border border-gray-300 px-3 py-1.5 text-[13px] focus:outline-none focus:border-[#1a3a5c]"
+            className="w-full border border-gray-300 px-3 py-1.5 text-[13px] focus:outline-none focus:border-gray-900"
             placeholder="Optional title"
           />
         </div>
@@ -1684,7 +1684,7 @@ function WidgetEditor({
             type="text"
             value={widget.subtitle ?? ""}
             onChange={(e) => patch({ subtitle: e.target.value })}
-            className="w-full border border-gray-300 px-3 py-1.5 text-[13px] focus:outline-none focus:border-[#1a3a5c]"
+            className="w-full border border-gray-300 px-3 py-1.5 text-[13px] focus:outline-none focus:border-gray-900"
             placeholder="Optional subtitle"
           />
         </div>
@@ -1695,7 +1695,7 @@ function WidgetEditor({
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-[12px] font-semibold text-gray-700">Metrics</span>
-            <button onClick={addMetric} className="text-[11px] text-[#1a3a5c] font-medium hover:underline flex items-center gap-1">
+            <button onClick={addMetric} className="text-[11px] text-gray-900 font-medium hover:underline flex items-center gap-1">
               <Plus className="w-3 h-3" /> Add Metric
             </button>
           </div>
@@ -1704,22 +1704,22 @@ function WidgetEditor({
               <div className="col-span-3">
                 <label className="block text-[10px] text-gray-500 mb-1">Label</label>
                 <input value={m.label} onChange={(e) => updateMetric(m.id, { label: e.target.value })}
-                  className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-[#1a3a5c]" />
+                  className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-gray-900" />
               </div>
               <div className="col-span-2">
                 <label className="block text-[10px] text-gray-500 mb-1">Value</label>
                 <input value={m.value} onChange={(e) => updateMetric(m.id, { value: e.target.value })}
-                  className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-[#1a3a5c]" />
+                  className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-gray-900" />
               </div>
               <div className="col-span-2">
                 <label className="block text-[10px] text-gray-500 mb-1">Unit</label>
                 <input value={m.unit ?? ""} onChange={(e) => updateMetric(m.id, { unit: e.target.value })}
-                  className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-[#1a3a5c]" />
+                  className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-gray-900" />
               </div>
               <div className="col-span-2">
                 <label className="block text-[10px] text-gray-500 mb-1">Trend</label>
                 <select value={m.trend ?? "neutral"} onChange={(e) => updateMetric(m.id, { trend: e.target.value as "up" | "down" | "neutral" })}
-                  className="w-full border border-gray-300 px-2 py-1 text-[12px] bg-white focus:outline-none focus:border-[#1a3a5c]">
+                  className="w-full border border-gray-300 px-2 py-1 text-[12px] bg-white focus:outline-none focus:border-gray-900">
                   <option value="up">↑ Up</option>
                   <option value="down">↓ Down</option>
                   <option value="neutral">→ Neutral</option>
@@ -1728,7 +1728,7 @@ function WidgetEditor({
               <div className="col-span-2">
                 <label className="block text-[10px] text-gray-500 mb-1">Trend Value</label>
                 <input value={m.trendValue ?? ""} onChange={(e) => updateMetric(m.id, { trendValue: e.target.value })}
-                  className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-[#1a3a5c]" placeholder="+2.3%" />
+                  className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-gray-900" placeholder="+2.3%" />
               </div>
               <div className="col-span-1 flex justify-end">
                 <button onClick={() => removeMetric(m.id)} className="text-gray-400 hover:text-red-500">
@@ -1738,7 +1738,7 @@ function WidgetEditor({
               <div className="col-span-12">
                 <label className="block text-[10px] text-gray-500 mb-1">Note</label>
                 <input value={m.note ?? ""} onChange={(e) => updateMetric(m.id, { note: e.target.value })}
-                  className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-[#1a3a5c]" placeholder="Optional note" />
+                  className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-gray-900" placeholder="Optional note" />
               </div>
             </div>
           ))}
@@ -1750,7 +1750,7 @@ function WidgetEditor({
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-[12px] font-semibold text-gray-700">Distribution Items</span>
-            <button onClick={addDistItem} className="text-[11px] text-[#1a3a5c] font-medium hover:underline flex items-center gap-1">
+            <button onClick={addDistItem} className="text-[11px] text-gray-900 font-medium hover:underline flex items-center gap-1">
               <Plus className="w-3 h-3" /> Add Item
             </button>
           </div>
@@ -1762,16 +1762,16 @@ function WidgetEditor({
               </div>
               <div className="col-span-4">
                 <input value={d.label} onChange={(e) => updateDistItem(i, { label: e.target.value })}
-                  className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-[#1a3a5c]" />
+                  className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-gray-900" />
               </div>
               <div className="col-span-2">
                 <input type="number" value={d.value} onChange={(e) => updateDistItem(i, { value: Number(e.target.value) })}
-                  className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-[#1a3a5c]" />
+                  className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-gray-900" />
               </div>
               <div className="col-span-2">
                 <div className="flex items-center gap-1">
                   <input type="number" value={d.percentage} onChange={(e) => updateDistItem(i, { percentage: Number(e.target.value) })}
-                    className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-[#1a3a5c]" />
+                    className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-gray-900" />
                   <span className="text-[12px] text-gray-400">%</span>
                 </div>
               </div>
@@ -1792,11 +1792,11 @@ function WidgetEditor({
             <label className="block text-[10px] text-gray-500 mb-1">Column Headers (comma-separated)</label>
             <input value={(widget.compareHeaders ?? []).join(", ")}
               onChange={(e) => patch({ compareHeaders: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })}
-              className="w-full border border-gray-300 px-3 py-1.5 text-[12px] focus:outline-none focus:border-[#1a3a5c]"
+              className="w-full border border-gray-300 px-3 py-1.5 text-[12px] focus:outline-none focus:border-gray-900"
               placeholder="Item, Value 1, Value 2, Mitigation" />
           </div>
           <div className="flex justify-end">
-            <button onClick={addCompareRow} className="text-[11px] text-[#1a3a5c] font-medium hover:underline flex items-center gap-1">
+            <button onClick={addCompareRow} className="text-[11px] text-gray-900 font-medium hover:underline flex items-center gap-1">
               <Plus className="w-3 h-3" /> Add Row
             </button>
           </div>
@@ -1804,7 +1804,7 @@ function WidgetEditor({
             <div key={i} className="bg-white border border-gray-200 rounded p-3 flex gap-2 items-center">
               <div className="flex-1">
                 <input value={c.label} onChange={(e) => updateCompareRow(i, { label: e.target.value })}
-                  className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-[#1a3a5c]" placeholder="Row label" />
+                  className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-gray-900" placeholder="Row label" />
               </div>
               {c.values.map((v, vi) => (
                 <div key={vi} className="flex-1">
@@ -1813,7 +1813,7 @@ function WidgetEditor({
                     newVals[vi] = e.target.value;
                     updateCompareRow(i, { values: newVals });
                   }}
-                    className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-[#1a3a5c]" placeholder={`Value ${vi + 1}`} />
+                    className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-gray-900" placeholder={`Value ${vi + 1}`} />
                 </div>
               ))}
               <button onClick={() => removeCompareRow(i)} className="text-gray-400 hover:text-red-500 flex-shrink-0">
@@ -1839,7 +1839,7 @@ function WidgetEditor({
             <label className="block text-[10px] text-gray-500 mb-1">Callout Text (supports markdown-style bold **text**)</label>
             <textarea rows={4} value={widget.text ?? ""}
               onChange={(e) => patch({ text: e.target.value })}
-              className="w-full border border-gray-300 px-3 py-2 text-[13px] focus:outline-none focus:border-[#1a3a5c] resize-y"
+              className="w-full border border-gray-300 px-3 py-2 text-[13px] focus:outline-none focus:border-gray-900 resize-y"
               placeholder="Enter key insight text..." />
           </div>
         </div>
@@ -1850,7 +1850,7 @@ function WidgetEditor({
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-[12px] font-semibold text-gray-700">Data Items</span>
-            <button onClick={addBarItem} className="text-[11px] text-[#1a3a5c] font-medium hover:underline flex items-center gap-1">
+            <button onClick={addBarItem} className="text-[11px] text-gray-900 font-medium hover:underline flex items-center gap-1">
               <Plus className="w-3 h-3" /> Add Item
             </button>
           </div>
@@ -1862,11 +1862,11 @@ function WidgetEditor({
               </div>
               <div className="col-span-6">
                 <input value={b.label} onChange={(e) => updateBarItem(i, { label: e.target.value })}
-                  className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-[#1a3a5c]" placeholder="Label" />
+                  className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-gray-900" placeholder="Label" />
               </div>
               <div className="col-span-4">
                 <input type="number" value={b.value} onChange={(e) => updateBarItem(i, { value: Number(e.target.value) })}
-                  className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-[#1a3a5c]" placeholder="Value" />
+                  className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-gray-900" placeholder="Value" />
               </div>
               <div className="col-span-1 flex justify-end">
                 <button onClick={() => removeBarItem(i)} className="text-gray-400 hover:text-red-500">
@@ -1884,7 +1884,7 @@ function WidgetEditor({
           <label className="block text-[10px] text-gray-500 mb-1">Custom HTML / Text Content</label>
           <textarea rows={4} value={widget.text ?? ""}
             onChange={(e) => patch({ text: e.target.value })}
-            className="w-full border border-gray-300 px-3 py-2 text-[13px] focus:outline-none focus:border-[#1a3a5c] resize-y font-mono"
+            className="w-full border border-gray-300 px-3 py-2 text-[13px] focus:outline-none focus:border-gray-900 resize-y font-mono"
             placeholder="Enter custom text or HTML..." />
         </div>
       )}
@@ -1934,7 +1934,7 @@ function SectionEditor({
           <input
             value={section.title}
             onChange={(e) => patch({ title: e.target.value })}
-            className="text-[14px] font-semibold text-gray-900 bg-transparent focus:outline-none focus:border-b focus:border-[#1a3a5c]"
+            className="text-[14px] font-semibold text-gray-900 bg-transparent focus:outline-none focus:border-b focus:border-gray-900"
             placeholder="Section Title (EN)"
           />
         </div>
@@ -1996,7 +1996,7 @@ function SectionEditor({
               <div className="ml-auto flex gap-2">
                 <button
                   onClick={() => setActiveWidget(activeWidget === w.id ? null : w.id)}
-                  className="text-[11px] text-[#1a3a5c] font-medium hover:underline"
+                  className="text-[11px] text-gray-900 font-medium hover:underline"
                 >
                   {activeWidget === w.id ? "Collapse" : "Edit"}
                 </button>
@@ -2021,7 +2021,7 @@ function SectionEditor({
             <button
               key={wt.value}
               onClick={() => addWidget(wt.value)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-[11.5px] font-medium border border-gray-300 bg-white hover:border-[#1a3a5c] hover:text-[#1a3a5c] rounded"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[11.5px] font-medium border border-gray-300 bg-white hover:border-gray-900 hover:text-gray-900 rounded"
             >
               {wt.icon} Add {wt.label}
             </button>
@@ -2130,19 +2130,19 @@ function AnalisisEditor({
             <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Title (EN)</label>
             <input type="text" value={draft.title ?? ""}
               onChange={(e) => patch({ title: e.target.value })}
-              className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c]" />
+              className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-gray-900" />
           </div>
           <div>
             <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Title (ID)</label>
             <input type="text" value={draft.titleEn ?? ""}
               onChange={(e) => patch({ titleEn: e.target.value })}
-              className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c]" />
+              className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-gray-900" />
           </div>
           <div className="md:col-span-2">
             <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Description</label>
             <textarea rows={2} value={draft.description ?? ""}
               onChange={(e) => patch({ description: e.target.value })}
-              className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c] resize-none" />
+              className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-gray-900 resize-none" />
           </div>
           <div className="md:col-span-2">
             <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Language Scope</label>
@@ -2150,7 +2150,7 @@ function AnalisisEditor({
               {(["both", "en", "id"] as const).map((l) => (
                 <button key={l} onClick={() => patch({ locale: l })}
                   className={`px-4 py-2 text-[12px] font-semibold border capitalize ${
-                    draft.locale === l ? "bg-[#1a3a5c] text-white border-[#1a3a5c]" : "border-gray-300 text-gray-600 hover:bg-gray-50"
+                    draft.locale === l ? "bg-gray-900 text-white border-gray-900" : "border-gray-300 text-gray-600 hover:bg-gray-50"
                   }`}>
                   {l === "both" ? "EN + ID" : l === "en" ? "English Only" : "Indonesian Only"}
                 </button>
@@ -2183,7 +2183,7 @@ function AnalisisEditor({
               </p>
             </div>
             <button onClick={addSection}
-              className="flex items-center gap-2 text-[13px] font-medium text-white bg-[#1a3a5c] px-4 py-2 hover:bg-[#14305a]">
+              className="flex items-center gap-2 text-[13px] font-medium text-white bg-gray-900 px-4 py-2 hover:bg-gray-700">
               <Plus className="w-4 h-4" /> Add Section
             </button>
           </div>
@@ -2204,7 +2204,7 @@ function AnalisisEditor({
               <Layout className="w-12 h-12 text-gray-300 mx-auto mb-3" />
               <p className="text-[14px] text-gray-500 mb-3">No sections yet.</p>
               <button onClick={addSection}
-                className="text-[13px] font-medium text-[#1a3a5c] hover:underline">
+                className="text-[13px] font-medium text-gray-900 hover:underline">
                 + Add your first section
               </button>
             </div>
@@ -2224,7 +2224,7 @@ function AnalisisEditor({
             type="button"
             onClick={handleSave}
             disabled={isSaving}
-            className="flex items-center gap-2 text-[13px] font-medium text-white bg-[#1a3a5c] px-5 py-2 hover:bg-[#14305a] disabled:opacity-50"
+            className="flex items-center gap-2 text-[13px] font-medium text-white bg-gray-900 px-5 py-2 hover:bg-gray-700 disabled:opacity-50"
           >
             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {isSaving ? "Saving…" : "Save Analysis"}
@@ -2314,7 +2314,7 @@ function AnalisisTab() {
             Reset to Seed
           </button>
           <button onClick={handleCreate}
-            className="flex items-center gap-2 text-[13px] font-medium text-white bg-[#1a3a5c] px-4 py-2 hover:bg-[#14305a]">
+            className="flex items-center gap-2 text-[13px] font-medium text-white bg-gray-900 px-4 py-2 hover:bg-gray-700">
             <Plus className="w-4 h-4" /> New Analysis
           </button>
         </div>
@@ -2328,7 +2328,7 @@ function AnalisisTab() {
         <div className="text-center py-16 border-2 border-dashed border-gray-200 rounded-lg">
           <Layout className="w-12 h-12 text-gray-300 mx-auto mb-3" />
           <p className="text-[14px] text-gray-500 mb-3">No analysis records found.</p>
-          <button onClick={handleCreate} className="text-[13px] font-medium text-[#1a3a5c] hover:underline">
+          <button onClick={handleCreate} className="text-[13px] font-medium text-gray-900 hover:underline">
             + Create your first analysis
           </button>
         </div>
@@ -2363,7 +2363,7 @@ function AnalisisTab() {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => { setEditRecord(r); setIsNew(false); }}
-                    className="flex items-center gap-1.5 text-[12px] font-medium text-[#1a3a5c] border border-[#1a3a5c] px-3 py-1.5 hover:bg-[#1a3a5c] hover:text-white transition-colors"
+                    className="flex items-center gap-1.5 text-[12px] font-medium text-gray-900 border border-gray-900 px-3 py-1.5 hover:bg-gray-900 hover:text-white transition-colors"
                   >
                     <Edit3 className="w-3.5 h-3.5" /> Edit
                   </button>
@@ -2438,7 +2438,7 @@ export default function AdminPage() {
               <button key={t.key} onClick={() => setActiveTab(t.key)}
                 className={`flex items-center gap-1.5 px-4 py-1.5 text-[13px] font-medium border transition-colors ${
                   activeTab === t.key
-                    ? "border-[#1a3a5c] bg-[#1a3a5c] text-white"
+                    ? "border-gray-900 bg-gray-900 text-white"
                     : "border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50"
                 }`}>
                 {t.icon}

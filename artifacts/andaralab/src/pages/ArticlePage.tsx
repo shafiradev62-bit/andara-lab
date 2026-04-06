@@ -69,7 +69,7 @@ export default function ArticlePage() {
         <div className="text-[72px] font-bold text-gray-100 mb-4">404</div>
         <h1 className="text-[24px] font-semibold text-gray-900 mb-3">Article not found</h1>
         <p className="text-gray-500 mb-8">{hint}</p>
-        <Link href="/" className="text-[13.5px] font-medium text-white bg-[#1a3a5c] px-6 py-2.5">
+        <Link href="/" className="text-[13.5px] font-medium text-white bg-gray-900 px-6 py-2.5">
           Go Home
         </Link>
       </div>
@@ -100,7 +100,7 @@ export default function ArticlePage() {
           <div className="lg:col-span-2">
             <Link
               href={categoryHref}
-              className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[#1a3a5c] mb-5 hover:underline"
+              className="inline-flex items-center gap-1.5 text-[12px] font-medium text-gray-900 mb-5 hover:underline"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               {post.tag || post.category}
@@ -108,7 +108,7 @@ export default function ArticlePage() {
 
             <div className="flex items-center gap-2 mb-4">
               {post.tag && (
-                <span className="text-[10.5px] font-semibold text-[#1a3a5c] border border-[#1a3a5c]/20 bg-blue-50 px-2 py-0.5 uppercase tracking-wide">
+                <span className="text-[10.5px] font-semibold text-gray-900 border border-gray-900/20 bg-gray-100 px-2 py-0.5 uppercase tracking-wide">
                   {post.tag}
                 </span>
               )}
@@ -125,7 +125,7 @@ export default function ArticlePage() {
             </h1>
 
             {post.excerpt && (
-              <p className="text-[15px] text-gray-500 leading-relaxed mb-6 border-l-4 border-[#1a3a5c] pl-4">
+              <p className="text-[15px] text-gray-500 leading-relaxed mb-6 border-l-4 border-gray-900 pl-4">
                 {post.excerpt}
               </p>
             )}
@@ -154,7 +154,7 @@ export default function ArticlePage() {
               </div>
               <Link
                 href={categoryHref}
-                className="inline-flex items-center gap-2 text-[12.5px] font-medium text-white bg-[#1a3a5c] px-4 py-2 hover:bg-[#14305a] transition-colors"
+                className="inline-flex items-center gap-2 text-[12.5px] font-medium text-white bg-gray-900 px-4 py-2 hover:bg-gray-700 transition-colors"
               >
                 More in {post.category} <ArrowRight className="w-3.5 h-3.5" />
               </Link>
@@ -178,7 +178,7 @@ export default function ArticlePage() {
                       >
                         <div className="flex items-center gap-1.5 mb-1.5">
                           {r.tag && (
-                            <span className="text-[10px] font-semibold text-[#1a3a5c] bg-blue-50 px-1.5 py-0.5 uppercase tracking-wide">
+                            <span className="text-[10px] font-semibold text-gray-900 bg-gray-100 px-1.5 py-0.5 uppercase tracking-wide">
                               {r.tag}
                             </span>
                           )}
@@ -186,7 +186,7 @@ export default function ArticlePage() {
                             <span className="text-[10.5px] text-gray-400">{r.readTime}</span>
                           )}
                         </div>
-                        <h4 className="text-[13px] font-medium text-gray-900 leading-snug group-hover:text-[#1a3a5c] transition-colors">
+                        <h4 className="text-[13px] font-medium text-gray-900 leading-snug group-hover:text-gray-900 transition-colors">
                           {r.title}
                         </h4>
                         <p className="text-[11.5px] text-gray-400 mt-1">{formatDate(r.publishedAt || r.createdAt)}</p>
@@ -203,7 +203,7 @@ export default function ArticlePage() {
                 <p className="text-[12.5px] text-gray-500 leading-relaxed mb-3">
                   AndaraLab produces independent economic research for Indonesia and emerging markets.
                 </p>
-                <Link href="/about" className="text-[12px] font-medium text-[#1a3a5c] hover:underline flex items-center gap-1">
+                <Link href="/about" className="text-[12px] font-medium text-gray-900 hover:underline flex items-center gap-1">
                   About AndaraLab <ArrowRight className="w-3 h-3" />
                 </Link>
               </div>
@@ -217,7 +217,7 @@ export default function ArticlePage() {
                 </p>
                 <Link
                   href="/data"
-                  className="inline-flex items-center gap-1.5 text-[12px] font-medium text-white bg-[#1a3a5c] px-3 py-1.5 hover:bg-[#14305a] transition-colors"
+                  className="inline-flex items-center gap-1.5 text-[12px] font-medium text-white bg-gray-900 px-3 py-1.5 hover:bg-gray-700 transition-colors"
                 >
                   Open Data Hub <ArrowRight className="w-3 h-3" />
                 </Link>

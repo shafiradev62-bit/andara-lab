@@ -1,19 +1,24 @@
-import { ArrowRight, BarChart3, Globe, Shield } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { Link } from "wouter";
+import { useLocale } from "../lib/locale";
 
 const pillars = [
-  { icon: <BarChart3 className="w-5 h-5 text-[#1a3a5c]" />, text: "28+ Years of Data" },
-  { icon: <Globe className="w-5 h-5 text-[#1a3a5c]" />, text: "Macro & Sectoral Coverage" },
-  { icon: <Shield className="w-5 h-5 text-[#1a3a5c]" />, text: "Independent Research" },
+  { text: "28+ Years of Data" },
+  { text: "Macro & Sectoral Coverage" },
+  { text: "Independent Research" },
 ];
 
 export default function Hero() {
+  const { locale } = useLocale();
+  const isId = locale === "id";
+
   return (
-    <section className="bg-white border-b border-[#E5E7EB]">
+    <section className="bg-white border-b border-[#F0F0F0]">
       <div className="max-w-[1200px] mx-auto px-6 py-16 md:py-20">
         <div className="max-w-2xl">
 
           {/* Label */}
-          <div className="text-[11px] font-semibold uppercase tracking-widest text-[#1a3a5c] mb-5">
+          <div className="text-[11px] font-medium uppercase tracking-widest text-gray-400 mb-5">
             Independent Economic Research · Indonesia
           </div>
 
@@ -24,18 +29,18 @@ export default function Hero() {
           </h1>
 
           {/* Subheadline */}
-          <p className="text-[15.5px] text-gray-500 leading-relaxed mb-8 max-w-[480px]">
+          <p className="text-[15.5px] text-gray-400 leading-relaxed mb-8 max-w-[480px]">
             AndaraLab transforms Indonesia's complex economic data into
             high-precision strategic intelligence — from macro policy shifts to
             sectoral deep-dives across 8 key industries.
           </p>
 
           {/* Pillar strip */}
-          <div className="flex flex-wrap gap-5 mb-10 pb-8 border-b border-[#F3F4F6]">
+          <div className="flex flex-wrap gap-5 mb-10 pb-8 border-b border-[#F0F0F0]">
             {pillars.map((p) => (
               <div key={p.text} className="flex items-center gap-2">
-                {p.icon}
-                <span className="text-[13px] font-medium text-gray-700">{p.text}</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
+                <span className="text-[13px] font-medium text-gray-500">{p.text}</span>
               </div>
             ))}
           </div>
@@ -44,20 +49,20 @@ export default function Hero() {
           <div className="flex flex-wrap items-center gap-3">
             <Link
               href="/analisis"
-              className="inline-flex items-center gap-2 text-white text-[13px] font-semibold bg-[#1a3a5c] px-6 py-3 hover:bg-[#14305a] transition-colors"
+              className="inline-flex items-center gap-2 text-white text-[13px] font-semibold bg-gray-900 px-6 py-3 hover:bg-gray-700 transition-colors"
             >
               View Research Overview
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
             <Link
               href="/macro/macro-outlooks"
-              className="inline-flex items-center gap-2 border border-[#D1D5DB] text-gray-700 text-[13px] font-medium px-6 py-3 hover:border-gray-400 hover:text-gray-900 transition-colors"
+              className="inline-flex items-center gap-2 border border-gray-200 text-gray-700 text-[13px] font-medium px-6 py-3 hover:border-gray-400 hover:text-gray-900 transition-colors"
             >
               Macro Outlooks
             </Link>
             <Link
               href="/data"
-              className="inline-flex items-center gap-2 text-[#1a3a5c] text-[13px] font-semibold hover:underline"
+              className="inline-flex items-center gap-2 text-gray-500 text-[13px] font-medium hover:text-gray-900 transition-colors"
             >
               Data Hub <ArrowRight className="w-3.5 h-3.5" />
             </Link>

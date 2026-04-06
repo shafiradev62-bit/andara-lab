@@ -22,8 +22,8 @@ function parsePrice(s: string): number {
 function SortIcon({ active, dir }: { active: boolean; dir: SortDir }) {
   if (!active) return <ChevronUp className="w-3 h-3 text-gray-300 opacity-0 group-hover:opacity-100" />;
   return dir === "asc"
-    ? <ChevronUp className="w-3 h-3 text-[#1a3a5c]" />
-    : <ChevronDown className="w-3 h-3 text-[#1a3a5c]" />;
+    ? <ChevronUp className="w-3 h-3 text-gray-900" />
+    : <ChevronDown className="w-3 h-3 text-gray-900" />;
 }
 
 // ─── Status Cell ────────────────────────────────────────────────────────────────
@@ -200,7 +200,7 @@ function FilterBar({
             placeholder="Search…"
             value={search}
             onChange={(e) => onSearch(e.target.value)}
-            className="w-full pl-8 pr-8 py-2 text-[12.5px] text-gray-900 placeholder:text-gray-400 border border-gray-200 bg-white focus:outline-none focus:border-[#1a3a5c] transition-colors"
+            className="w-full pl-8 pr-8 py-2 text-[12.5px] text-gray-900 placeholder:text-gray-400 border border-gray-200 bg-white focus:outline-none focus:border-gray-900 transition-colors"
           />
           {search && (
             <button onClick={() => onSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -214,9 +214,9 @@ function FilterBar({
           onClick={cycleFree}
           className={`px-3 py-2 text-[12px] font-medium border transition-colors ${
             showFreeOnly === null
-              ? "border-[#1a3a5c] text-[#1a3a5c] bg-slate-100"
+              ? "border-gray-900 text-gray-900 bg-gray-100"
               : showFreeOnly === true
-              ? "border-[#1a3a5c] text-[#1a3a5c] bg-slate-100"
+              ? "border-gray-900 text-gray-900 bg-gray-100"
               : "border-gray-200 text-gray-500 hover:border-gray-300"
           }`}
         >
@@ -230,7 +230,7 @@ function FilterBar({
               key={v}
               onClick={() => onView(v)}
               className={`px-3 py-2 text-[12px] font-medium transition-colors border-l border-gray-200 first:border-l-0 ${
-                view === v ? "bg-[#1a3a5c] text-white" : "bg-white text-gray-500 hover:bg-gray-50"
+                view === v ? "bg-gray-900 text-white" : "bg-white text-gray-500 hover:bg-gray-50"
               }`}
             >
               {label}
@@ -260,7 +260,7 @@ function FilterBar({
               onClick={() => onToggleProvider(p)}
               className={`px-2.5 py-1 text-[12px] font-medium border transition-colors ${
                 active
-                  ? "border-[#1a3a5c] text-[#1a3a5c] bg-slate-100"
+                  ? "border-gray-900 text-gray-900 bg-gray-100"
                   : "border-gray-200 text-gray-500 hover:border-gray-300"
               }`}
             >
@@ -378,7 +378,7 @@ export default function ModelsPage() {
 
           {/* Publication metadata */}
           <div className="flex items-center gap-3 text-[11px] text-gray-400 font-medium mb-6">
-            <span className="bg-[#1a3a5c] text-white px-2 py-0.5 font-semibold uppercase tracking-wide text-[10px]">Research</span>
+            <span className="bg-gray-900 text-white px-2 py-0.5 font-semibold uppercase tracking-wide text-[10px]">Research</span>
             <span>AndaraLab · Technology Research</span>
             <span>·</span>
             <span>March 2026</span>

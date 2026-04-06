@@ -28,7 +28,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-5 gap-8 mb-10">
           <div className="md:col-span-2">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-7 h-7 bg-[#1a3a5c] flex items-center justify-center">
+              <div className="w-7 h-7 bg-gray-900 flex items-center justify-center">
                 <span className="text-white text-[11px] font-bold">AL</span>
               </div>
               <span className="text-[15px] font-bold text-gray-900 tracking-tight">AndaraLab</span>
@@ -39,7 +39,7 @@ export default function Footer() {
             </p>
             <Link
               href="/contact"
-              className="inline-flex items-center text-[12.5px] font-medium text-white bg-[#1a3a5c] px-4 py-2 hover:bg-[#14305a] transition-colors"
+              className="inline-flex items-center text-[12.5px] font-medium text-white bg-gray-900 px-4 py-2 hover:bg-gray-700 transition-colors"
             >
               Get in Touch →
             </Link>

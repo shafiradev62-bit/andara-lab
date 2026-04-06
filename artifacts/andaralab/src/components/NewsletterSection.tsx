@@ -28,7 +28,7 @@ export default function NewsletterSection() {
             <div className="mt-5 flex flex-wrap gap-4">
               {["Weekly Research Digest", "Data Releases", "Policy Alerts"].map((tag) => (
                 <div key={tag} className="flex items-center gap-1.5 text-[12px] text-gray-500">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#1a3a5c]" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-gray-900" />
                   {tag}
                 </div>
               ))}
@@ -37,7 +37,7 @@ export default function NewsletterSection() {
           <div>
             {submitted ? (
               <div className="flex flex-col items-center justify-center text-center py-8 border border-[#E5E7EB] bg-white">
-                <CheckCircle className="w-8 h-8 text-[#1a3a5c] mb-3" />
+                <CheckCircle className="w-8 h-8 text-gray-900 mb-3" />
                 <p className="text-[15px] font-semibold text-gray-900 mb-1">You're subscribed!</p>
                 <p className="text-[13px] text-gray-400">First digest arrives Monday.</p>
               </div>
@@ -53,7 +53,7 @@ export default function NewsletterSection() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="your@email.com"
-                    className="w-full border border-[#D1D5DB] px-4 py-2.5 text-[13.5px] text-gray-900 placeholder-gray-300 focus:outline-none focus:border-[#1a3a5c] transition-colors bg-white"
+                    className="w-full border border-[#D1D5DB] px-4 py-2.5 text-[13.5px] text-gray-900 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors bg-white"
                   />
                 </div>
                 <div>
@@ -63,7 +63,7 @@ export default function NewsletterSection() {
                   <div className="flex flex-wrap gap-3">
                     {["Macro", "Monetary Policy", "Sectoral", "ESG", "Markets"].map((topic) => (
                       <label key={topic} className="flex items-center gap-1.5 cursor-pointer">
-                        <input type="checkbox" className="accent-[#1a3a5c]" />
+                        <input type="checkbox" className="accent-gray-900" />
                         <span className="text-[12.5px] text-gray-600">{topic}</span>
                       </label>
                     ))}
@@ -71,7 +71,7 @@ export default function NewsletterSection() {
                 </div>
                 <button
                   type="submit"
-                  className="flex items-center gap-2 text-[13px] font-semibold text-white bg-[#1a3a5c] px-5 py-2.5 hover:bg-[#14305a] transition-colors"
+                  className="flex items-center gap-2 text-[13px] font-semibold text-white bg-gray-900 px-5 py-2.5 hover:bg-gray-700 transition-colors"
                 >
                   <Send className="w-3.5 h-3.5" />
                   Subscribe to Digest
