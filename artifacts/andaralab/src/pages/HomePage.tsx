@@ -5,7 +5,7 @@ import FeaturedInsights from "@/components/FeaturedInsights";
 import LatestInsights from "@/components/LatestInsights";
 import ResearchAreas from "@/components/ResearchAreas";
 import DataHub from "@/components/DataHub";
-import AboutSection from "@/components/AboutSection";
+import HomeAboutSection from "@/components/HomeAboutSection";
 import NewsletterSection from "@/components/NewsletterSection";
 import { useLocale } from "@/lib/locale";
 import { applyDocumentSeo, SITE_NAME } from "@/lib/document-meta";
@@ -29,7 +29,7 @@ export default function HomePage() {
       <LatestInsights />
       <ResearchAreas />
       <DataHub />
-      <AboutSection />
+      <HomeAboutSection />
       <NewsletterSection />
     </>
   );

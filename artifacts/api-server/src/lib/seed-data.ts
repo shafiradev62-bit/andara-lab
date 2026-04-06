@@ -481,7 +481,21 @@ export const SEED_PAGES: SeedPage[] = [
         type: "text",
         content: "AndaraLab is an independent economic research firm providing in-depth analysis of Indonesia's macroeconomic environment, sectoral developments, and financial markets. Our work is built on publicly available data, proprietary models, and decades of collective experience across central banking, sovereign wealth management, and international institutions.",
       },
-      { type: "stats", items: [{ label: "Founded", value: "2021" }, { label: "Research Coverage", value: "Indonesia" }, { label: "Methodology", value: "Quantitative + Qualitative" }] },
+      { type: "stats", items: [
+        { label: "Economic Indicators Tracked", value: "100+" },
+        { label: "Economies Monitored", value: "15+" },
+        { label: "Research Verticals", value: "5+" },
+        { label: "Founded", value: "2019" },
+      ]},
+      {
+        type: "about",
+        headline: "Our Approach",
+        items: [
+          { label: "Rigor", value: "Every analysis is grounded in verified data sources, peer-reviewed methodology, and transparent assumptions." },
+          { label: "Relevance", value: "We focus on what matters now — policy shifts, market dislocations, and structural economic changes." },
+          { label: "Clarity", value: "Complex economic intelligence translated into clear, actionable insights for decision-makers." },
+        ],
+      },
     ],
   },
   {
@@ -497,6 +511,21 @@ export const SEED_PAGES: SeedPage[] = [
       {
         type: "text",
         content: "AndaraLab adalah firma riset ekonomi independen yang menyediakan analisis mendalam tentang lingkungan makroekonomi Indonesia, perkembangan sektoral, dan pasar keuangan.",
+      },
+      { type: "stats", items: [
+        { label: "Indikator Ekonomi Dilacak", value: "100+" },
+        { label: "Ekonomi Dipantau", value: "15+" },
+        { label: "Lini Riset", value: "5+" },
+        { label: "Didirikan", value: "2019" },
+      ]},
+      {
+        type: "about",
+        headline: "Pendekatan Kami",
+        items: [
+          { label: "Ketelitian", value: "Setiap analisis berbasis data terverifikasi, metodologi yang telah direview, dan asumsi yang transparan." },
+          { label: "Relevansi", value: "Kami fokus pada hal yang penting saat ini — pergeseran kebijakan, dislokasi pasar, dan perubahan struktural ekonomi." },
+          { label: "Kejelasan", value: "Intelijen ekonomi kompleks diterjemahkan ke dalam wawasan yang jelas dan dapat ditindaklanjuti." },
+        ],
       },
     ],
   },

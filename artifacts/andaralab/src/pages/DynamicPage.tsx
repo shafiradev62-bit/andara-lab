@@ -234,8 +234,48 @@ function SectionBlock({ section }: { section: ContentSection }) {
     case "featured": return <FeaturedSection slugs={section.slugs} limit={section.limit} />;
     case "posts":    return <PostsSection categories={section.categories} title={section.title} />;
     case "chart":    return <ChartSection datasetId={section.datasetId} title={section.title} />;
+    case "about":    return <AboutSectionContent {...section} />;
     default:         return null;
   }
+}
+
+function AboutSectionContent({ items, content: textContent }: { items?: { label: string; value: string; unit?: string }[]; content?: string }) {
+  return (
+    <section className="border-t border-[#E5E7EB] bg-white">
+      <div className="max-w-[1200px] mx-auto px-6 py-14">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 mb-4">About AndaraLab</div>
+            {textContent ? (
+              <p className="text-[14.5px] text-gray-500 leading-relaxed">{textContent}</p>
+            ) : (
+              <p className="text-[14.5px] text-gray-500 leading-relaxed">
+                At AndaraLab, we operate as a premier economic research hub under PT. Andara Investasi Cerdas — bridging the gap between complex macro-economic data and actionable intelligence for Indonesia and beyond.
+              </p>
+            )}
+          </div>
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 mb-4">Our Approach</div>
+            <div className="space-y-0 border border-[#E5E7EB]">
+              {(items ?? [
+                { label: "Rigor", value: "Every analysis is grounded in verified data sources, peer-reviewed methodology, and transparent assumptions." },
+                { label: "Relevance", value: "We focus on what matters now — policy shifts, market dislocations, and structural economic changes." },
+                { label: "Clarity", value: "Complex economic intelligence translated into clear, actionable insights for decision-makers." },
+              ]).map((item, i, arr) => (
+                <div key={i} className={`flex gap-4 p-5 ${i < arr.length - 1 ? "border-b border-[#E5E7EB]" : ""}`}>
+                  <div className="text-[11px] font-bold text-gray-300 w-6 flex-shrink-0 mt-0.5">0{i + 1}</div>
+                  <div>
+                    <div className="text-[14px] font-semibold text-gray-900 mb-1">{item.label}</div>
+                    <div className="text-[13px] text-gray-500 leading-relaxed">{item.value}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
 }
 
 export default function DynamicPage({ pageSlug, locale }: { pageSlug: string; locale?: "en" | "id" }) {
