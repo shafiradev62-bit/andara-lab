@@ -6,9 +6,11 @@ import {
   usePosts, useCreatePost, useUpdatePost, useDeletePost, useResetPosts,
   useAnalisisList, useAnalisis, useCreateAnalisis, useUpdateAnalisis,
   useDeleteAnalisis, useResetAnalisis,
+  useFeaturedInsights, useUpdateFeaturedInsights, useResetFeaturedInsights,
   type ChartDataset, type Page, type BlogPost,
   type AnalisisDeskriptif, type AnalysisSection, type AnalysisWidget,
   type AnalysisMetric, type AnalysisWidgetType,
+  type FeaturedInsight, type FeaturedInsightsConfig,
 } from "@/lib/cms-store";
 import InteractiveChart from "@/components/InteractiveChart";
 import {
@@ -18,7 +20,7 @@ import {
   Globe, Eye, EyeOff, Link2, Unlink,
   BarChart3, PieChart, LayoutGrid, List, ArrowUp, ArrowDown,
   ArrowRight, Type, Layout, Star, Zap, Shield, Target,
-  GripVertical, Edit3, Archive,
+  GripVertical, Edit3, Archive, Star,
 } from "lucide-react";
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
@@ -808,6 +810,213 @@ function PostEditor({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── Featured Insights Tab ──────────────────────────────────────────────────────
+
+function FeaturedInsightsTab() {
+  const [activeLocale, setActiveLocale] = useState<"en" | "id">("en");
+  const { data: config, isLoading } = useFeaturedInsights(activeLocale);
+  const updateMut = useUpdateFeaturedInsights();
+  const resetMut = useResetFeaturedInsights();
+
+  const { data: allPosts = [] } = usePosts({ status: "published", locale: activeLocale });
+  const postsBySlug = new Map(allPosts.map((p) => [p.slug, p]));
+
+  const [draft, setDraft] = useState<FeaturedInsightsConfig | null>(null);
+
+  useEffect(() => {
+    if (config) setDraft({ ...config, slugs: [...config.slugs] });
+  }, [config]);
+
+  if (isLoading || !draft) {
+    return (
+      <div className="py-16 text-center">
+        <Loader2 className="w-5 h-5 animate-spin mx-auto text-gray-400" />
+      </div>
+    );
+  }
+
+  const handleSave = () => {
+    updateMut.mutate(
+      { locale: activeLocale, data: draft },
+      { onSuccess: (updated) => setDraft({ ...updated, slugs: [...updated.slugs] }) },
+    );
+  };
+
+  const handleReset = () => {
+    if (!confirm("Reset Featured Insights to seed state?")) return;
+    resetMut.mutate(undefined, { onSuccess: () => setActiveLocale(activeLocale === "en" ? "id" : "en") });
+  };
+
+  const currentSlugs = new Set(draft.slugs.map((s) => s.slug));
+
+  const addSlug = (slug: string) => {
+    const order = draft.slugs.length > 0 ? Math.max(...draft.slugs.map((s) => s.order)) + 1 : 1;
+    setDraft({ ...draft, slugs: [...draft.slugs, { slug, label: "", order }] });
+  };
+
+  const removeSlug = (slug: string) => {
+    setDraft({ ...draft, slugs: draft.slugs.filter((s) => s.slug !== slug) });
+  };
+
+  const moveSlug = (slug: string, direction: -1 | 1) => {
+    const sorted = [...draft.slugs].sort((a, b) => a.order - b.order);
+    const idx = sorted.findIndex((s) => s.slug === slug);
+    const target = idx + direction;
+    if (target < 0 || target >= sorted.length) return;
+    const reordered = sorted.map((s, i) => {
+      if (i === idx) return { ...s, order: sorted[target].order };
+      if (i === target) return { ...s, order: sorted[idx].order };
+      return s;
+    });
+    setDraft({ ...draft, slugs: reordered });
+  };
+
+  const patchMeta = (field: keyof Pick<FeaturedInsightsConfig, "title" | "subtitle" | "sectionLabel" | "limit">, value: string | number) => {
+    setDraft({ ...draft, [field]: value });
+  };
+
+  const isSaving = updateMut.isPending;
+  const availablePosts = allPosts.filter((p) => !currentSlugs.has(p.slug));
+  const orderedSlugs = [...draft.slugs].sort((a, b) => a.order - b.order);
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-[20px] font-semibold text-gray-900">Featured Insights</h2>
+          <p className="text-[12px] text-gray-400 mt-0.5">
+            Configure which research posts appear on the homepage — order, title, subtitle
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={handleReset} disabled={resetMut.isPending}
+            className="flex items-center gap-1.5 text-[12px] font-medium text-gray-500 border border-gray-300 bg-white px-3 py-1.5 hover:bg-gray-50 disabled:opacity-50">
+            {resetMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />} Reset
+          </button>
+          <button onClick={handleSave} disabled={isSaving}
+            className="flex items-center gap-1.5 text-[12px] font-semibold bg-[#1a3a5c] text-white px-4 py-1.5 hover:bg-[#14305a] disabled:opacity-50">
+            {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />} Save Changes
+          </button>
+        </div>
+      </div>
+
+      {/* Locale toggle */}
+      <div className="flex items-center gap-1 border border-gray-200 rounded p-0.5 mb-6 w-fit">
+        {(["en", "id"] as const).map((loc) => (
+          <button key={loc} onClick={() => setActiveLocale(loc)}
+            className={`px-4 py-1.5 text-[12px] font-semibold rounded transition-colors ${
+              activeLocale === loc ? "bg-[#1a3a5c] text-white" : "text-gray-600 hover:text-gray-900"
+            }`}>
+            {loc === "en" ? "English" : "Bahasa Indonesia"}
+          </button>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left: config meta */}
+        <div className="lg:col-span-1 space-y-5">
+          <div className="bg-white border border-[#E5E7EB] rounded-lg p-5 space-y-4">
+            <h3 className="text-[13px] font-semibold text-gray-900">Section Settings</h3>
+            {(["sectionLabel", "title", "subtitle"] as const).map((field) => (
+              <div key={field}>
+                <label className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
+                  {field === "sectionLabel" ? "Section Label" : field.charAt(0).toUpperCase() + field.slice(1)}
+                </label>
+                <input value={draft[field]} onChange={(e) => patchMeta(field, e.target.value)}
+                  className="mt-1 w-full text-[13px] border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#1a3a5c]" />
+              </div>
+            ))}
+            <div>
+              <label className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">Max Posts</label>
+              <input type="number" min={1} max={10} value={draft.limit}
+                onChange={(e) => patchMeta("limit", Number(e.target.value))}
+                className="mt-1 w-full text-[13px] border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#1a3a5c]" />
+            </div>
+            <div className="flex items-center gap-2">
+              <input type="checkbox" id="showOnHomepage" checked={draft.showOnHomepage}
+                onChange={(e) => setDraft({ ...draft, showOnHomepage: e.target.checked })} className="w-4 h-4 accent-[#1a3a5c]" />
+              <label htmlFor="showOnHomepage" className="text-[12.5px] text-gray-700">Show on Homepage</label>
+            </div>
+          </div>
+          {updateMut.isSuccess && (
+            <div className="flex items-center gap-1.5 text-[12px] text-green-700 bg-green-50 border border-green-200 rounded px-3 py-2">
+              <CheckCircle className="w-3.5 h-3.5" /> Saved successfully
+            </div>
+          )}
+        </div>
+
+        {/* Right: post selection */}
+        <div className="lg:col-span-2 space-y-4">
+          <div className="bg-white border border-[#E5E7EB] rounded-lg p-5">
+            <h3 className="text-[13px] font-semibold text-gray-900 mb-1">Selected Posts</h3>
+            <p className="text-[11px] text-gray-400 mb-4">
+              Order 1 = hero card (spans 2 cols) · {draft.slugs.length}/{draft.limit} slots used
+            </p>
+            {orderedSlugs.length === 0 ? (
+              <div className="text-center py-8 text-[12px] text-gray-400 border border-dashed border-gray-200 rounded">
+                No posts selected — add from below
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {orderedSlugs.map((item, idx) => {
+                  const post = postsBySlug.get(item.slug);
+                  return (
+                    <div key={item.slug} className="flex items-center gap-3 border border-gray-200 rounded px-3 py-2.5 hover:border-gray-300 transition-colors">
+                      <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                        idx === 0 ? "bg-[#1a3a5c] text-white" : "bg-gray-100 text-gray-600"
+                      }`}>{item.order}</div>
+                      <div className="flex-1 min-w-0">
+                        {post ? (
+                          <div>
+                            <div className="text-[12.5px] font-semibold text-gray-900 truncate">{post.title}</div>
+                            <div className="text-[11px] text-gray-400">{post.category} · {post.readTime}</div>
+                          </div>
+                        ) : (
+                          <div className="text-[12.5px] text-gray-400 italic">Unknown: {item.slug}</div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button onClick={() => moveSlug(item.slug, -1)} disabled={idx === 0}
+                          className="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed" title="Move up">
+                          <ArrowUp className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={() => moveSlug(item.slug, 1)} disabled={idx === orderedSlugs.length - 1}
+                          className="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed" title="Move down">
+                          <ArrowDown className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={() => removeSlug(item.slug)} className="p-1 text-gray-400 hover:text-red-500" title="Remove">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="bg-white border border-[#E5E7EB] rounded-lg p-5">
+            <h3 className="text-[13px] font-semibold text-gray-900 mb-3">Add a Post</h3>
+            {availablePosts.length === 0 ? (
+              <p className="text-[12px] text-gray-400">All published posts are already selected.</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {availablePosts.map((post) => (
+                  <button key={post.slug} onClick={() => addSlug(post.slug)}
+                    className="flex items-center gap-1.5 text-[11.5px] font-medium border border-gray-300 rounded px-2.5 py-1 hover:border-[#1a3a5c] hover:text-[#1a3a5c] transition-colors bg-white text-gray-600">
+                    <Plus className="w-3 h-3" />
+                    <span className="truncate max-w-[180px]">{post.title}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -2208,13 +2417,14 @@ function AnalisisTab() {
 // ─── Main AdminPage ────────────────────────────────────────────────────────────
 
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState<"data" | "pages" | "blog" | "analisis">("data");
+  const [activeTab, setActiveTab] = useState<"data" | "pages" | "blog" | "analisis" | "featured">("data");
 
   const tabs = [
-    { key: "data" as const,      label: "Data Hub",        icon: <Database className="w-4 h-4" /> },
-    { key: "pages" as const,      label: "Pages",           icon: <FileText className="w-4 h-4" /> },
-    { key: "blog" as const,       label: "Blog",            icon: <BookOpen className="w-4 h-4" /> },
-    { key: "analisis" as const,   label: "Analisis Deskriptif", icon: <BarChart3 className="w-4 h-4" /> },
+    { key: "data" as const,      label: "Data Hub",           icon: <Database className="w-4 h-4" /> },
+    { key: "pages" as const,      label: "Pages",              icon: <FileText className="w-4 h-4" /> },
+    { key: "blog" as const,       label: "Blog",               icon: <BookOpen className="w-4 h-4" /> },
+    { key: "analisis" as const,   label: "Analisis Deskriptif",  icon: <BarChart3 className="w-4 h-4" /> },
+    { key: "featured" as const,    label: "Featured Insights",   icon: <Star className="w-4 h-4" /> },
   ];
 
   return (
@@ -2246,6 +2456,7 @@ export default function AdminPage() {
         {activeTab === "pages"     && <PagesTab />}
         {activeTab === "blog"      && <BlogTab />}
         {activeTab === "analisis"  && <AnalisisTab />}
+        {activeTab === "featured"  && <FeaturedInsightsTab />}
       </div>
     </div>
   );
