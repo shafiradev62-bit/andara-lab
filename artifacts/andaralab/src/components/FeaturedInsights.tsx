@@ -1,6 +1,10 @@
-import { ArrowRight, Clock } from "lucide-react";
+// FeaturedInsights.tsx — Reads from CMS Featured Insights config
+// Falls back to latest published posts if no config slugs defined
+
+import { ArrowRight, Clock, Star } from "lucide-react";
 import { Link } from "wouter";
-import { usePosts } from "../lib/cms-store";
+import { useLocale } from "../lib/locale";
+import { usePosts, useFeaturedInsights } from "../lib/cms-store";
 import { RESEARCH_TAG_PILL } from "../lib/research-tag-styles";
 
 function formatDate(dateStr?: string) {
@@ -13,19 +17,51 @@ function formatDate(dateStr?: string) {
 }
 
 export default function FeaturedInsights() {
-  const { data: posts = [], isLoading } = usePosts({ status: "published" });
+  const { locale, t } = useLocale();
+  const { data: config } = useFeaturedInsights(locale);
+  const { data: allPosts = [], isLoading } = usePosts({ status: "published", locale });
 
-  const published = posts.filter((p) => p.locale === "en" || !p.locale);
-  const [hero, ...rest] = published.slice(0, 3);
+  // Resolve which posts to show
+  const postsToShow = (() => {
+    const limit = config?.limit ?? 3;
+
+    if (config?.slugs && config.slugs.length > 0) {
+      // Use CMS-specified slugs in order
+      const slugOrder = config.slugs
+        .slice()
+        .sort((a, b) => a.order - b.order)
+        .map((s) => s.slug);
+      const slugSet = new Set(slugOrder);
+      const matched = allPosts.filter((p) => slugSet.has(p.slug));
+      const matchedMap = new Map(matched.map((p) => [p.slug, p]));
+      // Preserve CMS ordering, fill remaining with latest posts
+      const ordered: typeof allPosts = [];
+      for (const s of config.slugs) {
+        if (matchedMap.has(s.slug)) ordered.push(matchedMap.get(s.slug)!);
+      }
+      const usedSlugs = new Set(config.slugs.map((s) => s.slug));
+      const extras = allPosts.filter((p) => !usedSlugs.has(p.slug));
+      return [...ordered, ...extras].slice(0, limit);
+    }
+
+    // Fallback: latest posts
+    return allPosts.slice(0, limit);
+  })();
+
+  const sectionTitle = config?.title ?? (locale === "id" ? "Wawasan Pilihan" : "Featured Insights");
+  const sectionSubtitle = config?.subtitle ?? "";
+  const hero = postsToShow[0];
+  const rest = postsToShow.slice(1);
 
   if (isLoading) {
     return (
-      <section className="py-12 bg-white border-t border-[#E5E7EB]">
+      <section className="py-14 bg-white border-t border-[#E5E7EB]">
         <div className="max-w-[1200px] mx-auto px-6">
-          <div className="h-8 w-48 bg-gray-100 animate-pulse mb-8" />
+          <div className="h-8 w-56 bg-gray-100 animate-pulse mb-2" />
+          <div className="h-4 w-80 bg-gray-100 animate-pulse mb-10" />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[0, 1, 2].map((i) => (
-              <div key={i} className="h-64 bg-gray-100 animate-pulse" />
+              <div key={i} className="h-64 bg-gray-100 animate-pulse rounded-lg" />
             ))}
           </div>
         </div>
@@ -36,20 +72,38 @@ export default function FeaturedInsights() {
   if (!hero) return null;
 
   return (
-    <section className="py-12 bg-white border-t border-[#E5E7EB]">
+    <section className="py-14 bg-white border-t border-[#E5E7EB]">
       <div className="max-w-[1200px] mx-auto px-6">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-[22px] font-semibold text-gray-900">Featured Insights</h2>
-          <Link href="/blog" className="text-[12.5px] font-medium text-[#1a3a5c] hover:underline flex items-center gap-1">
-            View all <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
+        {/* Section header */}
+        <div className="mb-10">
+          <div className="flex items-center gap-2 mb-3">
+            <Star className="w-4 h-4 text-[#1a3a5c]" />
+            <span className="text-[11px] font-bold uppercase tracking-widest text-[#1a3a5c]">
+              {config?.sectionLabel ?? (locale === "id" ? "Riset Pilihan" : "Featured Research")}
+            </span>
+          </div>
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <h2 className="text-[26px] font-bold text-gray-900 leading-tight">{sectionTitle}</h2>
+              {sectionSubtitle && (
+                <p className="text-[13.5px] text-gray-500 mt-1">{sectionSubtitle}</p>
+              )}
+            </div>
+            <Link
+              href="/blog"
+              className="flex-shrink-0 text-[12.5px] font-medium text-[#1a3a5c] hover:underline flex items-center gap-1"
+            >
+              {locale === "id" ? "Lihat semua" : "View all"} <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
         </div>
 
+        {/* Cards grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Hero card */}
+          {/* Hero card — spans 2 cols */}
           <Link
             href={`/article/${hero.slug}`}
-            className="md:col-span-2 group relative overflow-hidden flex flex-col"
+            className="md:col-span-2 group relative overflow-hidden flex flex-col border border-[#E5E7EB] hover:border-gray-300 hover:shadow-md transition-all rounded-lg"
           >
             {hero.image && (
               <img
@@ -58,13 +112,13 @@ export default function FeaturedInsights() {
                 className="w-full h-52 object-cover"
               />
             )}
-            <div className="flex-1 border border-[#E5E7EB] border-t-0 p-5 flex flex-col">
+            <div className="flex-1 p-6 flex flex-col">
               <div className="flex items-center gap-2 mb-3">
                 <span className={`text-[10.5px] font-semibold px-2 py-0.5 uppercase tracking-wide ${RESEARCH_TAG_PILL}`}>
                   {hero.category}
                 </span>
               </div>
-              <h3 className="text-[16px] font-semibold text-gray-900 leading-snug mb-2 group-hover:text-[#1a3a5c] transition-colors flex-1">
+              <h3 className="text-[17px] font-bold text-gray-900 leading-snug mb-3 group-hover:text-[#1a3a5c] transition-colors flex-1">
                 {hero.title}
               </h3>
               {hero.excerpt && (
@@ -72,7 +126,7 @@ export default function FeaturedInsights() {
                   {hero.excerpt}
                 </p>
               )}
-              <div className="flex items-center gap-2 text-[11px] text-gray-400 mt-auto pt-3 border-t border-[#F3F4F6]">
+              <div className="flex items-center gap-2 text-[11px] text-gray-400 mt-auto pt-4 border-t border-[#F3F4F6]">
                 <span>{formatDate(hero.publishedAt || hero.createdAt)}</span>
                 {hero.readTime && (
                   <>
@@ -92,7 +146,7 @@ export default function FeaturedInsights() {
               <Link
                 key={post.id}
                 href={`/article/${post.slug}`}
-                className="group border border-[#E5E7EB] p-4 flex flex-col hover:border-gray-300 hover:shadow-sm transition-all flex-1"
+                className="group border border-[#E5E7EB] p-5 flex flex-col hover:border-gray-300 hover:shadow-sm transition-all rounded-lg flex-1"
               >
                 <div className="flex items-center gap-2 mb-2">
                   <span className={`text-[10.5px] font-semibold px-2 py-0.5 uppercase tracking-wide ${RESEARCH_TAG_PILL}`}>
@@ -102,7 +156,7 @@ export default function FeaturedInsights() {
                 <h3 className="text-[13.5px] font-semibold text-gray-900 leading-snug mb-2 group-hover:text-[#1a3a5c] transition-colors flex-1">
                   {post.title}
                 </h3>
-                <div className="flex items-center gap-2 text-[11px] text-gray-400 mt-auto pt-2 border-t border-[#F3F4F6]">
+                <div className="flex items-center gap-2 text-[11px] text-gray-400 mt-auto pt-3 border-t border-[#F3F4F6]">
                   <span>{formatDate(post.publishedAt || post.createdAt)}</span>
                   {post.readTime && (
                     <>

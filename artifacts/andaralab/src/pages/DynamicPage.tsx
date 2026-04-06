@@ -258,8 +258,11 @@ export default function DynamicPage({ pageSlug, locale }: { pageSlug: string; lo
   }, [isLoading, error, page, pathname, pageSlug, t]);
 
   if (isLoading) return (
-    <div className="flex items-center justify-center py-32">
-      <div className="flex items-center gap-3 text-gray-400">
+    <div className="flex flex-col items-center justify-center py-32 text-gray-500">
+      <div>DEBUG SLUG: {pageSlug || "EMPTY"}</div>
+      <div>DEBUG IS_LOADING: {String(isLoading)}</div>
+      <div>DEBUG ERROR: {error ? String(error) : "NONE"}</div>
+      <div className="flex items-center gap-3 text-gray-400 mt-4">
         <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
         <span className="text-[13px]">Loading</span>
       </div>
@@ -293,14 +296,21 @@ export default function DynamicPage({ pageSlug, locale }: { pageSlug: string; lo
 
   return (
     <>
-      {blocks.length === 0 && (
-        <div className="max-w-[1200px] mx-auto px-6 py-16 text-center text-gray-400">
-          <p className="text-[14px]">This page has no content yet.</p>
-        </div>
+      {blocks.length === 0 ? (
+        <>
+          <HeroSection 
+            headline={page.title || "Untitled Page"} 
+            subheadline={page.description || "This page has been created but no content blocks have been added yet."} 
+          />
+          <div className="max-w-[1200px] mx-auto px-6 py-16 text-center text-gray-400">
+            <p className="text-[14px]">You can structure this page using JSON blocks via the CMS API.</p>
+          </div>
+        </>
+      ) : (
+        blocks.map((section: ContentSection, i: number) => (
+          <SectionBlock key={`${section.type}-${i}`} section={section} />
+        ))
       )}
-      {blocks.map((section: ContentSection, i: number) => (
-        <SectionBlock key={`${section.type}-${i}`} section={section} />
-      ))}
     </>
   );
 }

@@ -666,6 +666,7 @@ export const QUERY_KEY = {
   post:        (id: number) => ["post", id] as const,
   analisis:    ["analisis"] as const,
   analisisRecord: (id: string) => ["analisis", id] as const,
+  featuredInsights: (locale: string) => ["featured-insights", locale] as const,
 };
 
 // useDatasets — fetch all datasets (optionally filtered by category)
@@ -1002,6 +1003,85 @@ export function useResetAnalisis() {
       qc.invalidateQueries({ queryKey: QUERY_KEY.analisis });
     },
   });
+}
+
+// ─── Featured Insights hooks ─────────────────────────────────────────────────────
+
+export function useFeaturedInsights(locale: "en" | "id") {
+  return useQuery({
+    queryKey: QUERY_KEY.featuredInsights(locale),
+    queryFn: () => fetchFeaturedInsights(locale),
+    staleTime: 1000 * 60 * 5,
+  });
+}
+
+export function useUpdateFeaturedInsights() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ locale, data }: { locale: "en" | "id"; data: Parameters<typeof updateFeaturedInsights>[1] }) =>
+      updateFeaturedInsights(locale, data),
+    onSuccess: (_data, { locale }) => {
+      qc.invalidateQueries({ queryKey: QUERY_KEY.featuredInsights(locale) });
+    },
+  });
+}
+
+export function useResetFeaturedInsights() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: resetFeaturedInsights,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["featured-insights"] });
+    },
+  });
+}
+
+// ─── Featured Insights Config API ─────────────────────────────────────────────
+
+export interface FeaturedInsight {
+  slug: string;
+  label: string;
+  order: number;
+}
+
+export interface FeaturedInsightsConfig {
+  id: string;
+  locale: "en" | "id";
+  slugs: FeaturedInsight[];
+  title: string;
+  subtitle: string;
+  sectionLabel: string;
+  limit: number;
+  showOnHomepage: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface FeaturedInsightsResponse {
+  data: FeaturedInsightsConfig;
+  meta?: { updated?: boolean };
+}
+
+export async function fetchFeaturedInsights(locale: "en" | "id"): Promise<FeaturedInsightsConfig> {
+  try {
+    const res = await apiGet<FeaturedInsightsResponse>(`/api/featured-insights/${locale}`);
+    return res.data;
+  } catch (error) {
+    console.warn('API unavailable for fetchFeaturedInsights:', error);
+    throw error;
+  }
+}
+
+export async function updateFeaturedInsights(
+  locale: "en" | "id",
+  data: Partial<Omit<FeaturedInsightsConfig, "id" | "locale" | "createdAt" | "updatedAt">>
+): Promise<FeaturedInsightsConfig> {
+  const res = await apiPut<FeaturedInsightsResponse>(`/api/featured-insights/${locale}`, data);
+  return res.data;
+}
+
+export async function resetFeaturedInsights(): Promise<void> {
+  await apiPost("/api/featured-insights/reset", {});
 }
 
 // ─── Legacy compatibility layer ─────────────────────────────────────────────────

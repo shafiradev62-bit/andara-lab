@@ -497,6 +497,115 @@ class PersistentBlogPostStore implements BlogPostStore {
   }
 }
 
+// ─── Featured Insights Config ───────────────────────────────────────────────────
+
+export interface FeaturedInsight {
+  slug: string;     // blog post slug
+  label: string;    // optional override label
+  order: number;    // display order
+}
+
+export interface FeaturedInsightsConfig {
+  id: string;
+  locale: "en" | "id";
+  // If slugs is empty, fallback to auto-select latest posts
+  slugs: FeaturedInsight[];
+  title: string;
+  subtitle: string;
+  sectionLabel: string;
+  limit: number;    // how many posts to show (3 or 6)
+  showOnHomepage: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+const SEED_FEATURED_INSIGHTS: FeaturedInsightsConfig[] = [
+  {
+    id: "featured-en",
+    locale: "en",
+    slugs: [
+      { slug: "nickel-ev-indonesia", order: 1 },
+      { slug: "digital-economy-indonesia-2026", order: 2 },
+      { slug: "bank-mandatory-ratio-q1-2026", order: 3 },
+    ],
+    title: "Featured Insights",
+    subtitle: "Latest research and analysis from AndaraLab",
+    sectionLabel: "Featured Research",
+    limit: 3,
+    showOnHomepage: true,
+    createdAt: "2026-01-01",
+    updatedAt: "2026-04-06",
+  },
+  {
+    id: "featured-id",
+    locale: "id",
+    slugs: [
+      { slug: "ri-transmigration-nickel-downstreaming", order: 1 },
+      { slug: "prospeks-makro-indonesia-2026-id", order: 2 },
+      { slug: "food-inflation-handling-indonesia", order: 3 },
+    ],
+    title: "Wawasan Pilihan",
+    subtitle: "Riset dan analisis terbaru dari AndaraLab",
+    sectionLabel: "Riset Pilihan",
+    limit: 3,
+    showOnHomepage: true,
+    createdAt: "2026-01-01",
+    updatedAt: "2026-04-06",
+  },
+];
+
+export interface FeaturedInsightsStore {
+  get(locale: "en" | "id"): FeaturedInsightsConfig | undefined;
+  update(id: string, data: Partial<Omit<FeaturedInsightsConfig, "id" | "createdAt" | "updatedAt">>): FeaturedInsightsConfig | null;
+  reset(): void;
+}
+
+class PersistentFeaturedInsightsStore implements FeaturedInsightsStore {
+  private records: Map<string, FeaturedInsightsConfig>;
+  private readonly FILE = "featured-insights.json";
+
+  constructor() {
+    this.records = new Map();
+    this.load();
+  }
+
+  private load() {
+    const saved = readJson<FeaturedInsightsConfig[]>(this.FILE, []);
+    if (saved.length > 0) {
+      this.records = new Map(saved.map((r) => [r.id, r]));
+    } else {
+      this.seed();
+    }
+  }
+
+  private save() {
+    writeJson(this.FILE, [...this.records.values()]);
+  }
+
+  private seed() {
+    this.records.clear();
+    for (const r of SEED_FEATURED_INSIGHTS) {
+      this.records.set(r.id, cloneDeep(r));
+    }
+    this.save();
+  }
+
+  get(locale: "en" | "id"): FeaturedInsightsConfig | undefined {
+    return this.records.get(`featured-${locale}`);
+  }
+
+  update(id: string, data: Partial<Omit<FeaturedInsightsConfig, "id" | "createdAt" | "updatedAt">>): FeaturedInsightsConfig | null {
+    const existing = this.records.get(id);
+    if (!existing) return null;
+    const updated: FeaturedInsightsConfig = { ...existing, ...cloneDeep(data), updatedAt: now() };
+    this.records.set(id, updated);
+    this.save();
+    return updated;
+  }
+
+  reset() { this.seed(); }
+}
+
 // ─── Analisis Deskriptif Store ─────────────────────────────────────────────────
 
 const SEED_ANALISIS: AnalisisDeskriptifRecord[] = [
@@ -715,3 +824,4 @@ export const datasetStore: DatasetStore   = new PersistentDatasetStore();
 export const pageStore: PageStore         = new PersistentPageStore();
 export const blogPostStore: BlogPostStore = new PersistentBlogPostStore();
 export const analisisStore: AnalisisDeskriptifStore = new PersistentAnalisisDeskriptifStore();
+export const featuredInsightsStore: FeaturedInsightsStore = new PersistentFeaturedInsightsStore();
