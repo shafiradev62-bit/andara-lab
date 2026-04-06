@@ -14,6 +14,88 @@ import {
   type SeedBlogPost,
 } from "./seed-data.js";
 
+// ─── Analisis Deskriptif Types ────────────────────────────────────────────────
+
+export type AnalysisWidgetType =
+  | "metric-card"    // Single KPI with value + trend
+  | "comparison"     // Side-by-side comparison table
+  | "bar-chart"      // Horizontal bar chart
+  | "donut-chart"    // Donut/ring chart for distribution
+  | "trend-line"     // Trend indicator (↑ ↓ →)
+  | "highlight"      // Key insight callout box
+  | "distribution"   // Distribution breakdown list
+  | "custom-text";   // Free-form rich text
+
+export interface AnalysisMetric {
+  id: string;
+  label: string;
+  value: string;
+  unit?: string;
+  trend?: "up" | "down" | "neutral";
+  trendValue?: string; // e.g. "+2.3%", "-1.1%"
+  note?: string;
+  color?: string; // for badge/bar coloring
+}
+
+export interface AnalysisInsight {
+  id: string;
+  icon?: string;
+  heading: string;
+  body: string;
+  importance: "high" | "medium" | "low";
+  tags?: string[];
+}
+
+export interface AnalysisWidget {
+  id: string;
+  type: AnalysisWidgetType;
+  title?: string;
+  subtitle?: string;
+  // For metric-card
+  metrics?: AnalysisMetric[];
+  // For comparison
+  compareItems?: { label: string; values: string[] }[];
+  compareHeaders?: string[];
+  // For bar-chart / donut-chart
+  barData?: { label: string; value: number; color?: string }[];
+  // For distribution
+  distributionItems?: { label: string; value: number; percentage: number; color?: string }[];
+  // For highlight / custom-text
+  text?: string;
+  // For highlight
+  calloutColor?: string;
+  // For custom-text
+  html?: string;
+}
+
+export interface AnalysisSection {
+  id: string;
+  title: string;
+  titleEn?: string;
+  description?: string;
+  descriptionEn?: string;
+  locale: "en" | "id" | "both";
+  sectionType: "overview" | "dataset-breakdown" | "blog-insights" | "custom";
+  order: number;
+  widgets: AnalysisWidget[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AnalisisDeskriptifRecord {
+  id: string;
+  title: string;
+  titleEn: string;
+  description: string;
+  descriptionEn: string;
+  locale: "en" | "id" | "both";
+  status: "active" | "archived";
+  sections: AnalysisSection[];
+  linkedId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type { SeedDataset as Dataset };
 
 // ─── Record Types ─────────────────────────────────────────────────────────────
@@ -415,8 +497,221 @@ class PersistentBlogPostStore implements BlogPostStore {
   }
 }
 
+// ─── Analisis Deskriptif Store ─────────────────────────────────────────────────
+
+const SEED_ANALISIS: AnalisisDeskriptifRecord[] = [
+  {
+    id: "default-overview",
+    title: "Gambaran Umum Sistem",
+    titleEn: "System Overview",
+    description: "Analisis otomatis dari data CMS: datasets, blog posts, dan pages.",
+    descriptionEn: "Auto-generated analysis from CMS data: datasets, blog posts, and pages.",
+    locale: "both",
+    status: "active",
+    sections: [
+      {
+        id: "s1-coverage",
+        title: "Cakupan Data",
+        titleEn: "Data Coverage",
+        description: "Distribusi konten berdasarkan kategori dan bahasa.",
+        locale: "both",
+        sectionType: "overview",
+        order: 1,
+        widgets: [
+          {
+            id: "w1",
+            type: "metric-card",
+            title: "Total Konten",
+            metrics: [
+              { id: "m1", label: "Datasets", value: "11", trend: "neutral", note: "11 chart datasets available" },
+              { id: "m2", label: "Blog Posts", value: "14", trend: "up", trendValue: "+2 this month", note: "13 published, 1 draft" },
+              { id: "m3", label: "Pages", value: "14", trend: "neutral", note: "EN + ID versions" },
+              { id: "m4", label: "Kategori Dataset", value: "4", trend: "neutral", note: "Macro, Sectoral, Market, Financial" },
+            ],
+          },
+          {
+            id: "w2",
+            type: "distribution",
+            title: "Distribusi Dataset per Kategori",
+            subtitle: "Focus Area AndaraLab",
+            distributionItems: [
+              { label: "Sectoral Intelligence", value: 4, percentage: 36, color: "#0d7377" },
+              { label: "Macro Foundations", value: 3, percentage: 27, color: "#1a3a5c" },
+              { label: "Market Dashboard", value: 2, percentage: 18, color: "#e67e22" },
+              { label: "Financial Markets", value: 1, percentage: 9, color: "#2ecc71" },
+            ],
+          },
+          {
+            id: "w3",
+            type: "highlight",
+            title: "Key Insight",
+            calloutColor: "#1a3a5c",
+            text: "Sectoral Intelligence mendominasi dengan 36% dari total dataset, menunjukkan fokus AndaraLab pada analisis sektoral ekonomi Indonesia. Nickel dan Energi Terbarukan menjadi topik utama.",
+          },
+        ],
+        createdAt: "2026-01-01",
+        updatedAt: "2026-04-06",
+      },
+      {
+        id: "s2-blog",
+        title: "Konten Blog",
+        titleEn: "Blog Content",
+        description: "Analisis distribusi dan kualitas artikel blog.",
+        locale: "both",
+        sectionType: "blog-insights",
+        order: 2,
+        widgets: [
+          {
+            id: "w4",
+            type: "metric-card",
+            title: "Blog Statistics",
+            metrics: [
+              { id: "m5", label: "Published", value: "13", trend: "up", trendValue: "93%", note: "1 draft pending" },
+              { id: "m6", label: "English Posts", value: "10", trend: "up", trendValue: "71%", note: "Primary language" },
+              { id: "m7", label: "Indonesian Posts", value: "4", trend: "neutral", trendValue: "29%", note: "Growing content" },
+              { id: "m8", label: "Categories", value: "5", trend: "neutral", note: "economics, sectoral, etc." },
+            ],
+          },
+          {
+            id: "w5",
+            type: "distribution",
+            title: "Distribusi Blog per Kategori",
+            distributionItems: [
+              { label: "Economics 101", value: 4, percentage: 29, color: "#1a3a5c" },
+              { label: "Sectoral Analysis", value: 4, percentage: 29, color: "#0d7377" },
+              { label: "Financial Markets", value: 2, percentage: 14, color: "#2ecc71" },
+              { label: "Policy Analysis", value: 2, percentage: 14, color: "#e67e22" },
+              { label: "Market Pulse", value: 1, percentage: 7, color: "#9b59b6" },
+              { label: "Lab Notes", value: 1, percentage: 7, color: "#3498db" },
+            ],
+          },
+          {
+            id: "w6",
+            type: "highlight",
+            title: "Content Strategy Insight",
+            calloutColor: "#0d7377",
+            text: "Dominasi konten economics-101 dan sectoral-analysis menunjukkan positioning AndaraLab sebagai platform edukasi + analisis. Rasio EN:ID sebesar 71:29 mengindikasikan target audience global.",
+          },
+        ],
+        createdAt: "2026-01-01",
+        updatedAt: "2026-04-06",
+      },
+      {
+        id: "s3-risk",
+        title: "Analisis Risiko",
+        titleEn: "Risk Analysis",
+        description: "Identifikasi risiko utama sistem.",
+        locale: "both",
+        sectionType: "custom",
+        order: 3,
+        widgets: [
+          {
+            id: "w7",
+            type: "comparison",
+            title: "Risk Matrix",
+            subtitle: "Dampak vs Likelihood",
+            compareHeaders: ["Risiko", "Dampak", "Likelihood", "Mitigasi"],
+            compareItems: [
+              { label: "API Server Down", values: ["High", "Medium", "PM2 auto-restart"] },
+              { label: "Data Loss (CRUD test)", values: ["High", "Low", "Reset to Default"] },
+              { label: "Cross-browser Issue", values: ["Medium", "Medium", "Multi-browser test"] },
+              { label: "Content Mismatch (EN/ID)", values: ["Low", "Low", "Verify toggle"] },
+              { label: "Auth Security", values: ["High", "Medium", "Password protect /admin"] },
+            ],
+          },
+          {
+            id: "w8",
+            type: "highlight",
+            title: "Critical Action",
+            calloutColor: "#e74c3c",
+            text: "Administrators harus selalu menjalankan Reset to Default setelah melakukan test CRUD. Tidak ada test autentikasi untuk panel admin — perlu implementasi password protection.",
+          },
+        ],
+        createdAt: "2026-01-01",
+        updatedAt: "2026-04-06",
+      },
+    ],
+    createdAt: "2026-01-01",
+    updatedAt: "2026-04-06",
+  },
+];
+
+export interface AnalisisDeskriptifStore {
+  list(filter?: { status?: string; locale?: string }): AnalisisDeskriptifRecord[];
+  get(id: string): AnalisisDeskriptifRecord | undefined;
+  create(data: Omit<AnalisisDeskriptifRecord, "id" | "createdAt" | "updatedAt">): AnalisisDeskriptifRecord;
+  update(id: string, data: Partial<Omit<AnalisisDeskriptifRecord, "id" | "createdAt" | "updatedAt">>): AnalisisDeskriptifRecord | null;
+  delete(id: string): boolean;
+  reset(): void;
+}
+
+class PersistentAnalisisDeskriptifStore implements AnalisisDeskriptifStore {
+  private records: Map<string, AnalisisDeskriptifRecord>;
+  private readonly FILE = "analisis.json";
+
+  constructor() {
+    this.records = new Map();
+    this.load();
+  }
+
+  private load() {
+    const saved = readJson<AnalisisDeskriptifRecord[]>(this.FILE, []);
+    if (saved.length > 0) {
+      this.records = new Map(saved.map((r) => [r.id, r]));
+    } else {
+      this.seed();
+    }
+  }
+
+  private save() {
+    writeJson(this.FILE, [...this.records.values()]);
+  }
+
+  private seed() {
+    this.records.clear();
+    for (const r of SEED_ANALISIS) {
+      this.records.set(r.id, cloneDeep(r));
+    }
+    this.save();
+  }
+
+  list(filter?: { status?: string; locale?: string }): AnalisisDeskriptifRecord[] {
+    let all = [...this.records.values()];
+    if (filter?.status) all = all.filter((r) => r.status === filter.status);
+    return all;
+  }
+
+  get(id: string): AnalisisDeskriptifRecord | undefined { return this.records.get(id); }
+
+  create(data: Omit<AnalisisDeskriptifRecord, "id" | "createdAt" | "updatedAt">): AnalisisDeskriptifRecord {
+    const id = `analisis-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    const record: AnalisisDeskriptifRecord = { ...cloneDeep(data), id, createdAt: now(), updatedAt: now() };
+    this.records.set(id, record);
+    this.save();
+    return record;
+  }
+
+  update(id: string, data: Partial<Omit<AnalisisDeskriptifRecord, "id" | "createdAt" | "updatedAt">>): AnalisisDeskriptifRecord | null {
+    const existing = this.records.get(id);
+    if (!existing) return null;
+    const updated: AnalisisDeskriptifRecord = { ...existing, ...cloneDeep(data), updatedAt: now() };
+    this.records.set(id, updated);
+    this.save();
+    return updated;
+  }
+
+  delete(id: string): boolean {
+    const result = this.records.delete(id);
+    if (result) this.save();
+    return result;
+  }
+
+  reset() { this.seed(); }
+}
+
 // ─── Singleton exports ─────────────────────────────────────────────────────────
 
 export const datasetStore: DatasetStore   = new PersistentDatasetStore();
 export const pageStore: PageStore         = new PersistentPageStore();
 export const blogPostStore: BlogPostStore = new PersistentBlogPostStore();
+export const analisisStore: AnalisisDeskriptifStore = new PersistentAnalisisDeskriptifStore();

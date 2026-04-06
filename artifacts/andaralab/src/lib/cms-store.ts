@@ -261,48 +261,43 @@ export async function fetchPage(id: number): Promise<Page> {
 }
 
 export async function fetchPageBySlug(slug: string, locale?: string): Promise<Page> {
+  let apiFailed = false;
   try {
     const params = new URLSearchParams();
     params.set("path", slug);
     if (locale) params.set("locale", locale);
     const res = await apiGet<PageApiResponse>(`/api/pages/lookup?${params.toString()}`);
     return res.data;
-  } catch (lookupErr) {
-    const lookup404 = (lookupErr as Error & { apiStatus?: number }).apiStatus === 404;
-    try {
-      const q = locale ? `?locale=${encodeURIComponent(locale)}` : "";
-      const res = await apiGet<PageApiResponse>(`/api/pages/slug/${encodeURIComponent(slug)}${q}`);
-      return res.data;
-    } catch (slugErr) {
-      const slug404 = (slugErr as Error & { apiStatus?: number }).apiStatus === 404;
-      if (lookup404 && slug404) throw slugErr;
-      console.warn("API unavailable, fetching page from cache/seed:", lookupErr);
-      const seedPages = getSeedPages();
-      const norm = slug.startsWith("/") ? slug : `/${slug}`;
-      const matchSlug = (p: Page) => p.slug === norm || p.slug === norm.replace(/^\//, "");
-      const published = seedPages.filter((p) => matchSlug(p) && p.status === "published");
-      const pickNewest = (rows: Page[]) =>
-        [...rows].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0];
-      let pick: Page | undefined;
-      if (locale) {
-        const forLocale = published.filter((p) => p.locale === locale);
-        if (forLocale.length) pick = pickNewest(forLocale);
-      }
-      if (!pick && published.length) pick = pickNewest(published);
-      if (pick) return pick;
-      const draftMatch = seedPages.find(
-        (p) => matchSlug(p) && p.status === "draft" && (!locale || p.locale === locale)
-      );
-      if (draftMatch) {
-        const err = new Error(
-          "This page is still a draft. In Admin → Pages, choose Published (live) and save."
-        ) as Error & { apiDetail?: string };
-        err.apiDetail = err.message;
-        throw err;
-      }
-      throw new Error(`Page ${slug} not found`);
-    }
+  } catch (lookupErr: any) {
+    apiFailed = true;
   }
+
+  // Fallback to cache immediately to prevent long loading screens
+  if (apiFailed) {
+    const seedPages = getSeedPages();
+    const norm = slug.startsWith("/") ? slug : `/${slug}`;
+    const matchSlug = (p: Page) => p.slug === norm || p.slug === norm.replace(/^\//, "");
+    const published = seedPages.filter((p) => matchSlug(p) && p.status === "published");
+    const pickNewest = (rows: Page[]) =>
+      [...rows].sort((a, b) => (b.updatedAt || "").localeCompare(a.updatedAt || ""))[0];
+    
+    let pick: Page | undefined;
+    if (locale) {
+      const forLocale = published.filter((p) => p.locale === locale);
+      if (forLocale.length) pick = pickNewest(forLocale);
+    }
+    if (!pick && published.length) pick = pickNewest(published);
+    if (pick) return pick;
+
+    const draftMatch = seedPages.find(
+      (p) => matchSlug(p) && p.status === "draft" && (!locale || p.locale === locale)
+    );
+    if (draftMatch) {
+      throw new Error("This page is still a draft. In Admin → Pages, choose Published (live) and save.");
+    }
+    throw new Error(`Page ${slug} not found`);
+  }
+  throw new Error(`Impossible code path`);
 }
 
 export async function createPage(data: Omit<Page, "id" | "createdAt" | "updatedAt">): Promise<Page> {
@@ -525,6 +520,131 @@ export async function linkPosts(idA: number, idB: number): Promise<void> {
   await apiPost("/api/blog/link", { idA, idB });
 }
 
+// ─── Analisis Deskriptif Types ─────────────────────────────────────────────────
+
+export type AnalysisWidgetType =
+  | "metric-card"
+  | "comparison"
+  | "bar-chart"
+  | "donut-chart"
+  | "trend-line"
+  | "highlight"
+  | "distribution"
+  | "custom-text";
+
+export interface AnalysisMetric {
+  id: string;
+  label: string;
+  value: string;
+  unit?: string;
+  trend?: "up" | "down" | "neutral";
+  trendValue?: string;
+  note?: string;
+  color?: string;
+}
+
+export interface AnalysisWidget {
+  id: string;
+  type: AnalysisWidgetType;
+  title?: string;
+  subtitle?: string;
+  metrics?: AnalysisMetric[];
+  compareItems?: { label: string; values: string[] }[];
+  compareHeaders?: string[];
+  barData?: { label: string; value: number; color?: string }[];
+  distributionItems?: { label: string; value: number; percentage: number; color?: string }[];
+  text?: string;
+  calloutColor?: string;
+  html?: string;
+}
+
+export interface AnalysisSection {
+  id: string;
+  title: string;
+  titleEn?: string;
+  description?: string;
+  descriptionEn?: string;
+  locale: "en" | "id" | "both";
+  sectionType: "overview" | "dataset-breakdown" | "blog-insights" | "custom";
+  order: number;
+  widgets: AnalysisWidget[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AnalisisDeskriptif {
+  id: string;
+  title: string;
+  titleEn: string;
+  description: string;
+  descriptionEn: string;
+  locale: "en" | "id" | "both";
+  status: "active" | "archived";
+  sections: AnalysisSection[];
+  linkedId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ─── Analisis Deskriptif API ────────────────────────────────────────────────────
+
+interface AnalisisApiResponse {
+  data: AnalisisDeskriptif[];
+  meta: { total: number; status: string };
+}
+
+interface AnalisisSingleResponse {
+  data: AnalisisDeskriptif;
+  meta?: { created?: boolean; updated?: boolean };
+}
+
+export async function fetchAnalisisList(filter?: { status?: string }): Promise<AnalisisDeskriptif[]> {
+  try {
+    const params = new URLSearchParams();
+    if (filter?.status) params.set("status", filter.status);
+    const qs = params.toString() ? `?${params.toString()}` : "";
+    const res = await apiGet<AnalisisApiResponse>(`/api/analisis${qs}`);
+    return res.data;
+  } catch (error) {
+    console.warn('API unavailable for fetchAnalisisList:', error);
+    return [];
+  }
+}
+
+export async function fetchAnalisis(id: string): Promise<AnalisisDeskriptif> {
+  try {
+    const res = await apiGet<AnalisisSingleResponse>(`/api/analisis/${id}`);
+    return res.data;
+  } catch (error) {
+    console.warn('API unavailable for fetchAnalisis:', error);
+    throw new Error(`Analisis ${id} not found`);
+  }
+}
+
+export async function createAnalisis(
+  data: Omit<AnalisisDeskriptif, "id" | "createdAt" | "updatedAt">
+): Promise<AnalisisDeskriptif> {
+  const res = await apiPost<AnalisisSingleResponse>("/api/analisis", data);
+  return res.data;
+}
+
+export async function updateAnalisis(
+  id: string,
+  data: Partial<Omit<AnalisisDeskriptif, "id" | "createdAt" | "updatedAt">>
+): Promise<AnalisisDeskriptif> {
+  const res = await apiPut<AnalisisSingleResponse>(`/api/analisis/${id}`, data);
+  return res.data;
+}
+
+export async function deleteAnalisisAPI(id: string): Promise<void> {
+  await apiDelete(`/api/analisis/${id}`);
+}
+
+export async function resetAnalisis(): Promise<AnalisisDeskriptif[]> {
+  const res = await apiPost<AnalisisApiResponse>("/api/analisis/reset", {});
+  return res.data;
+}
+
 // ─── TanStack Query hooks ────────────────────────────────────────────────────────
 //
 // Pages import these instead of calling the API functions directly.
@@ -544,6 +664,8 @@ export const QUERY_KEY = {
   page:        (id: number) => ["page", id] as const,
   posts:       ["posts"] as const,
   post:        (id: number) => ["post", id] as const,
+  analisis:    ["analisis"] as const,
+  analisisRecord: (id: string) => ["analisis", id] as const,
 };
 
 // useDatasets — fetch all datasets (optionally filtered by category)
@@ -670,7 +792,7 @@ export function usePageBySlug(slug: string, locale?: string) {
     queryFn:  () => fetchPageBySlug(slug, locale),
     enabled:  Boolean(slug),
     staleTime: 30_000,
-    retry: noRetryOn404,
+    retry: false, // FORCE DISABLE RETRIES TO DEBUG
   });
 }
 
@@ -817,6 +939,67 @@ export function useResetPosts() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: QUERY_KEY.posts });
       invalidatePostSlugQueries(qc);
+    },
+  });
+}
+
+// ─── Analisis Deskriptif hooks ──────────────────────────────────────────────────
+
+export function useAnalisisList(filter?: { status?: string }) {
+  return useQuery({
+    queryKey: filter ? [...QUERY_KEY.analisis, filter] : QUERY_KEY.analisis,
+    queryFn: () => fetchAnalisisList(filter),
+    staleTime: 1000 * 60 * 5,
+  });
+}
+
+export function useAnalisis(id: string | null) {
+  return useQuery({
+    queryKey: QUERY_KEY.analisisRecord(id ?? ""),
+    queryFn: () => fetchAnalisis(id!),
+    enabled: Boolean(id),
+    staleTime: 1000 * 60 * 2,
+  });
+}
+
+export function useCreateAnalisis() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: createAnalisis,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: QUERY_KEY.analisis });
+    },
+  });
+}
+
+export function useUpdateAnalisis() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Parameters<typeof updateAnalisis>[1] }) =>
+      updateAnalisis(id, data),
+    onSuccess: (_data, { id }) => {
+      qc.invalidateQueries({ queryKey: QUERY_KEY.analisisRecord(id) });
+      qc.invalidateQueries({ queryKey: QUERY_KEY.analisis });
+    },
+  });
+}
+
+export function useDeleteAnalisis() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: deleteAnalisisAPI,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: QUERY_KEY.analisis });
+    },
+  });
+}
+
+export function useResetAnalisis() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: resetAnalisis,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: QUERY_KEY.analisis });
     },
   });
 }

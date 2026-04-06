@@ -530,6 +530,10 @@ curl -s http://76.13.17.91/api/blog | node -p "JSON.parse(require('fs').readFile
 echo ""
 echo "=== 7. Datasets by Category ==="
 curl -s http://76.13.17.91/api/datasets | node -p "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')).data; const cats=[...new Set(d.map(x=>x.category))]; cats.forEach(c=>console.log(c,':',d.filter(x=>x.category===c).length))"
+
+echo ""
+echo "=== 8. Analisis Deskriptif Records ==="
+curl -s http://76.13.17.91/api/analisis | node -p "const a=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log('Records:', a.meta.total, '| Sections:', a.data[0]?.sections?.length, '| Widgets per section:', a.data[0]?.sections?.map(s=>s.widgets.length))"
 ```
 
 **Expected output:**
@@ -544,8 +548,364 @@ curl -s http://76.13.17.91/api/datasets | node -p "const d=JSON.parse(require('f
 14
 === 5. Frontend HTML ===
 <title>AndaraLab</title>
+=== 8. Analisis Deskriptif Records ===
+Records: 1 | Sections: 3 | Widgets per section: 3,2,2
 ```
 
 ---
 
-Last updated: April 1, 2026
+---
+
+## Section 12: Analisis Deskriptif (CMS Admin)
+
+### 12.1 Overview
+
+Fitur **Analisis Deskriptif** memungkinkan administrator untuk membuat dan mengelola bagian analisis yang bisa di-customize langsung dari CMS Admin Panel. Setiap record analisis terdiri dari multiple **sections**, dan setiap section berisi multiple **widgets** dengan berbagai tipe.
+
+**Endpoint API:** `http://76.13.17.91/api/analisis`
+
+---
+
+### 12.2 Widget Types
+
+| Tipe Widget | Fungsi | Use Case |
+|-------------|--------|----------|
+| `metric-card` | Kartu KPI dengan trend indicator | Menampilkan total datasets, blog posts, pages |
+| `distribution` | Distribusi dengan color-coded items | Breakdown kategori, bahasa, status |
+| `comparison` | Tabel perbandingan multi-kolom | Risk matrix, feature comparison |
+| `highlight` | Callout box dengan background color | Key insight, warning, important note |
+| `bar-chart` | Horizontal bar chart | Perbandingan kuantitatif antar item |
+| `donut-chart` | Ring/donut chart | Proporsi distribusi |
+| `custom-text` | Free-form text/HTML | Catatan tambahan, penjelasan |
+
+---
+
+### 12.3 API Test Commands
+
+```bash
+# List all analysis records
+curl http://76.13.17.91/api/analisis | jq '.meta.total'
+# Expected: 1 (default overview)
+
+# Get specific record
+curl http://76.13.17.91/api/analisis/default-overview | jq '.sections | length'
+# Expected: 3 sections
+
+# Get sections and widgets
+curl http://76.13.17.91/api/analisis/default-overview | jq '.sections[].widgets | length'
+# Expected: [3, 2, 2] — section 1 has 3 widgets, etc.
+
+# Create new analysis
+curl -X POST http://76.13.17.91/api/analisis \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Test Analysis",
+    "titleEn": "Test Analysis EN",
+    "description": "A test analysis record",
+    "locale": "both",
+    "status": "active",
+    "sections": []
+  }' | jq '.data.id'
+
+# Update analysis
+curl -X PUT http://76.13.17.91/api/analisis/default-overview \
+  -H "Content-Type: application/json" \
+  -d '{"status": "active"}' | jq '.meta.updated'
+# Expected: true
+
+# Reset to seed
+curl -X POST http://76.13.17.91/api/analisis/reset | jq '.meta.reset'
+# Expected: true
+```
+
+---
+
+### 12.4 CMS Admin Panel — Tab 4: Analisis Deskriptif
+
+**Navigasi:** Buka `http://76.13.17.91/admin` → Klik tab **"Analisis Deskriptif"**
+
+#### Test Create New Analysis:
+
+1. Klik **"+ New Analysis"**
+2. Fill form:
+   - Title (EN): `Test Analysis 2026`
+   - Title (ID): `Analisis Test 2026`
+   - Description: `Manual testing analysis`
+   - Language Scope: `EN + ID`
+   - Status: `Active`
+3. Klik **Save Analysis**
+4. Verify new record appears in list
+
+#### Test Add Section:
+
+1. Klik **Edit** pada record default
+2. Klik **"+ Add Section"**
+3. Fill:
+   - Section Title: `Test Section`
+   - Section Type: `Custom Analysis`
+   - Order: `10`
+4. Klik **Save Analysis**
+5. Verify section appears in list
+
+#### Test Add Widgets:
+
+1. Buka section editor (klik **Edit** pada section)
+2. Add widgets:
+   - Klik **"Add Metric Card"** → fill: Label `Test KPI`, Value `100`, Trend `↑ Up`
+   - Klik **"Add Distribution"** → add item: Label `Category A`, Value `5`, Percentage `50%`
+   - Klik **"Add Highlight / Callout"** → isi Callout Text `This is a test insight`
+   - Klik **"Add Comparison Table"** → add header `Item, Before, After`, add row `Feature 1, No, Yes`
+3. Simpan dan verify widgets appear in preview
+
+#### Test Widget Reordering:
+
+1. Dalam section editor, klik ↑ atau ↓ pada widget untuk reorder
+2. Verify order berubah setelah refresh
+
+#### Test Delete Widget:
+
+1. Dalam section editor, klik **Trash** icon pada widget
+2. Verify widget hilang dari list
+
+#### Test Delete Section:
+
+1. Dalam analysis editor, klik **Trash** icon pada section header
+2. Verify semua widget di dalam section ikut terhapus
+
+#### Test Delete Analysis Record:
+
+1. Klik **Trash** icon pada record card
+2. Confirm deletion
+3. Verify record hilang dari list
+
+#### Test Reset to Seed:
+
+1. Klik **"Reset to Seed"** button
+2. Confirm
+3. Verify default record (`default-overview`) kembali dengan 3 sections
+
+---
+
+### 12.5 Seed Data Structure
+
+Default record (`default-overview`) berisi 3 sections:
+
+```
+Section 1: Cakupan Data (Overview)
+├── Widget 1: metric-card (Total Konten: 11 datasets, 14 posts, 14 pages, 4 kategori)
+├── Widget 2: distribution (Distribusi Dataset per Kategori)
+└── Widget 3: highlight (Key Insight - Sectoral Intelligence dominance)
+
+Section 2: Konten Blog (Blog Insights)
+├── Widget 1: metric-card (Blog Statistics: 13 published, 10 EN, 4 ID)
+├── Widget 2: distribution (Distribusi Blog per Kategori)
+└── Widget 3: highlight (Content Strategy Insight)
+
+Section 3: Analisis Risiko (Custom)
+├── Widget 1: comparison (Risk Matrix)
+└── Widget 2: highlight (Critical Action - Reset reminder)
+```
+
+---
+
+### 12.6 Customization Capabilities
+
+Admin dapat membuat analisis kustom yang menampilkan:
+
+| Kapabilitas | Contoh Penggunaan |
+|-----------|------------------|
+| **Auto-generated metrics** | Total konten per kategori, distribusi bahasa |
+| **Risk analysis** | Risk matrix dengan Dampak vs Likelihood |
+| **Trend analysis** | Perbandingan data antar periode |
+| **Distribution charts** | Breakdown konten per kategori |
+| **Custom insights** | Callout box untuk key findings |
+| **Multi-language** | Judul dan deskripsi EN + ID |
+| **Section ordering** | Urutan sections bisa di-customize |
+| **Widget types** | 7 tipe widget berbeda |
+
+---
+
+### 12.7 Integration with Other CMS Tabs
+
+- **Data Hub** → Dataset metrics dan distribution widgets membaca data dari tab Data Hub
+- **Blog** → Blog statistics widgets membaca data dari tab Blog
+- **Pages** → Page metrics bisa ditambahkan sebagai metric-card widget
+- Semua data di-simpan ke `/data/analisis.json` (file-based persistence)
+
+---
+
+Last updated: April 6, 2026
+
+### 11.1 Gambaran Umum Sistem
+
+Sistem **AndaraLab CMS** adalah platform Content Management System berbasis web yang terdiri dari tiga komponen utama:
+
+| Komponen | Deskripsi |
+|----------|-----------|
+| **Frontend** | Aplikasi Next.js yang menyajikan konten ekonomi Indonesia kepada pengguna publik |
+| **API Server** | Backend Node.js/Express yang menangani CRUD data, autentikasi CMS, dan agregasi |
+| **Database** | Penyimpanan data dinamis (datasets, blog posts, pages) + Analisis Deskriptif |
+| **Admin Panel** | CMS untuk mengelola konten — Data Hub, Pages, Blog, dan **Analisis Deskriptif** |
+
+**Karakteristik Arsitektur:**
+- Sistem menggunakan arsitektur **headless CMS** — frontend terpisah dari konten
+- Data disajikan via REST API yang dapat dikonsumsi oleh berbagai client
+- Admin panel (`/admin`) terhubung langsung ke API untuk pengelolaan konten
+- Mendukung **multilingual** (EN/ID) pada level konten
+
+---
+
+### 11.2 Cakupan Pengujian (Test Coverage)
+
+Pengujian ini mencakup **5 area fungsional utama** dan **3 area non-fungsional**:
+
+#### Area Fungsional
+
+| # | Area | Komponen Diuji | Prioritas |
+|---|------|---------------|-----------|
+| 1 | **Homepage** | Hero, Stats bar, Featured articles, GDP chart, CTA | Tinggi |
+| 2 | **Data Hub** | 11 dataset cards, chart rendering, filter by category | Tinggi |
+| 3 | **Blog** | 14 posts (13 published, 1 draft), detail page, language filter | Tinggi |
+| 4 | **Pages** | 14 halaman EN/ID, slug routing, section-based filtering | Sedang |
+| 5 | **CMS Admin** | CRUD datasets, CRUD blog, CRUD pages, link EN/ID | Tinggi |
+| 6 | **Analisis Deskriptif** | CRUD analysis, section builder, widget editor (7 types) | Sedang |
+
+#### Area Non-Fungsional
+
+| # | Area | Metrik | Target |
+|---|------|--------|--------|
+| 1 | **Performance** | Response time API | < 500ms |
+| 2 | **CORS** | Cross-origin request dari browser | Header valid |
+| 3 | **Error Handling** | 404, 400, 500 responses | Pesan error sesuai |
+
+---
+
+### 11.3 Analisis Fitur Berdasarkan Kategori Konten
+
+#### Data Hub — 11 Dataset
+
+```
+Distribusi berdasarkan Category:
+├── Macro Foundations      : 3 dataset (GDP, Inflation, FDI)
+├── Sectoral Intelligence  : 4 dataset (Oil/Gas, Trade, Nickel, Coal)
+├── Market Dashboard       : 2 dataset (Exchange Rate, Digital Economy)
+└── Financial Markets      : 1 dataset (SBN Yield)
+```
+
+**Insight:**
+- Fokus utama AndaraLab adalah **Sectoral Intelligence** (4/11 = 36%) — menunjukkan fokus pada analisis sektoral ekonomi Indonesia
+- **Macro Foundations** menjadi landasan data (3/11 = 27%)
+- Masih terdapat ruang untuk ekspansi kategori **Financial Markets**
+
+#### Blog — 14 Artikel
+
+```
+Distribusi berdasarkan Category:
+├── economics-101       : 4 post  (grundgeskonsep ekonomi)
+├── sectoral-analysis   : 4 post  (analisis sektoral)
+├── financial-markets   : 2 post  (pasar keuangan)
+├── policy-analysis     : 2 post  (analisis kebijakan)
+└── market-pulse        : 1 post  (kondisi pasar terkini)
+└── lab-notes          : 1 post  (catatan metodologi)
+
+Status Publikasi:
+├── Published : 13 post (93%)
+└── Draft     : 1 post  (7%)
+
+Bahasa:
+├── English   : 10 post (71%)
+└── Indonesian: 4 post  (29%)
+```
+
+**Insight:**
+- Dominasi konten **economics-101** dan **sectoral-analysis** menunjukkan positioning sebagai platform edukasi + analisis
+- Ketimpangan bahasa (EN 71% vs ID 29%) mengindikasikan target audience lebih condong ke pembaca internasional
+- Terdapat **1 draft** yang perlu keputusan publikasi
+
+#### Pages — 14 Halaman
+
+```
+Berdasarkan Section:
+├── Sectoral Intelligence : 2 halaman (Energy EN + ID)
+├── About                  : 2 halaman (EN + ID)
+├── Root (Homepage dsb)    : 10 halaman
+└── Kontak, dll            : sisanya
+```
+
+---
+
+### 11.4 Analisis Risiko Pengujian
+
+| Risiko | Dampak | Likelihood | Mitigasi |
+|--------|--------|------------|----------|
+| API server down saat testing | High | Medium | Checklist `healthz` di awal; restart via PM2 |
+| Data hilang saat CRUD test | High | Low | Gunakan "Reset to Default" setelah testing |
+| Perubahan pada dataset mempengaruhi chart homepage | Medium | Low | Verifikasi homepage setelah edit dataset |
+| Cross-browser incompatibility (chart rendering) | Medium | Medium | Test di Chrome, Firefox, Safari |
+| Link EN/ID blog break setelah edit | Medium | Low | Selalu verifikasi linked post icon |
+| Multilingual content mismatch | Low | Low | Verifikasi label toggle bahasa |
+
+---
+
+### 11.5 Alur Pengujian yang Disarankan
+
+```
+START
+  │
+  ├─► 1. Pre-Test: Health Check
+  │       └─► API Health → Datasets → Blog → Pages count
+  │
+  ├─► 2. Smoke Test (2 menit)
+  │       └─► Quick validation semua endpoint
+  │
+  ├─► 3. Functional Test — User-Facing
+  │       ├─► Homepage load & elements
+  │       ├─► Data Hub chart rendering
+  │       ├─► Blog article read flow
+  │       └─► Page navigation
+  │
+  ├─► 4. Functional Test — Admin Panel
+  │       ├─► CRUD Datasets (Create → Read → Update → Delete)
+  │       ├─► CRUD Blog Posts
+  │       ├─► CRUD Pages
+  │       └─► Link EN/ID verification
+  │
+  ├─► 5. Non-Functional Test
+  │       ├─► Response time < 500ms
+  │       ├─► CORS headers
+  │       └─► Error handling (404, 400, 500)
+  │
+  └─► 6. Post-Test: Reset to Default
+          └─► Pastikan data kembali ke state awal
+```
+
+---
+
+### 11.6 Titik Rawan (Pain Points) yang Perlu Perhatian
+
+1. **Tidak ada test untuk autentikasi admin** — Pengujian ini tidak mencakup login/logout ke `/admin`. Jika panel admin dilindungi password, test plan perlu diperbarui.
+
+2. **Tidak ada test untuk image/media upload** — CMS memungkinkan upload media tetapi tidak tercakup dalam pengujian ini.
+
+3. **Data persistence antar test** — Test CRUD mengubah data aktif. Disarankan untuk selalu menjalankan **Reset to Default** sebelum menutup sesi testing.
+
+4. **Filter bahasa tidak konsisten** — Test menunjukkan bahasa ID memiliki lebih sedikit konten. Perlu verifikasi apakah filter berfungsi atau memang kurang data.
+
+5. **Tidak ada test untuk real-time data refresh** — Jika data di Data Hub di-update dari sumber eksternal, tidak ada mekanisme validasi otomatis.
+
+---
+
+### 11.7 Rekomendasi Pengujian Lanjutan
+
+| # | Rekomendasi | Alasan |
+|---|-------------|--------|
+| 1 | **Automated E2E Testing** (Playwright/Cypress) | Mengotomatiskan regression test agar dapat dijalankan setiap deployment |
+| 2 | **Load Testing** (k6/Artillery) | Mengukur performance di bawah concurrent users |
+| 3 | **Security Audit** | Verifikasi input sanitization pada form CMS |
+| 4 | **Database Backup Verification** | Pastikan backup berjalan otomatis sebelum test CRUD |
+| 5 | **Mobile Responsiveness Test** | Pastikan chart dan layout berfungsi di mobile |
+| 6 | **Link Checker** | Otomasi verifikasi semua internal link tidak broken |
+
+---
+
+Last updated: April 6, 2026

@@ -4,7 +4,11 @@ import {
   useDeleteDataset, useResetDatasets,
   usePages, useCreatePage, useUpdatePage, useDeletePage, useResetPages,
   usePosts, useCreatePost, useUpdatePost, useDeletePost, useResetPosts,
+  useAnalisisList, useAnalisis, useCreateAnalisis, useUpdateAnalisis,
+  useDeleteAnalisis, useResetAnalisis,
   type ChartDataset, type Page, type BlogPost,
+  type AnalisisDeskriptif, type AnalysisSection, type AnalysisWidget,
+  type AnalysisMetric, type AnalysisWidgetType,
 } from "@/lib/cms-store";
 import InteractiveChart from "@/components/InteractiveChart";
 import {
@@ -12,6 +16,9 @@ import {
   TrendingUp, AlertCircle, CheckCircle, Loader2, RefreshCw,
   Database, FileText, BookOpen, ChevronDown, ChevronRight,
   Globe, Eye, EyeOff, Link2, Unlink,
+  BarChart3, PieChart, LayoutGrid, List, ArrowUp, ArrowDown,
+  ArrowRight, Type, Layout, Star, Zap, Shield, Target,
+  GripVertical, Edit3, Archive,
 } from "lucide-react";
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
@@ -1355,15 +1362,859 @@ function BlogTab() {
   );
 }
 
+// ─── Analisis Deskriptif Tab ────────────────────────────────────────────────────
+
+const WIDGET_TYPES: { value: AnalysisWidgetType; label: string; icon: React.ReactNode }[] = [
+  { value: "metric-card", label: "Metric Card", icon: <Target className="w-3.5 h-3.5" /> },
+  { value: "distribution", label: "Distribution", icon: <PieChart className="w-3.5 h-3.5" /> },
+  { value: "comparison", label: "Comparison Table", icon: <LayoutGrid className="w-3.5 h-3.5" /> },
+  { value: "highlight", label: "Highlight / Callout", icon: <Zap className="w-3.5 h-3.5" /> },
+  { value: "bar-chart", label: "Bar Chart", icon: <BarChart3 className="w-3.5 h-3.5" /> },
+  { value: "donut-chart", label: "Donut Chart", icon: <PieChart className="w-3.5 h-3.5" /> },
+  { value: "custom-text", label: "Custom Text", icon: <Type className="w-3.5 h-3.5" /> },
+];
+
+const SECTION_TYPES = [
+  { value: "overview", label: "Overview / Summary" },
+  { value: "dataset-breakdown", label: "Dataset Breakdown" },
+  { value: "blog-insights", label: "Blog Insights" },
+  { value: "custom", label: "Custom Analysis" },
+];
+
+function newMetric(): AnalysisMetric {
+  return {
+    id: `m-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`,
+    label: "New Metric",
+    value: "0",
+    trend: "neutral",
+    trendValue: "",
+    note: "",
+  };
+}
+
+function newWidget(type: AnalysisWidgetType): AnalysisWidget {
+  const id = `w-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`;
+  const base: AnalysisWidget = { id, type, title: "" };
+  if (type === "metric-card") return { ...base, metrics: [newMetric()] };
+  if (type === "distribution") return { ...base, distributionItems: [] };
+  if (type === "comparison") return { ...base, compareHeaders: ["Item", "Value 1", "Value 2"], compareItems: [] };
+  if (type === "highlight") return { ...base, calloutColor: "#1a3a5c", text: "" };
+  if (type === "bar-chart") return { ...base, barData: [] };
+  if (type === "donut-chart") return { ...base, barData: [] };
+  if (type === "custom-text") return { ...base, text: "" };
+  return base;
+}
+
+function newSection(order: number): AnalysisSection {
+  return {
+    id: `s-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`,
+    title: "New Section",
+    titleEn: "",
+    description: "",
+    descriptionEn: "",
+    locale: "both",
+    sectionType: "custom",
+    order,
+    widgets: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+function WidgetEditor({
+  widget, onChange,
+}: {
+  widget: AnalysisWidget;
+  onChange: (w: AnalysisWidget) => void;
+}) {
+  const patch = (fields: Partial<AnalysisWidget>) => onChange({ ...widget, ...fields });
+
+  const addMetric = () => patch({ metrics: [...(widget.metrics ?? []), newMetric()] });
+  const removeMetric = (mid: string) => patch({ metrics: widget.metrics?.filter((m) => m.id !== mid) });
+  const updateMetric = (mid: string, fields: Partial<AnalysisMetric>) =>
+    patch({ metrics: widget.metrics?.map((m) => (m.id === mid ? { ...m, ...fields } : m)) });
+
+  const addDistItem = () =>
+    patch({ distributionItems: [...(widget.distributionItems ?? []), { label: "New Item", value: 0, percentage: 0, color: "#1a3a5c" }] });
+  const removeDistItem = (idx: number) =>
+    patch({ distributionItems: widget.distributionItems?.filter((_, i) => i !== idx) });
+  const updateDistItem = (idx: number, fields: Partial<typeof widget.distributionItems[0]>) =>
+    patch({ distributionItems: widget.distributionItems?.map((d, i) => (i === idx ? { ...d, ...fields } : d)) });
+
+  const addCompareRow = () =>
+    patch({ compareItems: [...(widget.compareItems ?? []), { label: "New Row", values: ["", ""] }] });
+  const removeCompareRow = (idx: number) =>
+    patch({ compareItems: widget.compareItems?.filter((_, i) => i !== idx) });
+  const updateCompareRow = (idx: number, fields: Partial<typeof widget.compareItems[0]>) =>
+    patch({ compareItems: widget.compareItems?.map((c, i) => (i === idx ? { ...c, ...fields } : c)) });
+
+  const addBarItem = () =>
+    patch({ barData: [...(widget.barData ?? []), { label: "Item", value: 0, color: "#1a3a5c" }] });
+  const removeBarItem = (idx: number) =>
+    patch({ barData: widget.barData?.filter((_, i) => i !== idx) });
+  const updateBarItem = (idx: number, fields: Partial<typeof widget.barData[0]>) =>
+    patch({ barData: widget.barData?.map((b, i) => (i === idx ? { ...b, ...fields } : b)) });
+
+  return (
+    <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 space-y-4">
+      {/* Common fields */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div>
+          <label className="block text-[11px] font-semibold text-gray-500 uppercase mb-1">Widget Title</label>
+          <input
+            type="text"
+            value={widget.title ?? ""}
+            onChange={(e) => patch({ title: e.target.value })}
+            className="w-full border border-gray-300 px-3 py-1.5 text-[13px] focus:outline-none focus:border-[#1a3a5c]"
+            placeholder="Optional title"
+          />
+        </div>
+        <div>
+          <label className="block text-[11px] font-semibold text-gray-500 uppercase mb-1">Subtitle</label>
+          <input
+            type="text"
+            value={widget.subtitle ?? ""}
+            onChange={(e) => patch({ subtitle: e.target.value })}
+            className="w-full border border-gray-300 px-3 py-1.5 text-[13px] focus:outline-none focus:border-[#1a3a5c]"
+            placeholder="Optional subtitle"
+          />
+        </div>
+      </div>
+
+      {/* Metric Card Editor */}
+      {widget.type === "metric-card" && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[12px] font-semibold text-gray-700">Metrics</span>
+            <button onClick={addMetric} className="text-[11px] text-[#1a3a5c] font-medium hover:underline flex items-center gap-1">
+              <Plus className="w-3 h-3" /> Add Metric
+            </button>
+          </div>
+          {(widget.metrics ?? []).map((m) => (
+            <div key={m.id} className="bg-white border border-gray-200 rounded p-3 grid grid-cols-12 gap-2 items-end">
+              <div className="col-span-3">
+                <label className="block text-[10px] text-gray-500 mb-1">Label</label>
+                <input value={m.label} onChange={(e) => updateMetric(m.id, { label: e.target.value })}
+                  className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-[#1a3a5c]" />
+              </div>
+              <div className="col-span-2">
+                <label className="block text-[10px] text-gray-500 mb-1">Value</label>
+                <input value={m.value} onChange={(e) => updateMetric(m.id, { value: e.target.value })}
+                  className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-[#1a3a5c]" />
+              </div>
+              <div className="col-span-2">
+                <label className="block text-[10px] text-gray-500 mb-1">Unit</label>
+                <input value={m.unit ?? ""} onChange={(e) => updateMetric(m.id, { unit: e.target.value })}
+                  className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-[#1a3a5c]" />
+              </div>
+              <div className="col-span-2">
+                <label className="block text-[10px] text-gray-500 mb-1">Trend</label>
+                <select value={m.trend ?? "neutral"} onChange={(e) => updateMetric(m.id, { trend: e.target.value as "up" | "down" | "neutral" })}
+                  className="w-full border border-gray-300 px-2 py-1 text-[12px] bg-white focus:outline-none focus:border-[#1a3a5c]">
+                  <option value="up">↑ Up</option>
+                  <option value="down">↓ Down</option>
+                  <option value="neutral">→ Neutral</option>
+                </select>
+              </div>
+              <div className="col-span-2">
+                <label className="block text-[10px] text-gray-500 mb-1">Trend Value</label>
+                <input value={m.trendValue ?? ""} onChange={(e) => updateMetric(m.id, { trendValue: e.target.value })}
+                  className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-[#1a3a5c]" placeholder="+2.3%" />
+              </div>
+              <div className="col-span-1 flex justify-end">
+                <button onClick={() => removeMetric(m.id)} className="text-gray-400 hover:text-red-500">
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <div className="col-span-12">
+                <label className="block text-[10px] text-gray-500 mb-1">Note</label>
+                <input value={m.note ?? ""} onChange={(e) => updateMetric(m.id, { note: e.target.value })}
+                  className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-[#1a3a5c]" placeholder="Optional note" />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Distribution Editor */}
+      {widget.type === "distribution" && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[12px] font-semibold text-gray-700">Distribution Items</span>
+            <button onClick={addDistItem} className="text-[11px] text-[#1a3a5c] font-medium hover:underline flex items-center gap-1">
+              <Plus className="w-3 h-3" /> Add Item
+            </button>
+          </div>
+          {(widget.distributionItems ?? []).map((d, i) => (
+            <div key={i} className="bg-white border border-gray-200 rounded p-3 grid grid-cols-12 gap-2 items-center">
+              <div className="col-span-1">
+                <input type="color" value={d.color ?? "#1a3a5c"} onChange={(e) => updateDistItem(i, { color: e.target.value })}
+                  className="w-8 h-8 rounded border border-gray-300 cursor-pointer" />
+              </div>
+              <div className="col-span-4">
+                <input value={d.label} onChange={(e) => updateDistItem(i, { label: e.target.value })}
+                  className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-[#1a3a5c]" />
+              </div>
+              <div className="col-span-2">
+                <input type="number" value={d.value} onChange={(e) => updateDistItem(i, { value: Number(e.target.value) })}
+                  className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-[#1a3a5c]" />
+              </div>
+              <div className="col-span-2">
+                <div className="flex items-center gap-1">
+                  <input type="number" value={d.percentage} onChange={(e) => updateDistItem(i, { percentage: Number(e.target.value) })}
+                    className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-[#1a3a5c]" />
+                  <span className="text-[12px] text-gray-400">%</span>
+                </div>
+              </div>
+              <div className="col-span-2 flex justify-end">
+                <button onClick={() => removeDistItem(i)} className="text-gray-400 hover:text-red-500">
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Comparison Table Editor */}
+      {widget.type === "comparison" && (
+        <div className="space-y-3">
+          <div>
+            <label className="block text-[10px] text-gray-500 mb-1">Column Headers (comma-separated)</label>
+            <input value={(widget.compareHeaders ?? []).join(", ")}
+              onChange={(e) => patch({ compareHeaders: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })}
+              className="w-full border border-gray-300 px-3 py-1.5 text-[12px] focus:outline-none focus:border-[#1a3a5c]"
+              placeholder="Item, Value 1, Value 2, Mitigation" />
+          </div>
+          <div className="flex justify-end">
+            <button onClick={addCompareRow} className="text-[11px] text-[#1a3a5c] font-medium hover:underline flex items-center gap-1">
+              <Plus className="w-3 h-3" /> Add Row
+            </button>
+          </div>
+          {(widget.compareItems ?? []).map((c, i) => (
+            <div key={i} className="bg-white border border-gray-200 rounded p-3 flex gap-2 items-center">
+              <div className="flex-1">
+                <input value={c.label} onChange={(e) => updateCompareRow(i, { label: e.target.value })}
+                  className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-[#1a3a5c]" placeholder="Row label" />
+              </div>
+              {c.values.map((v, vi) => (
+                <div key={vi} className="flex-1">
+                  <input value={v} onChange={(e) => {
+                    const newVals = [...c.values];
+                    newVals[vi] = e.target.value;
+                    updateCompareRow(i, { values: newVals });
+                  }}
+                    className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-[#1a3a5c]" placeholder={`Value ${vi + 1}`} />
+                </div>
+              ))}
+              <button onClick={() => removeCompareRow(i)} className="text-gray-400 hover:text-red-500 flex-shrink-0">
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Highlight / Callout Editor */}
+      {widget.type === "highlight" && (
+        <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] text-gray-500 mb-1">Callout Color</label>
+              <input type="color" value={widget.calloutColor ?? "#1a3a5c"}
+                onChange={(e) => patch({ calloutColor: e.target.value })}
+                className="w-16 h-9 rounded border border-gray-300 cursor-pointer" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-[10px] text-gray-500 mb-1">Callout Text (supports markdown-style bold **text**)</label>
+            <textarea rows={4} value={widget.text ?? ""}
+              onChange={(e) => patch({ text: e.target.value })}
+              className="w-full border border-gray-300 px-3 py-2 text-[13px] focus:outline-none focus:border-[#1a3a5c] resize-y"
+              placeholder="Enter key insight text..." />
+          </div>
+        </div>
+      )}
+
+      {/* Bar Chart / Donut Chart Editor */}
+      {(widget.type === "bar-chart" || widget.type === "donut-chart") && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[12px] font-semibold text-gray-700">Data Items</span>
+            <button onClick={addBarItem} className="text-[11px] text-[#1a3a5c] font-medium hover:underline flex items-center gap-1">
+              <Plus className="w-3 h-3" /> Add Item
+            </button>
+          </div>
+          {(widget.barData ?? []).map((b, i) => (
+            <div key={i} className="bg-white border border-gray-200 rounded p-3 grid grid-cols-12 gap-2 items-center">
+              <div className="col-span-1">
+                <input type="color" value={b.color ?? "#1a3a5c"} onChange={(e) => updateBarItem(i, { color: e.target.value })}
+                  className="w-8 h-8 rounded border border-gray-300 cursor-pointer" />
+              </div>
+              <div className="col-span-6">
+                <input value={b.label} onChange={(e) => updateBarItem(i, { label: e.target.value })}
+                  className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-[#1a3a5c]" placeholder="Label" />
+              </div>
+              <div className="col-span-4">
+                <input type="number" value={b.value} onChange={(e) => updateBarItem(i, { value: Number(e.target.value) })}
+                  className="w-full border border-gray-300 px-2 py-1 text-[12px] focus:outline-none focus:border-[#1a3a5c]" placeholder="Value" />
+              </div>
+              <div className="col-span-1 flex justify-end">
+                <button onClick={() => removeBarItem(i)} className="text-gray-400 hover:text-red-500">
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Custom Text Editor */}
+      {widget.type === "custom-text" && (
+        <div>
+          <label className="block text-[10px] text-gray-500 mb-1">Custom HTML / Text Content</label>
+          <textarea rows={4} value={widget.text ?? ""}
+            onChange={(e) => patch({ text: e.target.value })}
+            className="w-full border border-gray-300 px-3 py-2 text-[13px] focus:outline-none focus:border-[#1a3a5c] resize-y font-mono"
+            placeholder="Enter custom text or HTML..." />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SectionEditor({
+  section, onChange, onRemove,
+}: {
+  section: AnalysisSection;
+  onChange: (s: AnalysisSection) => void;
+  onRemove: () => void;
+}) {
+  const [activeWidget, setActiveWidget] = useState<string | null>(null);
+
+  const patch = (fields: Partial<AnalysisSection>) => onChange({ ...section, ...fields });
+
+  const addWidget = (type: AnalysisWidgetType) => {
+    const w = newWidget(type);
+    patch({ widgets: [...section.widgets, w] });
+    setActiveWidget(w.id);
+  };
+
+  const updateWidget = (wid: string, w: AnalysisWidget) =>
+    patch({ widgets: section.widgets.map((widget) => (widget.id === wid ? w : widget)) });
+
+  const removeWidget = (wid: string) => {
+    patch({ widgets: section.widgets.filter((w) => w.id !== wid) });
+    if (activeWidget === wid) setActiveWidget(null);
+  };
+
+  const moveWidget = (idx: number, dir: -1 | 1) => {
+    const newWidgets = [...section.widgets];
+    const target = idx + dir;
+    if (target < 0 || target >= newWidgets.length) return;
+    [newWidgets[idx], newWidgets[target]] = [newWidgets[target], newWidgets[idx]];
+    patch({ widgets: newWidgets });
+  };
+
+  return (
+    <div className="border border-gray-200 rounded-lg bg-white overflow-hidden">
+      {/* Section Header */}
+      <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <GripVertical className="w-4 h-4 text-gray-400" />
+          <input
+            value={section.title}
+            onChange={(e) => patch({ title: e.target.value })}
+            className="text-[14px] font-semibold text-gray-900 bg-transparent focus:outline-none focus:border-b focus:border-[#1a3a5c]"
+            placeholder="Section Title (EN)"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <select
+            value={section.sectionType}
+            onChange={(e) => patch({ sectionType: e.target.value as AnalysisSection["sectionType"] })}
+            className="border border-gray-300 px-2 py-1 text-[11px] bg-white focus:outline-none"
+          >
+            {SECTION_TYPES.map((s) => (
+              <option key={s.value} value={s.value}>{s.label}</option>
+            ))}
+          </select>
+          <input
+            type="number"
+            value={section.order}
+            min={1}
+            onChange={(e) => patch({ order: Number(e.target.value) })}
+            className="w-14 border border-gray-300 px-2 py-1 text-[12px] text-center focus:outline-none"
+            title="Display order"
+          />
+          <button onClick={onRemove} className="text-gray-400 hover:text-red-500">
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Description */}
+      <div className="px-4 py-2 border-b border-gray-100">
+        <input
+          value={section.description ?? ""}
+          onChange={(e) => patch({ description: e.target.value })}
+          className="w-full text-[12px] text-gray-600 bg-transparent focus:outline-none border-b border-transparent focus:border-gray-300"
+          placeholder="Description (optional)"
+        />
+      </div>
+
+      {/* Widgets List */}
+      <div className="divide-y divide-gray-100">
+        {section.widgets.map((w, idx) => (
+          <div key={w.id}>
+            <div className="flex items-center gap-2 px-4 py-2 bg-gray-50/50">
+              <button onClick={() => moveWidget(idx, -1)} className="text-gray-400 hover:text-gray-600" title="Move up">
+                <ArrowUp className="w-3.5 h-3.5" />
+              </button>
+              <button onClick={() => moveWidget(idx, 1)} className="text-gray-400 hover:text-gray-600" title="Move down">
+                <ArrowDown className="w-3.5 h-3.5" />
+              </button>
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                w.type === "metric-card" ? "bg-blue-100 text-blue-700" :
+                w.type === "distribution" ? "bg-purple-100 text-purple-700" :
+                w.type === "highlight" ? "bg-amber-100 text-amber-700" :
+                w.type === "comparison" ? "bg-green-100 text-green-700" :
+                "bg-gray-100 text-gray-600"
+              }`}>
+                {w.type}
+              </span>
+              {w.title && <span className="text-[12px] text-gray-700 font-medium">{w.title}</span>}
+              <div className="ml-auto flex gap-2">
+                <button
+                  onClick={() => setActiveWidget(activeWidget === w.id ? null : w.id)}
+                  className="text-[11px] text-[#1a3a5c] font-medium hover:underline"
+                >
+                  {activeWidget === w.id ? "Collapse" : "Edit"}
+                </button>
+                <button onClick={() => removeWidget(w.id)} className="text-gray-400 hover:text-red-500">
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+            {activeWidget === w.id && (
+              <div className="px-4 py-3">
+                <WidgetEditor widget={w} onChange={(updated) => updateWidget(w.id, updated)} />
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Add Widget */}
+      <div className="px-4 py-3 bg-gray-50 border-t border-gray-200">
+        <div className="flex flex-wrap gap-2">
+          {WIDGET_TYPES.map((wt) => (
+            <button
+              key={wt.value}
+              onClick={() => addWidget(wt.value)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[11.5px] font-medium border border-gray-300 bg-white hover:border-[#1a3a5c] hover:text-[#1a3a5c] rounded"
+            >
+              {wt.icon} Add {wt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AnalisisEditor({
+  record, onBack, onSave, isNew,
+}: {
+  record: AnalisisDeskriptif | null;
+  onBack: () => void;
+  onSave: (data: Partial<AnalisisDeskriptif>) => void;
+  isNew?: boolean;
+}) {
+  const [draft, setDraft] = useState<Partial<AnalisisDeskriptif>>(() =>
+    record ? { ...record } : {
+      title: "New Analysis",
+      titleEn: "",
+      description: "",
+      descriptionEn: "",
+      locale: "both",
+      status: "active",
+      sections: [],
+    }
+  );
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (record) setDraft({ ...record });
+    else setDraft({
+      title: "New Analysis",
+      titleEn: "",
+      description: "",
+      descriptionEn: "",
+      locale: "both",
+      status: "active",
+      sections: [],
+    });
+  }, [record?.id]);
+
+  const patch = (fields: Partial<AnalisisDeskriptif>) => setDraft((prev) => ({ ...prev, ...fields }));
+
+  const addSection = () => {
+    const currentSections = draft.sections ?? [];
+    patch({ sections: [...currentSections, newSection(currentSections.length + 1)] });
+  };
+
+  const updateSection = (idx: number, s: AnalysisSection) => {
+    const updated = [...(draft.sections ?? [])];
+    updated[idx] = s;
+    patch({ sections: updated });
+  };
+
+  const removeSection = (idx: number) => {
+    patch({ sections: (draft.sections ?? []).filter((_, i) => i !== idx) });
+  };
+
+  const handleSave = () => {
+    if (!draft.title?.trim()) {
+      setSaveError("Title is required.");
+      return;
+    }
+    setSaveError(null);
+    setIsSaving(true);
+    onSave(draft);
+    setTimeout(() => {
+      setIsSaving(false);
+      setSaved(true);
+    }, 500);
+  };
+
+  return (
+    <div>
+      <div className="flex items-center gap-3 mb-6">
+        <button onClick={onBack} className="flex items-center gap-1.5 text-[13px] text-gray-500 hover:text-gray-900 font-medium">
+          <ChevronLeft className="w-4 h-4" /> Back
+        </button>
+        <span className="text-gray-300">·</span>
+        <span className="text-[13px] font-medium text-gray-700">
+          {isNew ? "New Analysis" : (draft.title ?? record?.title ?? "Edit")}
+        </span>
+        {draft.status && (
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+            draft.status === "active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+          }`}>
+            {draft.status.toUpperCase()}
+          </span>
+        )}
+      </div>
+
+      <div className="space-y-6">
+        {/* Identity */}
+        <div className="bg-white border border-[#E5E7EB] p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="md:col-span-2">
+            <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-4 pb-3 border-b border-[#E5E7EB]">
+              Analysis Identity
+            </div>
+          </div>
+          <div>
+            <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Title (EN)</label>
+            <input type="text" value={draft.title ?? ""}
+              onChange={(e) => patch({ title: e.target.value })}
+              className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c]" />
+          </div>
+          <div>
+            <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Title (ID)</label>
+            <input type="text" value={draft.titleEn ?? ""}
+              onChange={(e) => patch({ titleEn: e.target.value })}
+              className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c]" />
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Description</label>
+            <textarea rows={2} value={draft.description ?? ""}
+              onChange={(e) => patch({ description: e.target.value })}
+              className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-[#1a3a5c] resize-none" />
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Language Scope</label>
+            <div className="flex gap-2">
+              {(["both", "en", "id"] as const).map((l) => (
+                <button key={l} onClick={() => patch({ locale: l })}
+                  className={`px-4 py-2 text-[12px] font-semibold border capitalize ${
+                    draft.locale === l ? "bg-[#1a3a5c] text-white border-[#1a3a5c]" : "border-gray-300 text-gray-600 hover:bg-gray-50"
+                  }`}>
+                  {l === "both" ? "EN + ID" : l === "en" ? "English Only" : "Indonesian Only"}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Status</label>
+            <div className="flex gap-2">
+              {(["active", "archived"] as const).map((s) => (
+                <button key={s} onClick={() => patch({ status: s })}
+                  className={`px-4 py-2 text-[12px] font-semibold border capitalize ${
+                    draft.status === s ? (s === "active" ? "bg-green-700 text-white border-green-700" : "bg-gray-500 text-white border-gray-500") : "border-gray-300 text-gray-600 hover:bg-gray-50"
+                  }`}>
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Sections */}
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-[16px] font-semibold text-gray-900">Sections</h3>
+              <p className="text-[12px] text-gray-400 mt-0.5">
+                {(draft.sections ?? []).length} section{(draft.sections ?? []).length !== 1 ? "s" : ""} —
+                Drag to reorder widgets within each section
+              </p>
+            </div>
+            <button onClick={addSection}
+              className="flex items-center gap-2 text-[13px] font-medium text-white bg-[#1a3a5c] px-4 py-2 hover:bg-[#14305a]">
+              <Plus className="w-4 h-4" /> Add Section
+            </button>
+          </div>
+
+          <div className="space-y-6">
+            {(draft.sections ?? []).sort((a, b) => a.order - b.order).map((section, idx) => (
+              <SectionEditor
+                key={section.id}
+                section={section}
+                onChange={(s) => updateSection(idx, s)}
+                onRemove={() => removeSection(idx)}
+              />
+            ))}
+          </div>
+
+          {(draft.sections ?? []).length === 0 && (
+            <div className="text-center py-16 border-2 border-dashed border-gray-200 rounded-lg">
+              <Layout className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-[14px] text-gray-500 mb-3">No sections yet.</p>
+              <button onClick={addSection}
+                className="text-[13px] font-medium text-[#1a3a5c] hover:underline">
+                + Add your first section
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Save */}
+        {saveError && (
+          <div className="flex items-start gap-2 text-[12.5px] text-red-700 bg-red-50 border border-red-200 px-4 py-3">
+            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <span>{saveError}</span>
+          </div>
+        )}
+
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={isSaving}
+            className="flex items-center gap-2 text-[13px] font-medium text-white bg-[#1a3a5c] px-5 py-2 hover:bg-[#14305a] disabled:opacity-50"
+          >
+            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            {isSaving ? "Saving…" : "Save Analysis"}
+          </button>
+          {saved && (
+            <span className="text-[12px] text-green-700 flex items-center gap-1">
+              <CheckCircle className="w-3.5 h-3.5" /> Saved successfully
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AnalisisTab() {
+  const { data: records = [], isLoading } = useAnalisisList();
+  const createMut = useCreateAnalisis();
+  const updateMut = useUpdateAnalisis();
+  const deleteMut = useDeleteAnalisis();
+  const resetMut = useResetAnalisis();
+
+  const [editRecord, setEditRecord] = useState<AnalisisDeskriptif | null>(null);
+  const [isNew, setIsNew] = useState(false);
+
+  const handleCreate = () => {
+    setEditRecord(null);
+    setIsNew(true);
+  };
+
+  const handleSave = (data: Partial<AnalisisDeskriptif>) => {
+    if (isNew) {
+      createMut.mutate(data as Omit<AnalisisDeskriptif, "id" | "createdAt" | "updatedAt">, {
+        onSuccess: () => {
+          setIsNew(false);
+          setEditRecord(null);
+        },
+      });
+    } else if (editRecord?.id) {
+      updateMut.mutate({ id: editRecord.id, data }, {
+        onSuccess: () => {
+          setEditRecord(null);
+        },
+      });
+    }
+  };
+
+  const handleDelete = (id: string) => {
+    if (!confirm("Delete this analysis record? This cannot be undone.")) return;
+    deleteMut.mutate(id, { onSuccess: () => {
+      if (editRecord?.id === id) {
+        setEditRecord(null);
+        setIsNew(false);
+      }
+    }});
+  };
+
+  const handleReset = () => {
+    if (!confirm("Reset all analysis to seed state? All custom edits will be lost.")) return;
+    resetMut.mutate(undefined, { onSuccess: () => setEditRecord(null) });
+  };
+
+  if (editRecord !== null || isNew) {
+    return (
+      <AnalisisEditor
+        record={isNew ? null : editRecord}
+        isNew={isNew}
+        onBack={() => { setEditRecord(null); setIsNew(false); }}
+        onSave={handleSave}
+      />
+    );
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-[20px] font-semibold text-gray-900">Analisis Deskriptif</h2>
+          <p className="text-[12px] text-gray-400 mt-0.5">
+            {isLoading ? "Loading…" : `${records.length} analysis record${records.length !== 1 ? "s" : ""} — customizable descriptive analysis sections`}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={handleReset} disabled={resetMut.isPending}
+            className="flex items-center gap-1.5 text-[12px] font-medium text-gray-500 border border-gray-300 bg-white px-3 py-1.5 hover:bg-gray-50 disabled:opacity-50">
+            {resetMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+            Reset to Seed
+          </button>
+          <button onClick={handleCreate}
+            className="flex items-center gap-2 text-[13px] font-medium text-white bg-[#1a3a5c] px-4 py-2 hover:bg-[#14305a]">
+            <Plus className="w-4 h-4" /> New Analysis
+          </button>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-24 gap-3 text-gray-400">
+          <Loader2 className="w-5 h-5 animate-spin" /> <span className="text-[13.5px]">Loading…</span>
+        </div>
+      ) : records.length === 0 ? (
+        <div className="text-center py-16 border-2 border-dashed border-gray-200 rounded-lg">
+          <Layout className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+          <p className="text-[14px] text-gray-500 mb-3">No analysis records found.</p>
+          <button onClick={handleCreate} className="text-[13px] font-medium text-[#1a3a5c] hover:underline">
+            + Create your first analysis
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {records.map((r) => (
+            <div key={r.id} className="bg-white border border-[#E5E7EB] rounded-lg overflow-hidden">
+              <div className="px-5 py-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-[14px] font-semibold text-gray-900">{r.title}</h3>
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                        r.status === "active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+                      }`}>
+                        {r.status.toUpperCase()}
+                      </span>
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                        r.locale === "both" ? "bg-blue-100 text-blue-700" :
+                        r.locale === "en" ? "bg-gray-800 text-white" : "bg-gray-700 text-white"
+                      }`}>
+                        {r.locale === "both" ? "EN+ID" : r.locale.toUpperCase()}
+                      </span>
+                    </div>
+                    <p className="text-[12px] text-gray-500">{r.description || "No description"}</p>
+                    <p className="text-[11px] text-gray-400 mt-1">
+                      {r.sections.length} section{r.sections.length !== 1 ? "s" : ""} ·
+                      Last updated: {new Date(r.updatedAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => { setEditRecord(r); setIsNew(false); }}
+                    className="flex items-center gap-1.5 text-[12px] font-medium text-[#1a3a5c] border border-[#1a3a5c] px-3 py-1.5 hover:bg-[#1a3a5c] hover:text-white transition-colors"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" /> Edit
+                  </button>
+                  <button onClick={() => handleDelete(r.id)} className="text-gray-400 hover:text-red-500">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Section Preview */}
+              <div className="border-t border-gray-100 bg-gray-50 px-5 py-3">
+                <div className="flex flex-wrap gap-2">
+                  {r.sections.sort((a, b) => a.order - b.order).map((s) => (
+                    <div key={s.id} className="flex items-center gap-1.5 bg-white border border-gray-200 rounded px-2.5 py-1">
+                      <span className="text-[10px] font-bold text-gray-400">#{s.order}</span>
+                      <span className="text-[11.5px] font-medium text-gray-700">{s.title || "Untitled"}</span>
+                      <span className="text-[10px] text-gray-400">({s.widgets.length} widget{s.widgets.length !== 1 ? "s" : ""})</span>
+                      <span className={`text-[9px] px-1 py-0.5 rounded ${
+                        s.sectionType === "overview" ? "bg-blue-50 text-blue-600" :
+                        s.sectionType === "dataset-breakdown" ? "bg-purple-50 text-purple-600" :
+                        s.sectionType === "blog-insights" ? "bg-green-50 text-green-600" :
+                        "bg-gray-100 text-gray-500"
+                      }`}>
+                        {s.sectionType}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-6 bg-blue-50 border border-blue-200 p-4 flex items-start gap-3">
+        <Star className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+        <div>
+          <p className="text-[12.5px] font-semibold text-blue-800 mb-1">Customizable Descriptive Analysis</p>
+          <p className="text-[12px] text-blue-700 leading-relaxed">
+            Each analysis record supports multiple sections. Each section can contain multiple widgets:
+            <strong> Metric Cards</strong> (KPI with trends), <strong>Distribution Charts</strong> (donut/bar),
+            <strong> Comparison Tables</strong>, <strong>Highlight Callouts</strong>, <strong>Bar Charts</strong>,
+            and <strong>Custom Text</strong>. Edit widgets inline, reorder with ↑↓ buttons, and preview changes live.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main AdminPage ────────────────────────────────────────────────────────────
 
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState<"data" | "pages" | "blog">("data");
+  const [activeTab, setActiveTab] = useState<"data" | "pages" | "blog" | "analisis">("data");
 
   const tabs = [
-    { key: "data" as const,  label: "Data Hub",  icon: <Database className="w-4 h-4" /> },
-    { key: "pages" as const, label: "Pages",     icon: <FileText className="w-4 h-4" /> },
-    { key: "blog" as const,  label: "Blog",       icon: <BookOpen className="w-4 h-4" /> },
+    { key: "data" as const,      label: "Data Hub",        icon: <Database className="w-4 h-4" /> },
+    { key: "pages" as const,      label: "Pages",           icon: <FileText className="w-4 h-4" /> },
+    { key: "blog" as const,       label: "Blog",            icon: <BookOpen className="w-4 h-4" /> },
+    { key: "analisis" as const,   label: "Analisis Deskriptif", icon: <BarChart3 className="w-4 h-4" /> },
   ];
 
   return (
@@ -1391,9 +2242,10 @@ export default function AdminPage() {
 
       {/* ── Tab content ───────────────────────────────────────────────────────── */}
       <div className="max-w-[1200px] mx-auto px-6 py-8">
-        {activeTab === "data"  && <DataHubTab />}
-        {activeTab === "pages" && <PagesTab />}
-        {activeTab === "blog"  && <BlogTab />}
+        {activeTab === "data"      && <DataHubTab />}
+        {activeTab === "pages"     && <PagesTab />}
+        {activeTab === "blog"      && <BlogTab />}
+        {activeTab === "analisis"  && <AnalisisTab />}
       </div>
     </div>
   );
