@@ -102,6 +102,7 @@ export default function Navbar() {
         label: t("nav_blog"),
         children: blogChildren.length > 0 ? blogChildren : fallbackBlog,
       },
+      { label: locale === "id" ? "Analisis" : "Analysis", href: "/analisis" },
       { label: t("nav_contact"), href: "/contact" },
     ];
   }, [cmsPages, locale, t]);

@@ -11,6 +11,7 @@ import DataHubPage from "@/pages/DataHubPage";
 import ModelsPage from "@/pages/ModelsPage";
 import AdminPage from "@/pages/AdminPage";
 import ArticlePage from "@/pages/ArticlePage";
+import AnalysisPage from "@/pages/AnalysisPage";
 import DynamicPage from "@/pages/DynamicPage";
 import { LocaleProvider, useLocale } from "@/lib/locale";
 
@@ -139,8 +140,12 @@ export default function App() {
               <Layout withNewsletter={false}><ArticlePage /></Layout>
             </Route>
 
+            <Route path="/analisis">
+              <Layout withNewsletter={false}><AnalysisPage /></Layout>
+            </Route>
+
             {/* Dynamic CMS pages — catches any slug created in admin */}
-            <Route path="/:slug*">
+            <Route>
               <Layout>
                 <CmsDynamicPage />
               </Layout>
