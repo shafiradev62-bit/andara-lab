@@ -11,8 +11,10 @@ import {
   type AnalisisDeskriptif, type AnalysisSection, type AnalysisWidget,
   type AnalysisMetric, type AnalysisWidgetType,
   type FeaturedInsight, type FeaturedInsightsConfig,
+  type DataUnitType,
 } from "@/lib/cms-store";
 import InteractiveChart from "@/components/InteractiveChart";
+import { UNIT_TYPE_LABELS } from "@/lib/utils";
 import {
   Plus, Trash2, Save, ChevronLeft, BarChart2, LineChart,
   TrendingUp, AlertCircle, CheckCircle, Loader2, RefreshCw,
@@ -20,12 +22,13 @@ import {
   Globe, Eye, EyeOff, Link2, Unlink,
   BarChart3, PieChart, LayoutGrid, List, ArrowUp, ArrowDown,
   ArrowRight, Type, Layout, Star, Zap, Shield, Target,
-  GripVertical, Edit3, Archive, Star,
+  GripVertical, Edit3, Archive,
 } from "lucide-react";
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
-const COLORS = ["#1a3a5c", "#e67e22", "#2ecc71", "#9b59b6", "#e74c3c", "#3498db"];
+const COLORS = ["#1e3a5f", "#374151", "#6b7280", "#9ca3af", "#d1d5db", "#e5e7eb"];
+const CHART_PALETTE = ["#1e3a5f", "#374151", "#6b7280", "#9ca3af", "#d1d5db", "#e5e7eb"];
 const CATEGORIES = [
   "Macro Foundations", "Sectoral Intelligence",
   "Market Dashboard", "Geopolitical Analysis", "ESG",
@@ -45,8 +48,9 @@ function newDataset(): Omit<ChartDataset, "id" | "createdAt" | "updatedAt"> {
     description: "",
     category: "Macro Foundations",
     chartType: "line",
-    color: "#1a3a5c",
+    color: "#1e3a5f",
     unit: "%",
+    unitType: "percent",
     columns: ["Period", "Value"],
     rows: [
       { Period: "2023 Q1", Value: 0 },
@@ -54,6 +58,7 @@ function newDataset(): Omit<ChartDataset, "id" | "createdAt" | "updatedAt"> {
       { Period: "2023 Q3", Value: 0 },
       { Period: "2023 Q4", Value: 0 },
     ],
+    colors: ["#374151"],
   };
 }
 
@@ -136,16 +141,28 @@ function DatasetEditor({
 
   const addColumn = () => {
     const name = `Series ${effective.columns.length}`;
-    patch({ columns: [...effective.columns, name], rows: effective.rows.map((r) => ({ ...r, [name]: 0 })) });
+    const prevColors = effective.colors ?? [];
+    const defaultColor = "#374151";
+    const newColors = [...prevColors, defaultColor];
+    patch({ columns: [...effective.columns, name], rows: effective.rows.map((r) => ({ ...r, [name]: 0 })), colors: newColors });
   };
 
   const removeColumn = (col: string) => {
     if (effective.columns.length <= 2) return;
-    patch({ columns: effective.columns.filter((c) => c !== col), rows: effective.rows.map((r) => { const nr = { ...r }; delete nr[col]; return nr; }) });
+    const colIdx = effective.columns.indexOf(col);
+    const newColors = (effective.colors ?? []).filter((_, i) => i !== colIdx - 1);
+    patch({ columns: effective.columns.filter((c) => c !== col), rows: effective.rows.map((r) => { const nr = { ...r }; delete nr[col]; return nr; }), colors: newColors });
   };
 
   const renameColumn = (oldName: string, newName: string) => {
     patch({ columns: effective.columns.map((c) => c === oldName ? newName : c), rows: effective.rows.map((r) => { const nr = { ...r }; nr[newName] = nr[oldName]; delete nr[oldName]; return nr; }) });
+  };
+
+  const updateSeriesColor = (seriesIdx: number, color: string) => {
+    const prevColors = effective.colors ?? [];
+    const newColors = [...prevColors];
+    newColors[seriesIdx] = color;
+    patch({ colors: newColors });
   };
 
   const addRow = () => {
@@ -192,7 +209,6 @@ function DatasetEditor({
           {[
             { label: "Title", field: "title" as const },
             { label: "Description", field: "description" as const, textarea: true },
-            { label: "Unit (e.g. %, IDR, USD B)", field: "unit" as const },
           ].map(({ label, field, textarea }) => (
             <div key={field} className={textarea || field === "description" ? "md:col-span-2" : ""}>
               <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">{label}</label>
@@ -208,6 +224,25 @@ function DatasetEditor({
             </div>
           ))}
           <div>
+            <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Unit Type</label>
+            <select value={effective.unitType ?? "number"}
+              onChange={(e) => patch({ unitType: e.target.value as DataUnitType })}
+              className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-gray-900 bg-white">
+              {(Object.entries(UNIT_TYPE_LABELS) as [DataUnitType, string][]).map(([val, label]) => (
+                <option key={val} value={val}>{label}</option>
+              ))}
+            </select>
+          </div>
+          {(effective.unitType ?? "number") === "custom" && (
+            <div>
+              <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Custom Unit Label</label>
+              <input type="text" value={effective.unit ?? ""}
+                onChange={(e) => patch({ unit: e.target.value })}
+                placeholder="e.g. 000 Barel / MMscf"
+                className="w-full border border-[#E5E7EB] px-3 py-2 text-[13.5px] text-gray-900 focus:outline-none focus:border-gray-900" />
+            </div>
+          )}
+          <div>
             <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Category</label>
             <select value={effective.category}
               onChange={(e) => patch({ category: e.target.value })}
@@ -218,7 +253,7 @@ function DatasetEditor({
           <div>
             <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Chart Type</label>
             <div className="flex gap-2">
-              {(["line", "bar", "area"] as const).map((t) => (
+              {(["line", "bar", "area", "combo"] as const).map((t) => (
                 <button key={t} onClick={() => patch({ chartType: t })}
                   className={`flex items-center gap-1.5 px-4 py-2 text-[12.5px] font-medium border capitalize ${effective.chartType === t ? "bg-gray-900 text-white border-gray-900" : "border-[#E5E7EB] text-gray-600 hover:border-gray-400"}`}>
                   {t === "line" ? <LineChart className="w-3.5 h-3.5" /> : t === "bar" ? <BarChart2 className="w-3.5 h-3.5" /> : <TrendingUp className="w-3.5 h-3.5" />}
@@ -235,7 +270,7 @@ function DatasetEditor({
         <div className="bg-white border border-[#E5E7EB] p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="md:col-span-2">
             <div className="flex items-center gap-2 mb-4 pb-4 border-b border-[#E5E7EB]">
-              <AlertCircle className="w-4 h-4 text-blue-500" />
+              <AlertCircle className="w-4 h-4 text-gray-500" />
               <span className="text-[12.5px] text-gray-600">These labels override the chart display title and axis labels. Leave blank to use defaults.</span>
             </div>
           </div>
@@ -281,13 +316,35 @@ function DatasetEditor({
                 <tr>
                   {effective.columns.map((col, i) => (
                     <th key={col} className="border border-[#E5E7EB] bg-gray-50 px-2 py-1.5 text-left min-w-[100px]">
-                      <div className="flex items-center gap-1">
-                        <input value={col} onChange={(e) => renameColumn(col, e.target.value)}
-                          className="text-[12px] font-semibold text-gray-700 bg-transparent focus:outline-none w-full" />
-                        {i > 1 && (
-                          <button onClick={() => removeColumn(col)} className="text-gray-300 hover:text-red-400 flex-shrink-0">
-                            <Trash2 className="w-3 h-3" />
-                          </button>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-1">
+                          <input value={col} onChange={(e) => renameColumn(col, e.target.value)}
+                            className="text-[12px] font-semibold text-gray-700 bg-transparent focus:outline-none w-full" />
+                          {i > 1 && (
+                            <button onClick={() => removeColumn(col)} className="text-gray-300 hover:text-red-400 flex-shrink-0">
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+                        {i > 0 && (
+                          <div className="flex items-center gap-1 flex-wrap">
+                            {CHART_PALETTE.map((c) => {
+                              const currentColor = (effective.colors ?? [])[i - 1] ?? "#374151";
+                              const isSelected = currentColor.toLowerCase() === c.toLowerCase();
+                              return (
+                                <button
+                                  key={c}
+                                  onClick={() => updateSeriesColor(i - 1, c)}
+                                  className={`w-5 h-5 rounded border-2 cursor-pointer transition-transform ${isSelected ? "border-gray-900 scale-110" : "border-gray-200 hover:border-gray-400"}`}
+                                  style={{ backgroundColor: c }}
+                                  title={c}
+                                />
+                              );
+                            })}
+                            <span className="text-[10px] text-gray-400 font-mono">
+                              {(effective.colors ?? [])[i - 1] ?? "#374151"}
+                            </span>
+                          </div>
                         )}
                       </div>
                     </th>
@@ -329,6 +386,23 @@ function DatasetEditor({
           </p>
         </div>
       )}
+
+      {/* Save button */}
+      <div className="mt-4 flex items-center gap-3">
+        <button
+          onClick={onSave}
+          disabled={isSaving}
+          className="flex items-center gap-2 text-[13px] font-medium text-white bg-gray-900 px-5 py-2.5 hover:bg-gray-700 disabled:opacity-50"
+        >
+          {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          {isSaving ? "Saving…" : "Save Dataset"}
+        </button>
+        {isSuccess && (
+          <span className="text-[12px] font-medium text-gray-500">
+            Saved successfully
+          </span>
+        )}
+      </div>
     </div>
   );
 }
@@ -505,10 +579,113 @@ function PageEditor({
         )}
       </div>
 
+      {/* Content Blocks */}
+      <div className="mt-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Content Blocks</div>
+          <div className="flex gap-2 flex-wrap">
+            {(["hero", "text", "stats", "chart", "about"] as const).map((t) => (
+              <button key={t} type="button"
+                onClick={() => { const defaults = { hero: { type: t as "hero", headline: "New Section", subheadline: "" }, text: { type: t as "text", content: "" }, stats: { type: t as "stats", items: [{ label: "Label", value: "Value" }] }, chart: { type: t as "chart", datasetId: "" }, about: { type: t as "about", headline: "Our Approach", items: [{ label: "Item", value: "Description" }] } }; patch({ content: [...(draft.content ?? []), defaults[t]] }); }}
+                className="flex items-center gap-1.5 text-[11.5px] font-medium text-gray-600 border border-[#E5E7EB] px-2.5 py-1.5 hover:bg-gray-50 bg-white">
+                <Plus className="w-3 h-3" /> + {t}
+              </button>
+            ))}
+          </div>
+        </div>
+        {(draft.content ?? []).length === 0 ? (
+          <div className="text-center text-gray-400 text-[12.5px] py-10 border border-dashed border-[#E5E7EB]">
+            No content blocks yet. Click + hero / + text / + stats / + chart / + about above to add.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {(draft.content ?? []).map((block: any, i: number) => (
+              <div key={i} className="bg-white border border-[#E5E7EB] p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-[11px] font-bold text-gray-400 w-6 text-center">{i + 1}</span>
+                  <span className="text-[11px] font-semibold text-gray-500 uppercase bg-gray-100 px-2 py-0.5">{block.type}</span>
+                  <button type="button" onClick={() => patch({ content: (draft.content ?? []).filter((_: any, j: number) => j !== i) })}
+                    className="ml-auto text-gray-400 hover:text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
+                </div>
+                {block.type === "hero" && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10.5px] text-gray-500 mb-1">Headline</label>
+                      <input value={block.headline ?? ""} onChange={(e) => { const c = [...(draft.content ?? [])]; c[i] = { ...c[i], headline: e.target.value }; patch({ content: c }); }}
+                        className="w-full border border-[#E5E7EB] px-2 py-1.5 text-[12.5px] focus:outline-none focus:border-gray-900" />
+                    </div>
+                    <div>
+                      <label className="block text-[10.5px] text-gray-500 mb-1">Subheadline</label>
+                      <input value={block.subheadline ?? ""} onChange={(e) => { const c = [...(draft.content ?? [])]; c[i] = { ...c[i], subheadline: e.target.value }; patch({ content: c }); }}
+                        className="w-full border border-[#E5E7EB] px-2 py-1.5 text-[12.5px] focus:outline-none focus:border-gray-900" />
+                    </div>
+                  </div>
+                )}
+                {block.type === "text" && (
+                  <div>
+                    <label className="block text-[10.5px] text-gray-500 mb-1">Content</label>
+                    <textarea rows={3} value={block.content ?? ""} onChange={(e) => { const c = [...(draft.content ?? [])]; c[i] = { ...c[i], content: e.target.value }; patch({ content: c }); }}
+                      className="w-full border border-[#E5E7EB] px-2 py-1.5 text-[12.5px] focus:outline-none focus:border-gray-900 resize-none" />
+                  </div>
+                )}
+                {block.type === "stats" && (
+                  <div>
+                    <label className="block text-[10.5px] text-gray-500 mb-1">Items (JSON array)</label>
+                    <textarea rows={3} value={JSON.stringify(block.items ?? [], null, 2)} onChange={(e) => {
+                      try { const c = [...(draft.content ?? [])]; c[i] = { ...c[i], items: JSON.parse(e.target.value) }; patch({ content: c }); } catch {}
+                    }}
+                      className="w-full border border-[#E5E7EB] px-2 py-1.5 text-[12px] font-mono focus:outline-none focus:border-gray-900 resize-none" />
+                  </div>
+                )}
+                {block.type === "chart" && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-[10.5px] text-gray-500 mb-1">Dataset ID</label>
+                      <input value={block.datasetId ?? ""} onChange={(e) => { const c = [...(draft.content ?? [])]; c[i] = { ...c[i], datasetId: e.target.value }; patch({ content: c }); }}
+                        className="w-full border border-[#E5E7EB] px-2 py-1.5 text-[12.5px] focus:outline-none focus:border-gray-900" />
+                    </div>
+                    <div>
+                      <label className="block text-[10.5px] text-gray-500 mb-1">Title</label>
+                      <input value={block.title ?? ""} onChange={(e) => { const c = [...(draft.content ?? [])]; c[i] = { ...c[i], title: e.target.value }; patch({ content: c }); }}
+                        className="w-full border border-[#E5E7EB] px-2 py-1.5 text-[12.5px] focus:outline-none focus:border-gray-900" />
+                    </div>
+                    <div>
+                      <label className="block text-[10.5px] text-gray-500 mb-1">Description</label>
+                      <input value={block.description ?? ""} onChange={(e) => { const c = [...(draft.content ?? [])]; c[i] = { ...c[i], description: e.target.value }; patch({ content: c }); }}
+                        className="w-full border border-[#E5E7EB] px-2 py-1.5 text-[12.5px] focus:outline-none focus:border-gray-900" />
+                    </div>
+                  </div>
+                )}
+                {block.type === "about" && (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-[10.5px] text-gray-500 mb-1">Headline</label>
+                      <input value={block.headline ?? ""} onChange={(e) => { const c = [...(draft.content ?? [])]; c[i] = { ...c[i], headline: e.target.value }; patch({ content: c }); }}
+                        className="w-full border border-[#E5E7EB] px-2 py-1.5 text-[12.5px] focus:outline-none focus:border-gray-900" />
+                    </div>
+                    <div>
+                      <label className="block text-[10.5px] text-gray-500 mb-1">Description</label>
+                      <textarea rows={2} value={block.description ?? ""} onChange={(e) => { const c = [...(draft.content ?? [])]; c[i] = { ...c[i], description: e.target.value }; patch({ content: c }); }}
+                        className="w-full border border-[#E5E7EB] px-2 py-1.5 text-[12.5px] focus:outline-none focus:border-gray-900 resize-none" />
+                    </div>
+                    <div>
+                      <label className="block text-[10.5px] text-gray-500 mb-1">Items (JSON array)</label>
+                      <textarea rows={4} value={JSON.stringify(block.items ?? [], null, 2)} onChange={(e) => {
+                        try { const c = [...(draft.content ?? [])]; c[i] = { ...c[i], items: JSON.parse(e.target.value) }; patch({ content: c }); } catch {}
+                      }}
+                        className="w-full border border-[#E5E7EB] px-2 py-1.5 text-[12px] font-mono focus:outline-none focus:border-gray-900 resize-none" />
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {saveError && (
-        <div className="mb-4 flex items-start gap-2 text-[12.5px] text-red-700 bg-red-50 border border-red-200 px-4 py-3">
-          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-          <span>{saveError}</span>
+        <div className="mb-4 text-[12.5px] text-red-600">
+          {saveError}
         </div>
       )}
 
@@ -525,9 +702,7 @@ function PageEditor({
           {isSaving ? "Saving…" : "Save Page"}
         </button>
         {(updateMut.isSuccess || createMut.isSuccess) && !savedSlug && (
-          <span className="text-[12px] text-gray-600 flex items-center gap-1">
-            <CheckCircle className="w-3.5 h-3.5" /> Saved
-          </span>
+          <span className="text-[12px] text-gray-500">Saved</span>
         )}
       </div>
 
@@ -548,7 +723,7 @@ function PageEditor({
               View on site → {window.location.origin}{viewHref}
             </a>
             {draft.status === "draft" && (
-              <span className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 px-2 py-1">
+              <span className="text-[11px] text-gray-500">
                 Draft tidak tampil di situs sampai Anda pilih Published lalu Save lagi.
               </span>
             )}
@@ -754,9 +929,8 @@ function PostEditor({
       </div>
 
       {saveError && (
-        <div className="mb-4 flex items-start gap-2 text-[12.5px] text-red-700 bg-red-50 border border-red-200 px-4 py-3">
-          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-          <span>{saveError}</span>
+        <div className="mb-4 text-[12.5px] text-red-600">
+          {saveError}
         </div>
       )}
 
@@ -772,9 +946,7 @@ function PostEditor({
           {isSaving ? "Saving…" : "Save Post"}
         </button>
         {(updateMut.isSuccess || createMut.isSuccess) && !savedSlug && (
-          <span className="text-[12px] text-gray-600 flex items-center gap-1">
-            <CheckCircle className="w-3.5 h-3.5" /> Saved
-          </span>
+          <span className="text-[12px] text-gray-500">Saved</span>
         )}
       </div>
 
@@ -795,7 +967,7 @@ function PostEditor({
               View article → {window.location.origin}{articleHref}
             </a>
             {draft.status === "draft" && (
-              <span className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 px-2 py-1">
+              <span className="text-[11px] text-gray-500">
                 Draft: artikel tidak tampil sampai Published + Save.
               </span>
             )}
@@ -943,8 +1115,7 @@ function FeaturedInsightsTab() {
             </div>
           </div>
           {updateMut.isSuccess && (
-            <div className="flex items-center gap-1.5 text-[12px] text-green-700 bg-green-50 border border-green-200 rounded px-3 py-2">
-              <CheckCircle className="w-3.5 h-3.5" /> Saved successfully
+            <div className="text-[12px] text-gray-500">Saved successfully
             </div>
           )}
         </div>
@@ -1132,8 +1303,7 @@ function DataHubTab() {
             </div>
           )}
 
-          <div className="mt-5 bg-gray-50 border border-gray-200 p-4 flex items-start gap-3">
-            <AlertCircle className="w-4 h-4 text-gray-500 flex-shrink-0 mt-0.5" />
+          <div className="mt-5 bg-gray-50 border border-gray-200 p-4">
             <p className="text-[12px] text-gray-600 leading-relaxed">
               All data is served via the <strong>REST API</strong> backed by an in-memory store.
               Click "Reset to Seed" to restore original datasets.
@@ -1607,7 +1777,7 @@ function newWidget(type: AnalysisWidgetType): AnalysisWidget {
   if (type === "metric-card") return { ...base, metrics: [newMetric()] };
   if (type === "distribution") return { ...base, distributionItems: [] };
   if (type === "comparison") return { ...base, compareHeaders: ["Item", "Value 1", "Value 2"], compareItems: [] };
-  if (type === "highlight") return { ...base, calloutColor: "#1a3a5c", text: "" };
+  if (type === "highlight") return { ...base, calloutColor: "#1e3a5f", text: "" };
   if (type === "bar-chart") return { ...base, barData: [] };
   if (type === "donut-chart") return { ...base, barData: [] };
   if (type === "custom-text") return { ...base, text: "" };
@@ -1624,6 +1794,7 @@ function newSection(order: number): AnalysisSection {
     locale: "both",
     sectionType: "custom",
     order,
+    sectionBg: undefined,
     widgets: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -1644,7 +1815,7 @@ function WidgetEditor({
     patch({ metrics: widget.metrics?.map((m) => (m.id === mid ? { ...m, ...fields } : m)) });
 
   const addDistItem = () =>
-    patch({ distributionItems: [...(widget.distributionItems ?? []), { label: "New Item", value: 0, percentage: 0, color: "#1a3a5c" }] });
+    patch({ distributionItems: [...(widget.distributionItems ?? []), { label: "New Item", value: 0, percentage: 0, color: "#1e3a5f" }] });
   const removeDistItem = (idx: number) =>
     patch({ distributionItems: widget.distributionItems?.filter((_, i) => i !== idx) });
   const updateDistItem = (idx: number, fields: Partial<typeof widget.distributionItems[0]>) =>
@@ -1658,7 +1829,7 @@ function WidgetEditor({
     patch({ compareItems: widget.compareItems?.map((c, i) => (i === idx ? { ...c, ...fields } : c)) });
 
   const addBarItem = () =>
-    patch({ barData: [...(widget.barData ?? []), { label: "Item", value: 0, color: "#1a3a5c" }] });
+    patch({ barData: [...(widget.barData ?? []), { label: "Item", value: 0, color: "#1e3a5f" }] });
   const removeBarItem = (idx: number) =>
     patch({ barData: widget.barData?.filter((_, i) => i !== idx) });
   const updateBarItem = (idx: number, fields: Partial<typeof widget.barData[0]>) =>
@@ -1757,7 +1928,7 @@ function WidgetEditor({
           {(widget.distributionItems ?? []).map((d, i) => (
             <div key={i} className="bg-white border border-gray-200 rounded p-3 grid grid-cols-12 gap-2 items-center">
               <div className="col-span-1">
-                <input type="color" value={d.color ?? "#1a3a5c"} onChange={(e) => updateDistItem(i, { color: e.target.value })}
+                <input type="color" value={d.color ?? "#1e3a5f"} onChange={(e) => updateDistItem(i, { color: e.target.value })}
                   className="w-8 h-8 rounded border border-gray-300 cursor-pointer" />
               </div>
               <div className="col-span-4">
@@ -1830,7 +2001,7 @@ function WidgetEditor({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label className="block text-[10px] text-gray-500 mb-1">Callout Color</label>
-              <input type="color" value={widget.calloutColor ?? "#1a3a5c"}
+              <input type="color" value={widget.calloutColor ?? "#1e3a5f"}
                 onChange={(e) => patch({ calloutColor: e.target.value })}
                 className="w-16 h-9 rounded border border-gray-300 cursor-pointer" />
             </div>
@@ -1857,7 +2028,7 @@ function WidgetEditor({
           {(widget.barData ?? []).map((b, i) => (
             <div key={i} className="bg-white border border-gray-200 rounded p-3 grid grid-cols-12 gap-2 items-center">
               <div className="col-span-1">
-                <input type="color" value={b.color ?? "#1a3a5c"} onChange={(e) => updateBarItem(i, { color: e.target.value })}
+                <input type="color" value={b.color ?? "#1e3a5f"} onChange={(e) => updateBarItem(i, { color: e.target.value })}
                   className="w-8 h-8 rounded border border-gray-300 cursor-pointer" />
               </div>
               <div className="col-span-6">
@@ -1972,6 +2143,20 @@ function SectionEditor({
         />
       </div>
 
+      {/* Section Background Image */}
+      <div className="px-4 py-2 border-b border-gray-100 flex items-center gap-2">
+        <span className="text-[10px] text-gray-400 font-medium">BG:</span>
+        <input
+          value={section.sectionBg ?? ""}
+          onChange={(e) => patch({ sectionBg: e.target.value })}
+          className="flex-1 text-[11.5px] text-gray-500 bg-transparent focus:outline-none border border-gray-200 px-2 py-1 rounded"
+          placeholder="/gambar.png (optional)"
+        />
+        {section.sectionBg && (
+          <button onClick={() => patch({ sectionBg: "" })} className="text-gray-400 hover:text-red-500 text-[10px]">✕</button>
+        )}
+      </div>
+
       {/* Widgets List */}
       <div className="divide-y divide-gray-100">
         {section.widgets.map((w, idx) => (
@@ -1983,13 +2168,7 @@ function SectionEditor({
               <button onClick={() => moveWidget(idx, 1)} className="text-gray-400 hover:text-gray-600" title="Move down">
                 <ArrowDown className="w-3.5 h-3.5" />
               </button>
-              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                w.type === "metric-card" ? "bg-blue-100 text-blue-700" :
-                w.type === "distribution" ? "bg-purple-100 text-purple-700" :
-                w.type === "highlight" ? "bg-amber-100 text-amber-700" :
-                w.type === "comparison" ? "bg-green-100 text-green-700" :
-                "bg-gray-100 text-gray-600"
-              }`}>
+              <span className="text-[10px] text-gray-400">
                 {w.type}
               </span>
               {w.title && <span className="text-[12px] text-gray-700 font-medium">{w.title}</span>}
@@ -2109,9 +2288,7 @@ function AnalisisEditor({
           {isNew ? "New Analysis" : (draft.title ?? record?.title ?? "Edit")}
         </span>
         {draft.status && (
-          <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-            draft.status === "active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
-          }`}>
+          <span className="text-[10px] text-gray-400">
             {draft.status.toUpperCase()}
           </span>
         )}
@@ -2162,7 +2339,7 @@ function AnalisisEditor({
               {(["active", "archived"] as const).map((s) => (
                 <button key={s} onClick={() => patch({ status: s })}
                   className={`px-4 py-2 text-[12px] font-semibold border capitalize ${
-                    draft.status === s ? (s === "active" ? "bg-green-700 text-white border-green-700" : "bg-gray-500 text-white border-gray-500") : "border-gray-300 text-gray-600 hover:bg-gray-50"
+                    draft.status === s ? "bg-[#1e3a5f] text-white border-[#1e3a5f]" : "border-gray-300 text-gray-600 hover:bg-gray-50"
                   }`}>
                   {s}
                 </button>
@@ -2212,9 +2389,8 @@ function AnalisisEditor({
 
         {/* Save */}
         {saveError && (
-          <div className="flex items-start gap-2 text-[12.5px] text-red-700 bg-red-50 border border-red-200 px-4 py-3">
-            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-            <span>{saveError}</span>
+          <div className="text-[12.5px] text-red-600">
+            {saveError}
           </div>
         )}
 
@@ -2229,9 +2405,7 @@ function AnalisisEditor({
             {isSaving ? "Saving…" : "Save Analysis"}
           </button>
           {saved && (
-            <span className="text-[12px] text-green-700 flex items-center gap-1">
-              <CheckCircle className="w-3.5 h-3.5" /> Saved successfully
-            </span>
+            <span className="text-[12px] text-gray-500">Saved successfully</span>
           )}
         </div>
       </div>
@@ -2342,15 +2516,10 @@ function AnalisisTab() {
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="text-[14px] font-semibold text-gray-900">{r.title}</h3>
-                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                        r.status === "active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
-                      }`}>
+                      <span className="text-[10px] text-gray-400">
                         {r.status.toUpperCase()}
                       </span>
-                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                        r.locale === "both" ? "bg-blue-100 text-blue-700" :
-                        r.locale === "en" ? "bg-gray-800 text-white" : "bg-gray-700 text-white"
-                      }`}>
+                      <span className="text-[10px] text-gray-400">
                         {r.locale === "both" ? "EN+ID" : r.locale.toUpperCase()}
                       </span>
                     </div>
@@ -2382,12 +2551,7 @@ function AnalisisTab() {
                       <span className="text-[10px] font-bold text-gray-400">#{s.order}</span>
                       <span className="text-[11.5px] font-medium text-gray-700">{s.title || "Untitled"}</span>
                       <span className="text-[10px] text-gray-400">({(s.widgets ?? []).length} widget{(s.widgets ?? []).length !== 1 ? "s" : ""})</span>
-                      <span className={`text-[9px] px-1 py-0.5 rounded ${
-                        s.sectionType === "overview" ? "bg-blue-50 text-blue-600" :
-                        s.sectionType === "dataset-breakdown" ? "bg-purple-50 text-purple-600" :
-                        s.sectionType === "blog-insights" ? "bg-green-50 text-green-600" :
-                        "bg-gray-100 text-gray-500"
-                      }`}>
+                      <span className="text-[9px] text-gray-400 uppercase tracking-wide">
                         {s.sectionType}
                       </span>
                     </div>
@@ -2399,17 +2563,14 @@ function AnalisisTab() {
         </div>
       )}
 
-      <div className="mt-6 bg-blue-50 border border-blue-200 p-4 flex items-start gap-3">
-        <Star className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
-        <div>
-          <p className="text-[12.5px] font-semibold text-blue-800 mb-1">Customizable Descriptive Analysis</p>
-          <p className="text-[12px] text-blue-700 leading-relaxed">
-            Each analysis record supports multiple sections. Each section can contain multiple widgets:
-            <strong> Metric Cards</strong> (KPI with trends), <strong>Distribution Charts</strong> (donut/bar),
-            <strong> Comparison Tables</strong>, <strong>Highlight Callouts</strong>, <strong>Bar Charts</strong>,
-            and <strong>Custom Text</strong>. Edit widgets inline, reorder with ↑↓ buttons, and preview changes live.
-          </p>
-        </div>
+      <div className="mt-6">
+        <p className="text-[12.5px] font-semibold text-gray-500 mb-1">Customizable Descriptive Analysis</p>
+        <p className="text-[12px] text-gray-700 leading-relaxed">
+          Each analysis record supports multiple sections. Each section can contain multiple widgets:
+          <strong> Metric Cards</strong> (KPI with trends), <strong>Distribution Charts</strong> (donut/bar),
+          <strong> Comparison Tables</strong>, <strong>Highlight Callouts</strong>, <strong>Bar Charts</strong>,
+          and <strong>Custom Text</strong>. Edit widgets inline, reorder with ↑↓ buttons, and preview changes live.
+        </p>
       </div>
     </div>
   );

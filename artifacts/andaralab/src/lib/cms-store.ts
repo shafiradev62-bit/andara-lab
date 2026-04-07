@@ -13,14 +13,17 @@
 //
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+export type DataUnitType = "percent" | "currency_idr" | "currency_usd" | "number" | "custom";
+
 export interface ChartDataset {
   id: string;
   title: string;
   description: string;
   category: string;
-  chartType: "line" | "bar" | "area";
+  chartType: "line" | "bar" | "area" | "combo";
   color: string;
-  unit: string;
+  unit: string;       // raw label stored here (used for display in legacy/custom)
+  unitType: DataUnitType; // structured type for formatting
   // CMS-editable chart metadata
   chartTitle?: string;
   xAxisLabel?: string;
@@ -28,6 +31,7 @@ export interface ChartDataset {
   subtitle?: string;
   columns: string[];
   rows: Record<string, string | number>[];
+  colors?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -568,6 +572,7 @@ export interface AnalysisSection {
   locale: "en" | "id" | "both";
   sectionType: "overview" | "dataset-breakdown" | "blog-insights" | "custom";
   order: number;
+  sectionBg?: string;
   widgets: AnalysisWidget[];
   createdAt: string;
   updatedAt: string;

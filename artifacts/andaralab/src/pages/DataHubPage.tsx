@@ -3,6 +3,7 @@ import { useLocation, Link } from "wouter";
 import { useDatasets } from "@/lib/cms-store";
 import { useLocale } from "@/lib/locale";
 import { applyDocumentSeo } from "@/lib/document-meta";
+import { formatValue } from "@/lib/utils";
 import InteractiveChart from "@/components/InteractiveChart";
 import { BarChart2, LineChart as LineChartIcon, TrendingUp, Calendar, Table as TableIcon, ArrowRight, ExternalLink, AlertCircle, Loader2 } from "lucide-react";
 
@@ -297,11 +298,11 @@ export default function DataHubPage() {
                       >
                         <div className="text-[11.5px] text-gray-400 mb-1.5">{ds.title}</div>
                         <div className="text-[24px] font-bold text-gray-900 mb-1">
-                          {last.toLocaleString()}{ds.unit === "%" ? "%" : ""}
+                          {formatValue(last, ds.unitType, ds.unit)}
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <span className={`text-[12px] font-semibold ${positive === null ? "text-gray-400" : positive ? "text-green-600" : "text-red-500"}`}>
-                            {positive === true && "▲ "}{positive === false && "▼ "}{label}
+                          <span className="text-[12px] font-semibold text-gray-600">
+                            {label}
                           </span>
                           <span className="text-[11px] text-gray-400">{String(lastRow?.[periodKey] ?? "")}</span>
                         </div>

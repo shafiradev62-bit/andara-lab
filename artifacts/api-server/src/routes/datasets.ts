@@ -15,6 +15,7 @@ const createDatasetSchema = z.object({
   chartType:  z.enum(["line", "bar", "area"]),
   color:      z.string().default("#1a3a5c"),
   unit:       z.string().default(""),
+  unitType:   z.enum(["percent", "currency_idr", "currency_usd", "number", "custom"]).default("number"),
   chartTitle: z.string().optional(),
   xAxisLabel: z.string().optional(),
   yAxisLabel: z.string().optional(),

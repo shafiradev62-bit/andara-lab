@@ -3,14 +3,17 @@
 
 // ─── Chart Dataset ─────────────────────────────────────────────────────────────
 
+export type SeedDataUnitType = "percent" | "currency_idr" | "currency_usd" | "number" | "custom";
+
 export interface SeedDataset {
   id: string;
   title: string;
   description: string;
   category: string;
-  chartType: "line" | "bar" | "area";
+  chartType: "line" | "bar" | "area" | "combo";
   color: string;
   unit: string;
+  unitType: SeedDataUnitType;
   // CMS-editable chart display metadata
   chartTitle?: string;
   xAxisLabel?: string;
@@ -18,6 +21,7 @@ export interface SeedDataset {
   subtitle?: string;
   columns: string[];
   rows: Record<string, string | number>[];
+  colors?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -69,11 +73,12 @@ export const SEED_DATASETS: SeedDataset[] = [
   {
     id: "oil-gas-production",
     title: "Produksi Minyak Bumi & Gas Alam",
-    description: "Produksi minyak mentah, kondensat, dan gas alam Indonesia 1996–2024 (ribuan barel & MMscf)",
+    description: "Produksi minyak mentah, kondensat, dan gas alam Indonesia 1996\u20132024 (ribuan barel & MMscf)",
     category: "Sectoral Intelligence",
     chartType: "line",
-    color: "#0d7377",
+    color: "#1e3a5f",
     unit: "000 Barel / MMscf",
+    unitType: "custom",
     chartTitle: "Produksi Minyak Bumi & Gas Alam Indonesia",
     xAxisLabel: "Tahun",
     yAxisLabel: "Volume (000 Barel & MMscf)",
@@ -120,7 +125,8 @@ export const SEED_DATASETS: SeedDataset[] = [
     chartType: "line",
     color: "#1a3a5c",
     unit: "%",
-    chartTitle: "PDB Indonesia — Pertumbuhan Kuartalan (YoY %)",
+    unitType: "percent",
+    chartTitle: "PDB Indonesia \u2014 Pertumbuhan Kuartalan (YoY %)",
     xAxisLabel: "Kuartal",
     yAxisLabel: "Pertumbuhan (%)",
     subtitle: "Sumber: BPS Indonesia",
@@ -144,8 +150,9 @@ export const SEED_DATASETS: SeedDataset[] = [
     description: "Monthly consumer price index inflation (%)",
     category: "Macro Foundations",
     chartType: "area",
-    color: "#e67e22",
+    color: "#1e3a5f",
     unit: "%",
+    unitType: "percent",
     chartTitle: "Inflasi IHK Indonesia (YoY %)",
     xAxisLabel: "Bulan",
     yAxisLabel: "Inflasi (%)",
@@ -170,8 +177,9 @@ export const SEED_DATASETS: SeedDataset[] = [
     description: "BI 7-Day Reverse Repo Rate (%)",
     category: "Macro Foundations",
     chartType: "bar",
-    color: "#2ecc71",
+    color: "#1e3a5f",
     unit: "%",
+    unitType: "percent",
     chartTitle: "Suku Bunga Kebijakan BI vs Fed Funds Rate (%)",
     xAxisLabel: "Periode",
     yAxisLabel: "Suku Bunga (%)",
@@ -196,8 +204,9 @@ export const SEED_DATASETS: SeedDataset[] = [
     description: "Monthly trade balance in USD Billion",
     category: "Sectoral Intelligence",
     chartType: "bar",
-    color: "#9b59b6",
+    color: "#1e3a5f",
     unit: "USD B",
+    unitType: "currency_usd",
     chartTitle: "Neraca Perdagangan Indonesia (USD Miliar)",
     xAxisLabel: "Bulan",
     yAxisLabel: "USD Miliar",
@@ -220,8 +229,9 @@ export const SEED_DATASETS: SeedDataset[] = [
     description: "Indonesian Rupiah vs US Dollar (monthly average)",
     category: "Market Dashboard",
     chartType: "line",
-    color: "#e74c3c",
+    color: "#1e3a5f",
     unit: "IDR",
+    unitType: "currency_idr",
     chartTitle: "Kurs IDR/USD (Rata-rata Bulanan)",
     xAxisLabel: "Bulan",
     yAxisLabel: "IDR per USD",
@@ -243,11 +253,12 @@ export const SEED_DATASETS: SeedDataset[] = [
   {
     id: "nickel-production",
     title: "Produksi Nikel Indonesia",
-    description: "Output nikel Indonesia 2010–2024 (tonnikel konten metal) dan pangsa pasar global",
+    description: "Output nikel Indonesia 2010\u20132024 (tonnikel konten metal) dan pangsa pasar global",
     category: "Sectoral Intelligence",
     chartType: "area",
-    color: "#f39c12",
+    color: "#1e3a5f",
     unit: "Ton Metal",
+    unitType: "number",
     chartTitle: "Produksi Nikel Indonesia vs Dunia (%)",
     xAxisLabel: "Tahun",
     yAxisLabel: "Ton Metal (Ribuan)",
@@ -271,11 +282,12 @@ export const SEED_DATASETS: SeedDataset[] = [
   {
     id: "digital-economy-gmv",
     title: "Ekonomi Digital Indonesia",
-    description: "Gross Merchandise Value (GMV) ekonomi digital Indonesia 2019–2026 (USD Miliar)",
+    description: "Gross Merchandise Value (GMV) ekonomi digital Indonesia 2019\u20132026 (USD Miliar)",
     category: "Market Dashboard",
     chartType: "line",
     color: "#00b894",
     unit: "USD B",
+    unitType: "currency_usd",
     chartTitle: "GMV Ekonomi Digital Indonesia (USD Miliar)",
     xAxisLabel: "Tahun",
     yAxisLabel: "USD Miliar",
@@ -297,11 +309,12 @@ export const SEED_DATASETS: SeedDataset[] = [
   {
     id: "sovereign-bond-yield",
     title: "Imbal Hasil SBN Indonesia",
-    description: "Yield obligasi pemerintah tenor 5, 10, 15 tahun (%) — Indikator risiko sovereign",
+    description: "Yield obligasi pemerintah tenor 5, 10, 15 tahun (%) \u2014 Indikator risiko sovereign",
     category: "Financial Markets",
     chartType: "line",
     color: "#0984e3",
     unit: "%",
+    unitType: "percent",
     chartTitle: "Yield SBN Indonesia (% p.a.)",
     xAxisLabel: "Tanggal",
     yAxisLabel: "Yield (%)",
@@ -323,11 +336,12 @@ export const SEED_DATASETS: SeedDataset[] = [
   {
     id: "coal-production",
     title: "Produksi Batu Bara Indonesia",
-    description: "Output batu bara Indonesia 2010–2024 (juta ton) dan ekspor",
+    description: "Output batu bara Indonesia 2010\u20132024 (juta ton) dan ekspor",
     category: "Sectoral Intelligence",
     chartType: "bar",
     color: "#2d3436",
     unit: "Juta Ton",
+    unitType: "number",
     chartTitle: "Produksi & Ekspor Batu Bara Indonesia (Juta Ton)",
     xAxisLabel: "Tahun",
     yAxisLabel: "Juta Ton",
@@ -351,11 +365,12 @@ export const SEED_DATASETS: SeedDataset[] = [
   {
     id: "fdi-inflow",
     title: "Foreign Direct Investment Indonesia",
-    description: "Aliran FDI masuk ke Indonesia per kuartal (USD Miliar) — berdasarkan negara asal",
+    description: "Aliran FDI masuk ke Indonesia per kuartal (USD Miliar) \u2014 berdasarkan negara asal",
     category: "Macro Foundations",
     chartType: "bar",
     color: "#6c5ce7",
     unit: "USD B",
+    unitType: "currency_usd",
     chartTitle: "FDI Masuk Indonesia per Kuartal (USD Miliar)",
     xAxisLabel: "Kuartal",
     yAxisLabel: "USD Miliar",

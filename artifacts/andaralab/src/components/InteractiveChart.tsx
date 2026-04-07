@@ -1,21 +1,35 @@
 import {
   LineChart, Line, BarChart, Bar, AreaChart, Area,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  ResponsiveContainer, ReferenceLine
+  ResponsiveContainer, ReferenceLine, ComposedChart
 } from "recharts";
 import { ChartDataset } from "@/lib/cms-store";
+import { formatValue } from "@/lib/utils";
 
-const COLORS = [
-  "#1a3a5c", "#e67e22", "#2ecc71", "#9b59b6", "#e74c3c",
-  "#3498db", "#1abc9c", "#f39c12",
+// Navy-to-gray professional palette — only these 6 colors allowed
+export const CHART_PALETTE = [
+  "#1e3a5f", // dark navy
+  "#374151", // dark gray
+  "#6b7280", // medium gray
+  "#9ca3af", // light gray
+  "#d1d5db", // lighter gray
+  "#e5e7eb", // lightest gray
 ];
+
+const DEFAULT_COLORS = CHART_PALETTE;
 
 interface Props {
   dataset: ChartDataset;
   height?: number;
 }
 
-function CustomTooltip({ active, payload, label, unit }: any) {
+// Resolve color: use dataset.colors[i] if available, else DEFAULT_COLORS
+function getColor(dataset: ChartDataset, i: number): string {
+  if (dataset.colors && dataset.colors[i]) return dataset.colors[i];
+  return DEFAULT_COLORS[i % DEFAULT_COLORS.length];
+}
+
+function CustomTooltip({ active, payload, label, dataset }: { active?: boolean; payload?: any[]; label?: string; dataset: ChartDataset }) {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-white border border-[#E5E7EB] shadow-lg px-4 py-3 rounded-sm min-w-[160px]">
@@ -31,7 +45,7 @@ function CustomTooltip({ active, payload, label, unit }: any) {
           </div>
           <span className="text-[12px] font-semibold text-gray-900">
             {typeof p.value === "number"
-              ? `${p.value.toLocaleString()}${unit ? " " + unit : ""}`
+              ? formatValue(p.value, dataset.unitType, dataset.unit)
               : p.value}
           </span>
         </div>
@@ -67,14 +81,14 @@ export default function InteractiveChart({ dataset, height = 280 }: Props) {
           <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
           <XAxis dataKey={xKey} {...axisStyle} />
           <YAxis {...axisStyle} width={45} />
-          <Tooltip content={<CustomTooltip unit={dataset.unit} />} cursor={{ fill: "rgba(0,0,0,0.04)" }} />
+          <Tooltip content={<CustomTooltip dataset={dataset} />} cursor={{ fill: "rgba(0,0,0,0.04)" }} />
           <Legend
             wrapperStyle={{ fontSize: 11, color: "#6B7280", paddingTop: 8 }}
             iconType="circle"
             iconSize={8}
           />
           {dataKeys.map((key, i) => (
-            <Bar key={key} dataKey={key} fill={COLORS[i % COLORS.length]} radius={[2, 2, 0, 0]} maxBarSize={40} />
+            <Bar key={key} dataKey={key} fill={getColor(dataset, i)} radius={[2, 2, 0, 0]} maxBarSize={40} />
           ))}
         </BarChart>
       </ResponsiveContainer>
@@ -88,29 +102,64 @@ export default function InteractiveChart({ dataset, height = 280 }: Props) {
           <defs>
             {dataKeys.map((key, i) => (
               <linearGradient key={key} id={`grad-${i}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={COLORS[i % COLORS.length]} stopOpacity={0.15} />
-                <stop offset="95%" stopColor={COLORS[i % COLORS.length]} stopOpacity={0} />
+                <stop offset="5%" stopColor={getColor(dataset, i)} stopOpacity={0.15} />
+                <stop offset="95%" stopColor={getColor(dataset, i)} stopOpacity={0} />
               </linearGradient>
             ))}
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
           <XAxis dataKey={xKey} {...axisStyle} />
           <YAxis {...axisStyle} width={45} />
-          <Tooltip content={<CustomTooltip unit={dataset.unit} />} />
+          <Tooltip content={<CustomTooltip dataset={dataset} />} />
           <Legend wrapperStyle={{ fontSize: 11, color: "#6B7280", paddingTop: 8 }} iconType="circle" iconSize={8} />
           {dataKeys.map((key, i) => (
             <Area
               key={key}
               type="monotone"
               dataKey={key}
-              stroke={COLORS[i % COLORS.length]}
+              stroke={getColor(dataset, i)}
               strokeWidth={2}
               fill={`url(#grad-${i})`}
-              dot={{ r: 3, strokeWidth: 0, fill: COLORS[i % COLORS.length] }}
+              dot={{ r: 3, strokeWidth: 0, fill: getColor(dataset, i) }}
               activeDot={{ r: 5, strokeWidth: 0 }}
             />
           ))}
         </AreaChart>
+      </ResponsiveContainer>
+    );
+  }
+
+  if (dataset.chartType === "combo") {
+    // All columns except last → bars; last column → line overlay
+    const barKeys = dataKeys.slice(0, -1);
+    const lineKey = dataKeys[dataKeys.length - 1];
+    return (
+      <ResponsiveContainer width="100%" height={height}>
+        <ComposedChart {...commonProps}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
+          <XAxis dataKey={xKey} {...axisStyle} />
+          <YAxis {...axisStyle} width={45} />
+          <Tooltip content={<CustomTooltip dataset={dataset} />} cursor={{ fill: "rgba(0,0,0,0.04)" }} />
+          <Legend wrapperStyle={{ fontSize: 11, color: "#6B7280", paddingTop: 8 }} iconType="circle" iconSize={8} />
+          {barKeys.map((key, i) => (
+            <Bar
+              key={key}
+              dataKey={key}
+              fill={getColor(dataset, i)}
+              radius={[2, 2, 0, 0]}
+              maxBarSize={40}
+            />
+          ))}
+          <Line
+            key={lineKey}
+            type="monotone"
+            dataKey={lineKey}
+            stroke={getColor(dataset, barKeys.length)}
+            strokeWidth={2.5}
+            dot={{ r: 3, strokeWidth: 0, fill: getColor(dataset, barKeys.length) }}
+            activeDot={{ r: 5, strokeWidth: 1, stroke: "#fff" }}
+          />
+        </ComposedChart>
       </ResponsiveContainer>
     );
   }
@@ -121,16 +170,16 @@ export default function InteractiveChart({ dataset, height = 280 }: Props) {
         <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
         <XAxis dataKey={xKey} {...axisStyle} />
         <YAxis {...axisStyle} width={45} />
-        <Tooltip content={<CustomTooltip unit={dataset.unit} />} />
+        <Tooltip content={<CustomTooltip dataset={dataset} />} />
         <Legend wrapperStyle={{ fontSize: 11, color: "#6B7280", paddingTop: 8 }} iconType="circle" iconSize={8} />
         {dataKeys.map((key, i) => (
           <Line
             key={key}
             type="monotone"
             dataKey={key}
-            stroke={COLORS[i % COLORS.length]}
+            stroke={getColor(dataset, i)}
             strokeWidth={2}
-            dot={{ r: 3, strokeWidth: 0, fill: COLORS[i % COLORS.length] }}
+            dot={{ r: 3, strokeWidth: 0, fill: getColor(dataset, i) }}
             activeDot={{ r: 5, strokeWidth: 1, stroke: "#fff" }}
           />
         ))}

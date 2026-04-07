@@ -1,12 +1,13 @@
 import { ArrowRight, Calendar, BarChart2 } from "lucide-react";
 import { Link } from "wouter";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import { useDatasets, usePosts } from "../lib/cms-store";
+import { useDatasets, usePosts, type ChartDataset } from "../lib/cms-store";
+import { formatValue } from "../lib/utils";
 
 function SparkTooltip({ active, payload }: any) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-gray-900 text-white text-[11px] px-2 py-1 font-semibold">
+    <div className="bg-white text-gray-900 border border-gray-200 text-[11px] px-2 py-1 font-semibold shadow-sm">
       {payload[0].value.toLocaleString()}
     </div>
   );
@@ -129,7 +130,7 @@ export default function DataHub() {
             <div className="px-4 py-3 border-t border-[#E5E7EB]">
               <Link
                 href="/blog/market-pulse"
-                className="flex items-center gap-1.5 justify-center text-[12.5px] font-medium text-white bg-gray-900 px-5 py-2 w-full hover:bg-gray-700 transition-colors"
+                className="flex items-center gap-1.5 justify-center text-[12.5px] font-medium text-gray-900 border border-gray-900 px-5 py-2 w-full hover:bg-gray-100 transition-colors"
               >
                 All Research <ArrowRight className="w-3.5 h-3.5" />
               </Link>
@@ -150,13 +151,13 @@ export default function DataHub() {
               <div className="px-4 pt-3 pb-2 border-b border-[#F3F4F6]">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-[11px] text-gray-400">IDR/USD — Historical</span>
-                  <span className={`text-[11px] font-semibold ${idrUsd.positive === false ? "text-red-500" : idrUsd.positive === true ? "text-green-600" : "text-gray-400"}`}>
-                    {idrUsd.positive === false ? "▼" : idrUsd.positive === true ? "▲" : ""} {idrUsd.change}
+                  <span className="text-[11px] font-semibold text-gray-600">
+                    {idrUsd.change}
                   </span>
                 </div>
                 <ResponsiveContainer width="100%" height={60}>
                   <LineChart data={jciSpark} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
-                    <Line type="monotone" dataKey="v" stroke="#1a3a5c" strokeWidth={1.5} dot={false} activeDot={{ r: 3, fill: "#1a3a5c" }} />
+                    <Line type="monotone" dataKey="v" stroke="#374151" strokeWidth={1.5} dot={false} activeDot={{ r: 3, fill: "#374151" }} />
                     <XAxis dataKey="t" hide />
                     <YAxis domain={["auto", "auto"]} hide />
                     <Tooltip content={<SparkTooltip />} />
@@ -171,8 +172,8 @@ export default function DataHub() {
                   <span className="text-[12.5px] text-gray-600">{item.label}</span>
                   <div className="flex items-center gap-2">
                     <span className="text-[13px] font-semibold text-gray-900">{item.value}</span>
-                    <span className={`text-[11px] font-semibold ${item.positive === null ? "text-gray-400" : item.positive ? "text-green-600" : "text-red-500"}`}>
-                      {item.positive === true && "▲ "}{item.positive === false && "▼ "}{item.change}
+                    <span className="text-[11px] font-semibold text-gray-600">
+                      {item.change}
                     </span>
                   </div>
                 </div>
@@ -188,9 +189,9 @@ export default function DataHub() {
                     <div key={ds.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 transition-colors">
                       <span className="text-[12.5px] text-gray-600 truncate max-w-[120px]">{ds.title}</span>
                       <div className="flex items-center gap-2">
-                        <span className="text-[13px] font-semibold text-gray-900">{last.toLocaleString()}{ds.unit === "%" ? "%" : ""}</span>
-                        <span className={`text-[11px] font-semibold ${positive === null ? "text-gray-400" : positive ? "text-green-600" : "text-red-500"}`}>
-                          {positive === true && "▲ "}{positive === false && "▼ "}{label}
+                        <span className="text-[13px] font-semibold text-gray-900">{formatValue(last, ds.unitType, ds.unit)}</span>
+                        <span className="text-[11px] font-semibold text-gray-600">
+                          {label}
                         </span>
                       </div>
                     </div>
@@ -201,7 +202,7 @@ export default function DataHub() {
             <div className="px-4 py-3 border-t border-[#E5E7EB]">
               <Link
                 href="/data/market-dashboard"
-                className="flex items-center gap-1.5 justify-center text-[12.5px] font-medium text-white bg-gray-900 px-5 py-2 w-full hover:bg-gray-700 transition-colors"
+                className="flex items-center gap-1.5 justify-center text-[12.5px] font-medium text-gray-900 border border-gray-900 px-5 py-2 w-full hover:bg-gray-100 transition-colors"
               >
                 Market Dashboard <ArrowRight className="w-3.5 h-3.5" />
               </Link>
