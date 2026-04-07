@@ -44,15 +44,15 @@ export default function DataHub() {
   const tradeDs  = datasets.find((d) => d.id === "trade-balance");
 
   const biRate = biRateDs
-    ? (() => { const { last, prev } = getLastTwo(biRateDs.rows, "BI Rate"); const { label, positive } = formatChange(last, prev, true); return { label: "BI Rate", value: `${last}%`, change: label, positive }; })()
+    ? (() => { const { last, prev } = getLastTwo(biRateDs.rows, "BI Rate"); const { label, positive } = formatChange(last, prev, true); return { label: "BI Rate", value: formatValue(last, biRateDs.unitType ?? "percent", biRateDs.unit), change: label, positive }; })()
     : { label: "BI Rate", value: "—", change: "—", positive: null as null };
 
   const idrUsd = idrUsdDs
-    ? (() => { const { last, prev } = getLastTwo(idrUsdDs.rows, "IDR/USD"); const { label, positive } = formatChange(last, prev); return { label: "IDR/USD", value: last.toLocaleString(), change: label, positive }; })()
+    ? (() => { const { last, prev } = getLastTwo(idrUsdDs.rows, "IDR/USD"); const { label, positive } = formatChange(last, prev); return { label: "IDR/USD", value: formatValue(last, idrUsdDs.unitType ?? "currency_idr", idrUsdDs.unit), change: label, positive }; })()
     : { label: "IDR/USD", value: "—", change: "—", positive: null as null };
 
   const tradeBalance = tradeDs
-    ? (() => { const { last, prev } = getLastTwo(tradeDs.rows, "Balance"); const { label, positive } = formatChange(last, prev); return { label: "Trade Balance", value: `+${last}B`, change: label, positive }; })()
+    ? (() => { const { last, prev } = getLastTwo(tradeDs.rows, "Balance"); const { label, positive } = formatChange(last, prev); return { label: "Trade Balance", value: formatValue(last, tradeDs.unitType ?? "currency_usd", tradeDs.unit), change: label, positive }; })()
     : { label: "Trade Balance", value: "—", change: "—", positive: null as null };
 
   const jciSpark = idrUsdDs
