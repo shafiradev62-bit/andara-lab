@@ -124,7 +124,7 @@ function ComparisonWidget({ widget }: { widget: AnalysisWidget }) {
           {items.map((row, ri) => (
             <tr key={ri} className="hover:bg-gray-50 transition-colors">
               <td className="px-4 py-3 font-semibold text-gray-800">{row.label}</td>
-              {row.values.map((v, vi) => (
+              {(row.values ?? []).map((v, vi) => (
                 <td key={vi} className="px-4 py-3 text-gray-600">
                   {v}
                 </td>

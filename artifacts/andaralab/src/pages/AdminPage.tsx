@@ -2075,14 +2075,13 @@ function AnalisisEditor({
     patch({ sections: [...currentSections, newSection(currentSections.length + 1)] });
   };
 
-  const updateSection = (idx: number, s: AnalysisSection) => {
-    const updated = [...(draft.sections ?? [])];
-    updated[idx] = s;
+  const updateSection = (id: string, s: AnalysisSection) => {
+    const updated = (draft.sections ?? []).map((section) => (section.id === id ? s : section));
     patch({ sections: updated });
   };
 
-  const removeSection = (idx: number) => {
-    patch({ sections: (draft.sections ?? []).filter((_, i) => i !== idx) });
+  const removeSection = (id: string) => {
+    patch({ sections: (draft.sections ?? []).filter((s) => s.id !== id) });
   };
 
   const handleSave = () => {
@@ -2189,12 +2188,12 @@ function AnalisisEditor({
           </div>
 
           <div className="space-y-6">
-            {(draft.sections ?? []).sort((a, b) => a.order - b.order).map((section, idx) => (
+            {(draft.sections ?? []).sort((a, b) => a.order - b.order).map((section) => (
               <SectionEditor
                 key={section.id}
                 section={section}
-                onChange={(s) => updateSection(idx, s)}
-                onRemove={() => removeSection(idx)}
+                onChange={(s) => updateSection(section.id, s)}
+                onRemove={() => removeSection(section.id)}
               />
             ))}
           </div>
@@ -2262,12 +2261,14 @@ function AnalisisTab() {
           setIsNew(false);
           setEditRecord(null);
         },
+        onError: (e: any) => alert("Error saving: " + (e.message || "Unknown error")),
       });
     } else if (editRecord?.id) {
       updateMut.mutate({ id: editRecord.id, data }, {
         onSuccess: () => {
           setEditRecord(null);
         },
+        onError: (e: any) => alert("Error updating: " + (e.message || "Unknown error")),
       });
     }
   };
@@ -2355,7 +2356,7 @@ function AnalisisTab() {
                     </div>
                     <p className="text-[12px] text-gray-500">{r.description || "No description"}</p>
                     <p className="text-[11px] text-gray-400 mt-1">
-                      {r.sections.length} section{r.sections.length !== 1 ? "s" : ""} ·
+                      {(r.sections ?? []).length} section{(r.sections ?? []).length !== 1 ? "s" : ""} ·
                       Last updated: {new Date(r.updatedAt).toLocaleDateString()}
                     </p>
                   </div>
@@ -2376,11 +2377,11 @@ function AnalisisTab() {
               {/* Section Preview */}
               <div className="border-t border-gray-100 bg-gray-50 px-5 py-3">
                 <div className="flex flex-wrap gap-2">
-                  {r.sections.sort((a, b) => a.order - b.order).map((s) => (
+                  {(r.sections ?? []).sort((a, b) => a.order - b.order).map((s) => (
                     <div key={s.id} className="flex items-center gap-1.5 bg-white border border-gray-200 rounded px-2.5 py-1">
                       <span className="text-[10px] font-bold text-gray-400">#{s.order}</span>
                       <span className="text-[11.5px] font-medium text-gray-700">{s.title || "Untitled"}</span>
-                      <span className="text-[10px] text-gray-400">({s.widgets.length} widget{s.widgets.length !== 1 ? "s" : ""})</span>
+                      <span className="text-[10px] text-gray-400">({(s.widgets ?? []).length} widget{(s.widgets ?? []).length !== 1 ? "s" : ""})</span>
                       <span className={`text-[9px] px-1 py-0.5 rounded ${
                         s.sectionType === "overview" ? "bg-blue-50 text-blue-600" :
                         s.sectionType === "dataset-breakdown" ? "bg-purple-50 text-purple-600" :

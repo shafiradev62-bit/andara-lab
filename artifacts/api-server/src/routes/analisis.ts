@@ -18,8 +18,8 @@ const analysisSectionSchema: z.ZodType<import("../lib/store.js").AnalysisSection
   sectionType: z.enum(["overview", "dataset-breakdown", "blog-insights", "custom"]),
   order: z.number(),
   widgets: z.array(z.any()),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+  createdAt: z.string().optional().default(() => new Date().toISOString()),
+  updatedAt: z.string().optional().default(() => new Date().toISOString()),
 });
 
 const createAnalisisSchema = z.object({

@@ -54,7 +54,7 @@ export default function AnalysisPage() {
       : record.description;
 
   // Sort sections by order
-  const sortedSections = [...record.sections].sort((a, b) => a.order - b.order);
+  const sortedSections = [...(record.sections ?? [])].sort((a, b) => a.order - b.order);
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-12">
@@ -119,7 +119,7 @@ export default function AnalysisPage() {
 
               {/* Widgets */}
               <div className="space-y-10">
-                {section.widgets.map((widget) => (
+                {(section.widgets ?? []).map((widget) => (
                   <div key={widget.id} className="relative">
                     {/* Widget Title + Subtitle */}
                     {(widget.title || widget.subtitle) && (
@@ -142,7 +142,7 @@ export default function AnalysisPage() {
                   </div>
                 ))}
 
-                {section.widgets.length === 0 && (
+                {(section.widgets ?? []).length === 0 && (
                   <p className="text-sm text-gray-400 italic">
                     {locale === "id"
                       ? "Belum ada widget di section ini."
