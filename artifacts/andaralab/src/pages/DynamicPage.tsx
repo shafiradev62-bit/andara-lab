@@ -217,6 +217,7 @@ function ChartSection({ datasetId, title }: any) {
   return (
     <section className="max-w-[1200px] mx-auto px-6 py-10">
       {title && <h2 className="text-[18px] font-semibold text-gray-900 mb-4">{title}</h2>}
+      {dataset.description && <p className="text-[14px] text-gray-500 mb-6 leading-relaxed">{dataset.description}</p>}
       <div className="border border-[#E5E7EB] p-6">
         <InteractiveChart dataset={dataset} height={280} />
       </div>
