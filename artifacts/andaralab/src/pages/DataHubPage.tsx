@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useLocation, Link } from "wouter";
-import { useDatasets } from "@/lib/cms-store";
+import { useDatasets, useExchangeRates } from "@/lib/cms-store";
 import { useLocale } from "@/lib/locale";
 import { applyDocumentSeo } from "@/lib/document-meta";
 import { formatValue } from "@/lib/utils";
 import InteractiveChart from "@/components/InteractiveChart";
+import CalendarWidget from "@/components/CalendarWidget";
 import { BarChart2, LineChart as LineChartIcon, TrendingUp, Calendar, Table as TableIcon, ArrowRight, ExternalLink, AlertCircle, Loader2 } from "lucide-react";
 
 function getLastTwo(rows: Record<string, string | number>[], key: string) {
@@ -31,6 +32,7 @@ export default function DataHubPage() {
   const [activeView, setActiveView] = useState<"chart" | "table">("chart");
 
   const { data: datasets = [], isLoading, error } = useDatasets();
+  const { data: exchangeRates = [] } = useExchangeRates();
 
   useEffect(() => {
     const path =
@@ -243,40 +245,7 @@ export default function DataHubPage() {
       {/* Calendar Tab */}
       {activeTab === "calendar" && (
         <div className="max-w-[1200px] mx-auto px-6 py-10">
-          <h2 className="text-[18px] font-semibold text-gray-900 mb-2">{t("economic_calendar")}</h2>
-          <p className="text-[13px] text-gray-400 mb-6">
-            {locale === "id" ? "Data kalender ekonomi dapat dikelola melalui CMS." : "Economic calendar data can be managed via the CMS."}{" "}
-            <Link href="/admin" className="text-gray-900 hover:underline">{locale === "id" ? "Buka Admin →" : "Open Admin →"}</Link>
-          </p>
-          {isLoading ? (
-            <div className="flex items-center justify-center py-24 gap-3 text-gray-400">
-              <Loader2 className="w-5 h-5 animate-spin" />
-              <span className="text-[13.5px]">{t("loading")}</span>
-            </div>
-          ) : (
-            <div className="border border-[#E5E7EB]">
-              <div className="grid grid-cols-4 border-b border-[#E5E7EB] bg-gray-50 text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide px-4 py-2.5">
-                <div>{t("dataset_label")}</div><div>{t("category_label")}</div><div>{t("last_updated_label")}</div><div>{t("unit_label")}</div>
-              </div>
-              {datasets.length === 0 && (
-                <div className="px-4 py-8 text-center text-gray-400 text-[13px]">
-                  {t("no_datasets")} <Link href="/admin" className="text-gray-900 hover:underline">{t("add_in_cms")}</Link>
-                </div>
-              )}
-              {datasets.map((ds, i) => (
-                <div
-                  key={ds.id}
-                  className={`grid grid-cols-4 px-4 py-3.5 items-center ${i < datasets.length - 1 ? "border-b border-[#F3F4F6]" : ""} hover:bg-gray-50 cursor-pointer`}
-                  onClick={() => { setSelectedChart(ds.id); setActiveTab("charts"); }}
-                >
-                  <div className="text-[13px] font-semibold text-gray-800">{ds.title}</div>
-                  <div className="text-[12.5px] text-gray-500">{ds.category}</div>
-                  <div className="text-[12px] text-gray-400">{ds.updatedAt?.slice(0, 10) ?? "—"}</div>
-                  <div className="text-[12px] text-gray-500">{ds.unit}</div>
-                </div>
-              ))}
-            </div>
-          )}
+          <CalendarWidget />
         </div>
       )}
 
@@ -291,6 +260,37 @@ export default function DataHubPage() {
             </div>
           ) : (
             <>
+              {/* Exchange Rates */}
+              {exchangeRates.length > 0 && (
+                <div className="mb-8">
+                  <h3 className="text-[16px] font-semibold text-gray-900 mb-5">{t("exchange_rates") || "Exchange Rates"}</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-10">
+                    {exchangeRates
+                      .filter((er) => er.enabled)
+                      .map((er) => (
+                        <div
+                          key={er.id}
+                          className="border border-[#E5E7EB] p-5 cursor-pointer hover:border-gray-900 transition-colors"
+                        >
+                          <div className="text-[11.5px] text-gray-400 mb-1.5">{er.label}</div>
+                          <div className="text-[24px] font-bold text-gray-900 mb-1">
+                            {er.value}
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span
+                              className={`text-[12px] font-semibold ${
+                                er.up === null ? "text-gray-400" : er.up ? "text-green-600" : "text-red-600"
+                              }`}
+                            >
+                              {er.change}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
               {/* Market cards from CMS datasets */}
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-10">
                 {datasets
