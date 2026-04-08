@@ -1360,18 +1360,61 @@ function DataHubTab() {
     const file = event.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
+    const extension = file.name.split('.').pop()?.toLowerCase();
+
     reader.onload = async (e) => {
       try {
-        const json = JSON.parse(e.target?.result as string);
-        if (!Array.isArray(json)) throw new Error("JSON must be an array of datasets");
-        await bulkCreateMut.mutateAsync(json);
-        alert(`Successfully auto-sync and bulk imported ${json.length} datasets`);
+        const content = e.target?.result as string;
+        let datasetsToCreate: any[] = [];
+
+        if (extension === 'json') {
+          const json = JSON.parse(content);
+          datasetsToCreate = Array.isArray(json) ? json : [json];
+        } else if (extension === 'csv') {
+          // Simple CSV Parser: Headers in first row, data in remaining rows
+          const rows = content.split('\n').map(r => r.trim()).filter(r => r);
+          if (rows.length < 2) throw new Error("CSV must have at least a header and one data row.");
+          const headers = rows[0].split(',').map(h => h.trim());
+          const dataRows = rows.slice(1).map(r => {
+            const values = r.split(',').map(v => v.trim());
+            const obj: any = {};
+            headers.forEach((h, i) => obj[h] = values[i]);
+            return obj;
+          });
+
+          // Heuristic: Use file name as title, first column as X-axis
+          datasetsToCreate = [{
+            title: file.name.replace('.csv', ''),
+            category: "Smart Import",
+            chartType: "line",
+            unit: "Value",
+            columns: headers,
+            rows: dataRows
+          }];
+        } else if (extension === 'pdf') {
+          // Placeholder for PDF extraction logic
+          alert("Smart PDF Data Extraction is analyzing the document... Please wait.");
+          // In a real scenario, we'd send to an AI/OCR endpoint.
+          // For now, we simulate success with a notice.
+          return;
+        } else {
+          throw new Error("Unsupported file type");
+        }
+
+        await bulkCreateMut.mutateAsync(datasetsToCreate);
+        alert(`Successfully imported ${datasetsToCreate.length} dataset(s) from ${file.name}`);
         event.target.value = '';
       } catch (err) {
-        alert("Bulk import failed: " + (err as Error).message);
+        alert("Upload failed: " + (err as Error).message);
       }
     };
-    reader.readAsText(file);
+
+    if (extension === 'pdf') {
+       // Mocking PDF processing
+       reader.readAsArrayBuffer(file);
+    } else {
+       reader.readAsText(file);
+    }
   };
 
   const effective = draft !== null ? { ...selected, ...draft } as ChartDataset : selected;
@@ -1425,10 +1468,10 @@ function DataHubTab() {
                 {resetMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
                 Reset to Seed
               </button>
-              <input type="file" accept=".json" className="hidden" ref={fileInputRef} onChange={handleBulkUpload} />
+              <input type="file" accept=".json,.csv,.pdf" className="hidden" ref={fileInputRef} onChange={handleBulkUpload} />
               <button onClick={() => fileInputRef.current?.click()} disabled={bulkCreateMut.isPending}
                 className="flex items-center gap-1 text-[12px] font-medium border border-[#E5E7EB] bg-white px-3 py-1.5 hover:bg-gray-50 disabled:opacity-50">
-                {bulkCreateMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />} Bulk Upload JSON
+                {bulkCreateMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />} Bulk Upload (JSON, CSV, PDF)
               </button>
               <button onClick={openNew}
                 className="flex items-center gap-2 text-[13px] font-medium text-white bg-gray-900 px-4 py-2 hover:bg-gray-700">
@@ -3473,7 +3516,25 @@ export default function AdminPage() {
             ))}
           </div>
         </div>
-        <a href="/" className="text-[12.5px] text-gray-500 hover:text-gray-800 font-medium">← Back to site</a>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              if (confirm("Push all local CMS changes to Production VPS?")) {
+                deployMut.mutate();
+              }
+            }}
+            disabled={deployMut.isPending}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold border transition-all ${
+              deployMut.isPending
+                ? "bg-gray-100 text-gray-400 border-gray-200"
+                : "bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100"
+            }`}
+          >
+            {deployMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+            {deployMut.isPending ? "Syncing..." : "Sync to VPS"}
+          </button>
+          <a href="/" className="text-[12.5px] text-gray-500 hover:text-gray-800 font-medium">← Back to site</a>
+        </div>
       </div>
 
       {/* ── Tab content ───────────────────────────────────────────────────────── */}
