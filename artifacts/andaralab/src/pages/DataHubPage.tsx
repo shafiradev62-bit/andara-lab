@@ -17,15 +17,15 @@ function getLastTwo(rows: Record<string, string | number>[], key: string) {
   return { last, prev };
 }
 
-function fmtChange(last: number, prev: number): { label: string; positive: boolean | null } {
+function fmtChange(last: number, prev: number, unchangedLabel: string = "Unchanged"): { label: string; positive: boolean | null } {
   const diff = last - prev;
-  if (Math.abs(diff) < 0.001) return { label: "Unchanged", positive: null };
+  if (Math.abs(diff) < 0.001) return { label: unchangedLabel, positive: null };
   return { label: `${diff > 0 ? "+" : ""}${diff.toFixed(2)}`, positive: diff > 0 };
 }
 
 export default function DataHubPage() {
   const [location] = useLocation();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const [activeTab, setActiveTab] = useState<"charts" | "calendar" | "market">("charts");
   const [selectedChart, setSelectedChart] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<"chart" | "table">("chart");
@@ -36,7 +36,7 @@ export default function DataHubPage() {
     const path =
       location && location !== "/" ? (location.startsWith("/") ? location : `/${location}`) : "/data";
     applyDocumentSeo({
-      title: t("data_hub_title"),
+      title: t("data_hub"),
       description: t("meta_data_description"),
       pathname: path,
     });
@@ -56,10 +56,10 @@ export default function DataHubPage() {
     <div className="bg-white">
       <section className="border-b border-[#E5E7EB] py-12">
         <div className="max-w-[1200px] mx-auto px-6">
-          <div className="text-[11px] font-semibold uppercase tracking-widest text-gray-900 mb-3">Data Hub</div>
-          <h1 className="text-[34px] font-bold text-gray-900 mb-3">Economic Data & Market Intelligence</h1>
+          <div className="text-[11px] font-semibold uppercase tracking-widest text-gray-900 mb-3">{t("data_hub")}</div>
+          <h1 className="text-[34px] font-bold text-gray-900 mb-3">{t("economic_data_market_intelligence")}</h1>
           <p className="text-[14.5px] text-gray-500 max-w-[540px]">
-            Interactive charts, economic calendar, and live market data for Indonesia and global economies.
+            {t("data_hub_subtitle")}
           </p>
         </div>
       </section>
@@ -68,9 +68,9 @@ export default function DataHubPage() {
       <div className="border-b border-[#E5E7EB] bg-white sticky top-14 z-30">
         <div className="max-w-[1200px] mx-auto px-6 flex gap-0">
           {[
-            { key: "charts", label: "Interactive Charts", icon: BarChart2 },
-            { key: "calendar", label: "Economic Calendar", icon: Calendar },
-            { key: "market", label: "Market Overview", icon: TrendingUp },
+            { key: "charts", label: t("interactive_charts"), icon: BarChart2 },
+            { key: "calendar", label: t("economic_calendar"), icon: Calendar },
+            { key: "market", label: t("market_overview"), icon: TrendingUp },
           ].map((tab) => (
             <button
               key={tab.key}
@@ -94,9 +94,9 @@ export default function DataHubPage() {
           {!selectedChart ? (
             <>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-[18px] font-semibold text-gray-900">Available Datasets</h2>
+                <h2 className="text-[18px] font-semibold text-gray-900">{t("available_datasets")}</h2>
                 <Link href="/admin" className="text-[12.5px] font-medium text-gray-900 flex items-center gap-1 hover:underline">
-                  Manage in CMS <ExternalLink className="w-3.5 h-3.5" />
+                  {t("manage_in_cms")} <ExternalLink className="w-3.5 h-3.5" />
                 </Link>
               </div>
 
@@ -104,7 +104,7 @@ export default function DataHubPage() {
               {isLoading && (
                 <div className="flex items-center justify-center py-24 gap-3 text-gray-400">
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  <span className="text-[13.5px]">Loading datasets…</span>
+                  <span className="text-[13.5px]">{t("loading_datasets")}</span>
                 </div>
               )}
 
@@ -113,9 +113,9 @@ export default function DataHubPage() {
                 <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl mb-6">
                   <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-[13px] font-semibold text-red-700">Could not reach API server</p>
+                    <p className="text-[13px] font-semibold text-red-700">{t("could_not_reach_api")}</p>
                     <p className="text-[12px] text-red-500 mt-0.5">
-                      Showing cached data. Start the API server: <code className="bg-red-100 px-1 rounded">pnpm --filter api-server dev</code>
+                      {t("showing_cached_data")}: <code className="bg-red-100 px-1 rounded">{t("start_api_server")}</code>
                     </p>
                   </div>
                 </div>
@@ -143,16 +143,16 @@ export default function DataHubPage() {
                         <InteractiveChart dataset={ds} height={100} />
                       </div>
                       <div className="mt-3 flex items-center gap-1 text-[12px] text-gray-900 font-medium">
-                        View full chart <ArrowRight className="w-3.5 h-3.5" />
+                        {t("view_full_chart")} <ArrowRight className="w-3.5 h-3.5" />
                       </div>
                     </button>
                   ))}
                   {datasets.length === 0 && !error && (
                     <div className="col-span-full text-center py-16 text-gray-400">
                       <BarChart2 className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                      <p className="text-[14px]">No datasets available.</p>
+                      <p className="text-[14px]">{t("no_datasets")}</p>
                       <Link href="/admin" className="text-[13px] text-gray-900 hover:underline mt-1 inline-block">
-                        Add one in the CMS →
+                        {t("add_one_cms")}
                       </Link>
                     </div>
                   )}
@@ -165,7 +165,7 @@ export default function DataHubPage() {
                 onClick={() => setSelectedChart(null)}
                 className="flex items-center gap-1.5 text-[12.5px] text-gray-500 hover:text-gray-900 mb-6 font-medium"
               >
-                ← Back to all charts
+                ← {t("back_to_all_charts")}
               </button>
               <div className="border border-[#E5E7EB] p-6">
                 <div className="flex items-start justify-between mb-2">
@@ -181,13 +181,13 @@ export default function DataHubPage() {
                       onClick={() => setActiveView("chart")}
                       className={`flex items-center gap-1.5 px-3 py-1.5 text-[12px] border transition-colors ${activeView === "chart" ? "bg-gray-900 text-white border-gray-900" : "border-[#E5E7EB] text-gray-600 hover:border-gray-400"}`}
                     >
-                      <LineChartIcon className="w-3.5 h-3.5" /> Chart
+                      <LineChartIcon className="w-3.5 h-3.5" /> {t("chart")}
                     </button>
                     <button
                       onClick={() => setActiveView("table")}
                       className={`flex items-center gap-1.5 px-3 py-1.5 text-[12px] border transition-colors ${activeView === "table" ? "bg-gray-900 text-white border-gray-900" : "border-[#E5E7EB] text-gray-600 hover:border-gray-400"}`}
                     >
-                      <TableIcon className="w-3.5 h-3.5" /> Table
+                      <TableIcon className="w-3.5 h-3.5" /> {t("table")}
                     </button>
                   </div>
                 </div>
@@ -221,7 +221,7 @@ export default function DataHubPage() {
                   </div>
                 )}
                 <p className="text-[11px] text-gray-400 mt-4">
-                  Unit: {selectedDataset.unit} · Updated: {selectedDataset.updatedAt}
+                  {t("unit_label")}: {selectedDataset.unit} · {t("updated_label")}: {selectedDataset.updatedAt}
                 </p>
               </div>
             </div>
@@ -232,24 +232,24 @@ export default function DataHubPage() {
       {/* Calendar Tab */}
       {activeTab === "calendar" && (
         <div className="max-w-[1200px] mx-auto px-6 py-10">
-          <h2 className="text-[18px] font-semibold text-gray-900 mb-2">Economic Calendar</h2>
+          <h2 className="text-[18px] font-semibold text-gray-900 mb-2">{t("economic_calendar")}</h2>
           <p className="text-[13px] text-gray-400 mb-6">
-            Economic calendar data can be managed via the CMS.{" "}
-            <Link href="/admin" className="text-gray-900 hover:underline">Open Admin →</Link>
+            {locale === "id" ? "Data kalender ekonomi dapat dikelola melalui CMS." : "Economic calendar data can be managed via the CMS."}{" "}
+            <Link href="/admin" className="text-gray-900 hover:underline">{locale === "id" ? "Buka Admin →" : "Open Admin →"}</Link>
           </p>
           {isLoading ? (
             <div className="flex items-center justify-center py-24 gap-3 text-gray-400">
               <Loader2 className="w-5 h-5 animate-spin" />
-              <span className="text-[13.5px]">Loading…</span>
+              <span className="text-[13.5px]">{t("loading")}</span>
             </div>
           ) : (
             <div className="border border-[#E5E7EB]">
               <div className="grid grid-cols-4 border-b border-[#E5E7EB] bg-gray-50 text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide px-4 py-2.5">
-                <div>Dataset</div><div>Category</div><div>Last Updated</div><div>Unit</div>
+                <div>{t("dataset_label")}</div><div>{t("category_label")}</div><div>{t("last_updated_label")}</div><div>{t("unit_label")}</div>
               </div>
               {datasets.length === 0 && (
                 <div className="px-4 py-8 text-center text-gray-400 text-[13px]">
-                  No datasets available. <Link href="/admin" className="text-gray-900 hover:underline">Add in CMS →</Link>
+                  {t("no_datasets")} <Link href="/admin" className="text-gray-900 hover:underline">{t("add_in_cms")}</Link>
                 </div>
               )}
               {datasets.map((ds, i) => (
@@ -272,11 +272,11 @@ export default function DataHubPage() {
       {/* Market Tab */}
       {activeTab === "market" && (
         <div className="max-w-[1200px] mx-auto px-6 py-10">
-          <h2 className="text-[18px] font-semibold text-gray-900 mb-6">Market Overview</h2>
+          <h2 className="text-[18px] font-semibold text-gray-900 mb-6">{t("market_overview")}</h2>
           {isLoading ? (
             <div className="flex items-center justify-center py-24 gap-3 text-gray-400">
               <Loader2 className="w-5 h-5 animate-spin" />
-              <span className="text-[13.5px]">Loading…</span>
+              <span className="text-[13.5px]">{t("loading")}</span>
             </div>
           ) : (
             <>
@@ -287,7 +287,7 @@ export default function DataHubPage() {
                   .map((ds) => {
                     const valueKey = ds.columns[1];
                     const { last, prev } = getLastTwo(ds.rows, valueKey);
-                    const { label, positive } = fmtChange(last, prev);
+                    const { label, positive } = fmtChange(last, prev, t("unchanged"));
                     const lastRow = ds.rows[ds.rows.length - 1];
                     const periodKey = ds.columns[0];
                     return (
@@ -311,11 +311,11 @@ export default function DataHubPage() {
                   })}
                 {datasets.filter((ds) => ["bi-rate", "idr-usd", "trade-balance", "gdp-growth", "inflation-rate", "sovereign-bond-yield"].includes(ds.id)).length === 0 && (
                   <div className="col-span-full text-center py-8 text-gray-400 text-[13px]">
-                    No market datasets found. <Link href="/admin" className="text-gray-900 hover:underline">Add in CMS →</Link>
+                    {t("no_datasets")} <Link href="/admin" className="text-gray-900 hover:underline">{t("add_in_cms")}</Link>
                   </div>
                 )}
               </div>
-              <h3 className="text-[16px] font-semibold text-gray-900 mb-5">All Datasets</h3>
+              <h3 className="text-[16px] font-semibold text-gray-900 mb-5">{t("all_datasets")}</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {datasets.map((ds) => (
                   <div

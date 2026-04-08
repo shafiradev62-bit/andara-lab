@@ -21,6 +21,7 @@ const createDatasetSchema = z.object({
   yAxisLabel: z.string().optional(),
   subtitle:   z.string().optional(),
   columns:    z.array(z.string()).min(1),
+  columnNames: z.record(z.enum(["en", "id"]), z.array(z.string())).optional(),
   rows:       z.array(z.record(z.union([z.string(), z.number()]))).default([]),
 });
 

@@ -47,9 +47,9 @@ export default function AnalysisPage() {
 
   // Pick localized title/description
   const title =
-    locale === "id" && record.titleEn ? record.titleEn : record.title;
+    locale === "en" && record.titleEn ? record.titleEn : record.title;
   const description =
-    locale === "id" && record.descriptionEn
+    locale === "en" && record.descriptionEn
       ? record.descriptionEn
       : record.description;
 
@@ -60,7 +60,7 @@ export default function AnalysisPage() {
     <div className="max-w-5xl mx-auto px-6 py-12">
       {/* Page Header */}
       <div className="text-center mb-12">
-        <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1 rounded-full mb-4">
+        <div className="inline-flex items-center gap-2 text-xs font-bold text-gray-400 mb-4">
           <BarChart3 className="w-3.5 h-3.5" />
           {locale === "id" ? "Analisis Deskriptif" : "Descriptive Analysis"}
         </div>
@@ -76,30 +76,26 @@ export default function AnalysisPage() {
       <div className="space-y-16">
         {sortedSections.map((section) => {
           const sectionTitle =
-            locale === "id" && section.titleEn
+            locale === "en" && section.titleEn
               ? section.titleEn
               : section.title;
           const sectionDesc =
-            locale === "id" && section.descriptionEn
+            locale === "en" && section.descriptionEn
               ? section.descriptionEn
               : section.description;
 
           return (
-            <section key={section.id} className="scroll-mt-28">
+            <section
+              key={section.id}
+              className="scroll-mt-28"
+              style={section.sectionBg ? { backgroundImage: `url(${section.sectionBg})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+            >
               {/* Section Header */}
               <div className="mb-8">
                 <div className="flex items-center gap-3 mb-3">
                   {/* Section type badge */}
                   <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wide ${
-                      section.sectionType === "overview"
-                        ? "bg-blue-100 text-blue-700"
-                        : section.sectionType === "dataset-breakdown"
-                        ? "bg-purple-100 text-purple-700"
-                        : section.sectionType === "blog-insights"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-gray-100 text-gray-600"
-                    }`}
+                    className="text-[10px] font-bold uppercase tracking-wide text-gray-500"
                   >
                     {section.sectionType.replace(/-/g, " ")}
                   </span>

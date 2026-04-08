@@ -15,21 +15,21 @@ import AnalysisPage from "@/pages/AnalysisPage";
 import DynamicPage from "@/pages/DynamicPage";
 import { LocaleProvider, useLocale } from "@/lib/locale";
 
-function SiteHeader() {
+function SiteHeader({ dark = false }: { dark?: boolean }) {
   return (
     <div className="fixed top-0 left-0 right-0 z-50">
-      <MarketTicker />
-      <Navbar />
+      <MarketTicker dark={dark} />
+      <Navbar dark={dark} />
     </div>
   );
 }
 
-function Layout({ children, withNewsletter = true }: { children: React.ReactNode; withNewsletter?: boolean }) {
+function Layout({ children, withNewsletter = true, withHeader = true, headerDark = false }: { children: React.ReactNode; withNewsletter?: boolean; withHeader?: boolean; headerDark?: boolean }) {
   return (
-    <div className="min-h-screen bg-white text-gray-900 font-sans">
-      <SiteHeader />
-      {/* pt = ticker(2rem) + navbar(3.5rem) = 5.5rem */}
-      <main className="pt-[5.5rem]">{children}</main>
+    <div className="min-h-screen text-gray-900 font-sans bg-white">
+      {withHeader && <SiteHeader dark={headerDark} />}
+      {/* pt = ticker(2rem) + navbar(3.5rem) = 5.5rem; no pt when header is hidden */}
+      <main className={withHeader ? "pt-[5.5rem]" : ""}>{children}</main>
       {withNewsletter && <NewsletterSection />}
       <Footer />
     </div>
@@ -77,7 +77,7 @@ export default function App() {
               </Layout>
             </Route>
             <Route path="/">
-              <Layout>
+              <Layout withNewsletter headerDark={true}>
                 <HomePage />
               </Layout>
             </Route>
@@ -118,6 +118,9 @@ export default function App() {
             </Route>
             <Route path="/data/market-dashboard">
               <Layout withNewsletter={false}><DataHubPage /></Layout>
+            </Route>
+            <Route path="/data/market-overview">
+              <Layout withNewsletter={false}><DynamicPage pageSlug="market-overview" /></Layout>
             </Route>
             <Route path="/data">
               <Layout withNewsletter={false}><DataHubPage /></Layout>

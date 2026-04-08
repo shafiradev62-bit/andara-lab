@@ -49,11 +49,8 @@ function StatsSection({ items }: { items?: { label: string; value: string; unit?
 }
 
 function ApproachSection({ headline, items }: { headline?: string; items?: { label: string; value: string }[] }) {
-  const list = Array.isArray(items) ? items : [
-    { label: "Rigor", value: "Every analysis is grounded in verified data sources, peer-reviewed methodology, and transparent assumptions." },
-    { label: "Relevance", value: "We focus on what matters now — policy shifts, market dislocations, and structural economic changes." },
-    { label: "Clarity", value: "Complex economic intelligence translated into clear, actionable insights for decision-makers." },
-  ];
+  const list = Array.isArray(items) ? items : [];
+  if (list.length === 0) return null;
   return (
     <div className="pb-12">
       <div className="text-[11px] font-medium uppercase tracking-widest text-gray-400 mb-4">
@@ -121,7 +118,7 @@ export default function HomeAboutSection() {
         <div className="flex items-center gap-4 pb-12">
           <Link
             href="/about"
-            className="inline-flex items-center gap-2 text-white text-[13px] font-semibold bg-gray-900 px-6 py-3 hover:bg-gray-700 transition-colors"
+            className="inline-flex items-center gap-2 text-gray-900 text-[13px] font-semibold border border-gray-900 px-6 py-3 hover:bg-gray-100 transition-colors"
           >
             About Us <ArrowRight className="w-3.5 h-3.5" />
           </Link>

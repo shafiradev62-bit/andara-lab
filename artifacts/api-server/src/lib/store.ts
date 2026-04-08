@@ -77,6 +77,7 @@ export interface AnalysisSection {
   locale: "en" | "id" | "both";
   sectionType: "overview" | "dataset-breakdown" | "blog-insights" | "custom";
   order: number;
+  sectionBg?: string;
   widgets: AnalysisWidget[];
   createdAt: string;
   updatedAt: string;
@@ -626,6 +627,7 @@ const SEED_ANALISIS: AnalisisDeskriptifRecord[] = [
         locale: "both",
         sectionType: "overview",
         order: 1,
+        sectionBg: "/gambar.png",
         widgets: [
           {
             id: "w1",
@@ -644,17 +646,17 @@ const SEED_ANALISIS: AnalisisDeskriptifRecord[] = [
             title: "Distribusi Dataset per Kategori",
             subtitle: "Focus Area AndaraLab",
             distributionItems: [
-              { label: "Sectoral Intelligence", value: 4, percentage: 36, color: "#0d7377" },
-              { label: "Macro Foundations", value: 3, percentage: 27, color: "#1a3a5c" },
-              { label: "Market Dashboard", value: 2, percentage: 18, color: "#e67e22" },
-              { label: "Financial Markets", value: 1, percentage: 9, color: "#2ecc71" },
+              { label: "Sectoral Intelligence", value: 4, percentage: 36, color: "#1e3a5f" },
+              { label: "Macro Foundations", value: 3, percentage: 27, color: "#1e3a5f" },
+              { label: "Market Dashboard", value: 2, percentage: 18, color: "#1e3a5f" },
+              { label: "Financial Markets", value: 1, percentage: 9, color: "#1e3a5f" },
             ],
           },
           {
             id: "w3",
             type: "highlight",
             title: "Key Insight",
-            calloutColor: "#1a3a5c",
+            calloutColor: "#1e3a5f",
             text: "Sectoral Intelligence mendominasi dengan 36% dari total dataset, menunjukkan fokus AndaraLab pada analisis sektoral ekonomi Indonesia. Nickel dan Energi Terbarukan menjadi topik utama.",
           },
         ],
@@ -686,19 +688,19 @@ const SEED_ANALISIS: AnalisisDeskriptifRecord[] = [
             type: "distribution",
             title: "Distribusi Blog per Kategori",
             distributionItems: [
-              { label: "Economics 101", value: 4, percentage: 29, color: "#1a3a5c" },
-              { label: "Sectoral Analysis", value: 4, percentage: 29, color: "#0d7377" },
-              { label: "Financial Markets", value: 2, percentage: 14, color: "#2ecc71" },
-              { label: "Policy Analysis", value: 2, percentage: 14, color: "#e67e22" },
-              { label: "Market Pulse", value: 1, percentage: 7, color: "#9b59b6" },
-              { label: "Lab Notes", value: 1, percentage: 7, color: "#3498db" },
+              { label: "Economics 101", value: 4, percentage: 29, color: "#1e3a5f" },
+              { label: "Sectoral Analysis", value: 4, percentage: 29, color: "#1e3a5f" },
+              { label: "Financial Markets", value: 2, percentage: 14, color: "#1e3a5f" },
+              { label: "Policy Analysis", value: 2, percentage: 14, color: "#1e3a5f" },
+              { label: "Market Pulse", value: 1, percentage: 7, color: "#1e3a5f" },
+              { label: "Lab Notes", value: 1, percentage: 7, color: "#1e3a5f" },
             ],
           },
           {
             id: "w6",
             type: "highlight",
             title: "Content Strategy Insight",
-            calloutColor: "#0d7377",
+            calloutColor: "#1e3a5f",
             text: "Dominasi konten economics-101 dan sectoral-analysis menunjukkan positioning AndaraLab sebagai platform edukasi + analisis. Rasio EN:ID sebesar 71:29 mengindikasikan target audience global.",
           },
         ],
@@ -732,7 +734,7 @@ const SEED_ANALISIS: AnalisisDeskriptifRecord[] = [
             id: "w8",
             type: "highlight",
             title: "Critical Action",
-            calloutColor: "#e74c3c",
+            calloutColor: "#1e3a5f",
             text: "Administrators harus selalu menjalankan Reset to Default setelah melakukan test CRUD. Tidak ada test autentikasi untuk panel admin — perlu implementasi password protection.",
           },
         ],
@@ -825,3 +827,302 @@ export const pageStore: PageStore         = new PersistentPageStore();
 export const blogPostStore: BlogPostStore = new PersistentBlogPostStore();
 export const analisisStore: AnalisisDeskriptifStore = new PersistentAnalisisDeskriptifStore();
 export const featuredInsightsStore: FeaturedInsightsStore = new PersistentFeaturedInsightsStore();
+
+// ─── Exchange Rate Store ────────────────────────────────────────────────────────
+
+export interface ExchangeRate {
+  id: string;
+  symbol: string;          // e.g. "IDR/USD", "EUR/USD"
+  label: string;            // display name e.g. "IDR/USD"
+  labelEn?: string;        // English label
+  labelId?: string;         // Indonesian label
+  value: string;            // current value e.g. "15,890"
+  change: string;           // change string e.g. "+0.32%"
+  changeValue: number;      // numeric change for direction
+  up: boolean | null;       // true = up, false = down, null = unchanged
+  category: "currency" | "index" | "commodity" | "bond";
+  order: number;            // display order
+  enabled: boolean;         // whether to show in ticker
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ExchangeRateStore {
+  list(): ExchangeRate[];
+  get(id: string): ExchangeRate | undefined;
+  create(data: Omit<ExchangeRate, "id" | "createdAt" | "updatedAt">): ExchangeRate;
+  update(id: string, data: Partial<Omit<ExchangeRate, "id" | "createdAt" | "updatedAt">>): ExchangeRate | null;
+  delete(id: string): boolean;
+  reset(): void;
+  reorder(ids: string[]): void;
+}
+
+const SEED_EXCHANGE_RATES: ExchangeRate[] = [
+  {
+    id: "idr-usd",
+    symbol: "IDR/USD",
+    label: "IDR/USD",
+    labelEn: "IDR/USD",
+    labelId: "IDR/USD",
+    value: "15,890",
+    change: "+0.32%",
+    changeValue: 0.32,
+    up: false,
+    category: "currency",
+    order: 1,
+    enabled: true,
+    createdAt: "2026-01-01",
+    updatedAt: "2026-04-08",
+  },
+  {
+    id: "jci",
+    symbol: "JCI",
+    label: "JCI",
+    labelEn: "JCI",
+    labelId: "IHSG",
+    value: "7,214.3",
+    change: "+1.14%",
+    changeValue: 1.14,
+    up: true,
+    category: "index",
+    order: 2,
+    enabled: true,
+    createdAt: "2026-01-01",
+    updatedAt: "2026-04-08",
+  },
+  {
+    id: "bi-rate",
+    symbol: "BI Rate",
+    label: "BI Rate",
+    labelEn: "BI Rate",
+    labelId: "Suku Bunga BI",
+    value: "6.00%",
+    change: "Unch",
+    changeValue: 0,
+    up: null,
+    category: "bond",
+    order: 3,
+    enabled: true,
+    createdAt: "2026-01-01",
+    updatedAt: "2026-04-08",
+  },
+  {
+    id: "us-10y",
+    symbol: "US 10Y",
+    label: "US 10Y",
+    labelEn: "US 10Y",
+    labelId: "Imbal Hasil US 10Y",
+    value: "4.28%",
+    change: "-0.05%",
+    changeValue: -0.05,
+    up: true,
+    category: "bond",
+    order: 4,
+    enabled: true,
+    createdAt: "2026-01-01",
+    updatedAt: "2026-04-08",
+  },
+  {
+    id: "gold",
+    symbol: "Gold",
+    label: "Gold",
+    labelEn: "Gold",
+    labelId: "Emas",
+    value: "$2,285",
+    change: "+0.63%",
+    changeValue: 0.63,
+    up: true,
+    category: "commodity",
+    order: 5,
+    enabled: true,
+    createdAt: "2026-01-01",
+    updatedAt: "2026-04-08",
+  },
+  {
+    id: "brent",
+    symbol: "Brent",
+    label: "Brent",
+    labelEn: "Brent Crude",
+    labelId: "Minyak Brent",
+    value: "$82.4",
+    change: "+0.78%",
+    changeValue: 0.78,
+    up: true,
+    category: "commodity",
+    order: 6,
+    enabled: true,
+    createdAt: "2026-01-01",
+    updatedAt: "2026-04-08",
+  },
+  {
+    id: "eur-usd",
+    symbol: "EUR/USD",
+    label: "EUR/USD",
+    labelEn: "EUR/USD",
+    labelId: "EUR/USD",
+    value: "1.0831",
+    change: "-0.15%",
+    changeValue: -0.15,
+    up: false,
+    category: "currency",
+    order: 7,
+    enabled: true,
+    createdAt: "2026-01-01",
+    updatedAt: "2026-04-08",
+  },
+  {
+    id: "dxy",
+    symbol: "DXY",
+    label: "DXY",
+    labelEn: "DXY Index",
+    labelId: "Indeks DXY",
+    value: "104.2",
+    change: "+0.18%",
+    changeValue: 0.18,
+    up: false,
+    category: "currency",
+    order: 8,
+    enabled: true,
+    createdAt: "2026-01-01",
+    updatedAt: "2026-04-08",
+  },
+  {
+    id: "sp500",
+    symbol: "S&P 500",
+    label: "S&P 500",
+    labelEn: "S&P 500",
+    labelId: "S&P 500",
+    value: "5,248",
+    change: "+0.52%",
+    changeValue: 0.52,
+    up: true,
+    category: "index",
+    order: 9,
+    enabled: true,
+    createdAt: "2026-01-01",
+    updatedAt: "2026-04-08",
+  },
+  {
+    id: "shanghai",
+    symbol: "Shanghai",
+    label: "Shanghai",
+    labelEn: "Shanghai Composite",
+    labelId: "Indeks Shanghai",
+    value: "3,178",
+    change: "-0.24%",
+    changeValue: -0.24,
+    up: false,
+    category: "index",
+    order: 10,
+    enabled: true,
+    createdAt: "2026-01-01",
+    updatedAt: "2026-04-08",
+  },
+  {
+    id: "nikkei",
+    symbol: "Nikkei",
+    label: "Nikkei",
+    labelEn: "Nikkei 225",
+    labelId: "Nikkei 225",
+    value: "38,820",
+    change: "+0.87%",
+    changeValue: 0.87,
+    up: true,
+    category: "index",
+    order: 11,
+    enabled: true,
+    createdAt: "2026-01-01",
+    updatedAt: "2026-04-08",
+  },
+  {
+    id: "cpi-id",
+    symbol: "CPI ID",
+    label: "CPI ID",
+    labelEn: "CPI Indonesia",
+    labelId: "IHK Indonesia",
+    value: "2.51%",
+    change: "-0.33pp",
+    changeValue: -0.33,
+    up: true,
+    category: "commodity",
+    order: 12,
+    enabled: true,
+    createdAt: "2026-01-01",
+    updatedAt: "2026-04-08",
+  },
+];
+
+class PersistentExchangeRateStore implements ExchangeRateStore {
+  private records: Map<string, ExchangeRate>;
+  private readonly FILE = "exchange-rates.json";
+
+  constructor() {
+    this.records = new Map();
+    this.load();
+  }
+
+  private load() {
+    const saved = readJson<ExchangeRate[]>(this.FILE, []);
+    if (saved.length > 0) {
+      this.records = new Map(saved.map((r) => [r.id, r]));
+    } else {
+      this.seed();
+    }
+  }
+
+  private save() {
+    writeJson(this.FILE, [...this.records.values()]);
+  }
+
+  private seed() {
+    this.records.clear();
+    for (const r of SEED_EXCHANGE_RATES) {
+      this.records.set(r.id, cloneDeep(r));
+    }
+    this.save();
+  }
+
+  list(): ExchangeRate[] {
+    return [...this.records.values()].sort((a, b) => a.order - b.order);
+  }
+
+  get(id: string): ExchangeRate | undefined { return this.records.get(id); }
+
+  create(data: Omit<ExchangeRate, "id" | "createdAt" | "updatedAt">): ExchangeRate {
+    const id = `er-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    const record: ExchangeRate = { ...cloneDeep(data), id, createdAt: now(), updatedAt: now() };
+    this.records.set(id, record);
+    this.save();
+    return record;
+  }
+
+  update(id: string, data: Partial<Omit<ExchangeRate, "id" | "createdAt" | "updatedAt">>): ExchangeRate | null {
+    const existing = this.records.get(id);
+    if (!existing) return null;
+    const updated: ExchangeRate = { ...existing, ...cloneDeep(data), updatedAt: now() };
+    this.records.set(id, updated);
+    this.save();
+    return updated;
+  }
+
+  delete(id: string): boolean {
+    const result = this.records.delete(id);
+    if (result) this.save();
+    return result;
+  }
+
+  reset() { this.seed(); }
+
+  reorder(ids: string[]): void {
+    ids.forEach((id, idx) => {
+      const record = this.records.get(id);
+      if (record) {
+        record.order = idx;
+        record.updatedAt = now();
+      }
+    });
+    this.save();
+  }
+}
+
+export const exchangeRateStore: ExchangeRateStore = new PersistentExchangeRateStore();

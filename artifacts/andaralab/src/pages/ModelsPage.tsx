@@ -378,7 +378,7 @@ export default function ModelsPage() {
 
           {/* Publication metadata */}
           <div className="flex items-center gap-3 text-[11px] text-gray-400 font-medium mb-6">
-            <span className="bg-gray-900 text-white px-2 py-0.5 font-semibold uppercase tracking-wide text-[10px]">Research</span>
+            <span className="bg-gray-100 text-gray-700 px-2 py-0.5 font-semibold uppercase tracking-wide text-[10px]">Research</span>
             <span>AndaraLab · Technology Research</span>
             <span>·</span>
             <span>March 2026</span>

@@ -17,7 +17,7 @@ function isSectoralSection(section?: string) {
   return section === "Sectoral Intelligence" || section === "Intelijen Sektoral";
 }
 
-export default function Navbar() {
+export default function Navbar({ dark = false }: { dark?: boolean }) {
   const [location] = useLocation();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -122,17 +122,17 @@ export default function Navbar() {
   };
 
   return (
-    <header className="bg-white border-b border-[#E5E7EB]">
+    <header className={`${dark ? "bg-black/40 backdrop-blur-sm border-b border-white/10" : "bg-white border-b border-[#E5E7EB]"}`}>
       <div className="max-w-[1200px] mx-auto px-6 flex items-center h-14">
         <Link
           href="/"
           className="flex items-center gap-2 mr-6 flex-shrink-0"
         >
-          <div className="w-7 h-7 bg-gray-900 flex items-center justify-center rounded-md">
-            <span className="text-white text-[11px] font-bold">AL</span>
+          <div className={`w-7 h-7 border flex items-center justify-center rounded-md ${dark ? "border-white/40" : "border-gray-400"}`}>
+            <span className={`text-[11px] font-bold ${dark ? "text-white" : "text-gray-700"}`}>AL</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[15px] font-bold text-gray-900 tracking-tight">AndaraLab</span>
+            <span className={`text-[15px] font-bold tracking-tight ${dark ? "text-white" : "text-gray-900"}`}>AndaraLab</span>
           </div>
         </Link>
 
@@ -150,8 +150,8 @@ export default function Navbar() {
                   href={(item as any).href}
                   className={`flex items-center px-3 py-5 text-[13px] font-medium border-b-2 transition-colors whitespace-nowrap ${
                     isActive(item)
-                      ? "border-gray-900 text-gray-900"
-                      : "border-transparent text-gray-600 hover:text-gray-900"
+                      ? (dark ? "border-white text-white" : "border-gray-900 text-gray-900")
+                      : dark ? "border-transparent text-white/70 hover:text-white" : "border-transparent text-gray-600 hover:text-gray-900"
                   }`}
                 >
                   {item.label}
@@ -161,8 +161,8 @@ export default function Navbar() {
                   <button
                     className={`flex items-center gap-1 px-3 py-5 text-[13px] font-medium border-b-2 transition-colors whitespace-nowrap ${
                       isActive(item)
-                        ? "border-gray-900 text-gray-900"
-                        : "border-transparent text-gray-600 hover:text-gray-900"
+                        ? (dark ? "border-white text-white" : "border-gray-900 text-gray-900")
+                        : dark ? "border-transparent text-white/70 hover:text-white" : "border-transparent text-gray-600 hover:text-gray-900"
                     }`}
                   >
                     {item.label}
@@ -172,7 +172,7 @@ export default function Navbar() {
                   </button>
                   {openMenu === item.label && "children" in item && (
                     <div
-                      className="absolute top-full left-0 bg-white border border-[#E5E7EB] shadow-lg min-w-[230px] z-50"
+                      className={`absolute top-full left-0 border shadow-lg min-w-[230px] z-50 ${dark ? "bg-black/80 backdrop-blur-sm border-white/10" : "bg-white border-[#E5E7EB]"}`}
                       onMouseEnter={() => handleMouseEnter(item.label)}
                       onMouseLeave={handleMouseLeave}
                     >
@@ -181,10 +181,10 @@ export default function Navbar() {
                           key={child.href}
                           href={child.href}
                           onClick={() => setOpenMenu(null)}
-                          className={`block px-4 py-2.5 text-[13px] transition-colors border-b border-[#F9FAFB] last:border-0 ${
+                          className={`block px-4 py-2.5 text-[13px] transition-colors border-b last:border-0 ${
                             location === child.href
-                              ? "text-gray-900 font-medium bg-gray-100"
-                              : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                              ? (dark ? "text-white font-medium bg-white/10" : "text-gray-900 font-medium bg-gray-100")
+                              : dark ? "text-white/70 hover:text-white hover:bg-white/10 border-white/10" : "text-gray-700 hover:bg-gray-50 hover:text-gray-900 border-[#F9FAFB]"
                           }`}
                         >
                           {child.label}
@@ -200,13 +200,15 @@ export default function Navbar() {
 
         {/* Right side */}
         <div className="hidden lg:flex items-center gap-3 ml-4">
-          <div className="flex items-center gap-1 text-[12.5px] text-gray-500 border border-[#E5E7EB] p-0.5">
+          <div className={`flex items-center gap-1 text-[12.5px] p-0.5 ${dark ? "text-white/50 border border-white/20" : "text-gray-500 border border-[#E5E7EB]"}`}>
             {(["en", "id"] as const).map((l) => (
               <button
                 key={l}
                 onClick={() => setLocale(l)}
                 className={`px-2.5 py-1 font-medium transition-colors ${
-                  locale === l ? "bg-gray-900 text-white" : "hover:text-gray-800"
+                  locale === l
+                    ? (dark ? "bg-white text-gray-900 border border-white" : "bg-white text-gray-900 border border-gray-900")
+                    : dark ? "hover:text-white" : "hover:text-gray-800"
                 }`}
               >
                 {l.toUpperCase()}
@@ -215,7 +217,9 @@ export default function Navbar() {
           </div>
           <Link
             href="/contact"
-            className="text-[12.5px] font-medium text-white bg-gray-900 px-4 py-1.5 hover:bg-gray-700 transition-colors whitespace-nowrap"
+            className={`text-[12.5px] font-medium border px-4 py-1.5 transition-colors whitespace-nowrap ${
+              dark ? "text-white border-white/60 hover:bg-white/10" : "text-gray-900 border-gray-900 hover:bg-gray-100"
+            }`}
           >
             {t("nav_get_in_touch")}
           </Link>
@@ -223,7 +227,7 @@ export default function Navbar() {
 
         {/* Mobile hamburger */}
         <button
-          className="lg:hidden ml-auto p-2 text-gray-500"
+          className={`lg:hidden ml-auto p-2 ${dark ? "text-white" : "text-gray-500"}`}
           onClick={() => setMobileOpen(!mobileOpen)}
         >
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -232,21 +236,21 @@ export default function Navbar() {
 
       {/* Mobile nav */}
       {mobileOpen && (
-        <div className="lg:hidden bg-white border-t border-[#E5E7EB] shadow-lg max-h-[80vh] overflow-y-auto">
+        <div className={`lg:hidden shadow-lg max-h-[80vh] overflow-y-auto ${dark ? "bg-black/90 backdrop-blur-sm border-t border-white/10" : "bg-white border-t border-[#E5E7EB]"}`}>
           {navItems.map((item) => (
-            <div key={item.label} className="border-b border-[#F3F4F6]">
+            <div key={item.label} className={`border-b ${dark ? "border-white/10" : "border-[#F3F4F6]"}`}>
               {"href" in item && !("children" in item) ? (
                 <Link
                   href={(item as any).href}
                   onClick={() => setMobileOpen(false)}
-                  className="block px-6 py-3.5 text-[14px] font-medium text-gray-800"
+                  className={`block px-6 py-3.5 text-[14px] font-medium ${dark ? "text-white" : "text-gray-800"}`}
                 >
                   {item.label}
                 </Link>
               ) : (
                 <>
                   <button
-                    className="flex items-center justify-between w-full px-6 py-3.5 text-[14px] font-medium text-gray-800"
+                    className={`flex items-center justify-between w-full px-6 py-3.5 text-[14px] font-medium ${dark ? "text-white" : "text-gray-800"}`}
                     onClick={() =>
                       setMobileExpanded(mobileExpanded === item.label ? null : item.label)
                     }
@@ -257,13 +261,13 @@ export default function Navbar() {
                     />
                   </button>
                   {mobileExpanded === item.label && "children" in item && (
-                    <div className="bg-gray-50 border-t border-[#F3F4F6]">
+                    <div className={dark ? "bg-white/5 border-t border-white/10" : "bg-gray-50 border-t border-[#F3F4F6]"}>
                       {(item as any).children?.map((child: any) => (
                         <Link
                           key={child.href}
                           href={child.href}
                           onClick={() => { setMobileOpen(false); setMobileExpanded(null); }}
-                          className="block px-8 py-3 text-[13.5px] text-gray-600 hover:text-gray-900"
+                          className={`block px-8 py-3 text-[13.5px] ${dark ? "text-white/70 hover:text-white" : "text-gray-600 hover:text-gray-900"}`}
                         >
                           {child.label}
                         </Link>
@@ -274,13 +278,13 @@ export default function Navbar() {
               )}
             </div>
           ))}
-          <div className="flex items-center gap-3 px-6 py-4">
-            <div className="flex items-center gap-1 text-[12.5px] text-gray-500 border border-[#E5E7EB] p-0.5">
+          <div className={`flex items-center gap-3 px-6 py-4 ${dark ? "border-t border-white/10" : ""}`}>
+            <div className={`flex items-center gap-1 text-[12.5px] p-0.5 ${dark ? "text-white/50 border border-white/20" : "text-gray-500 border border-[#E5E7EB]"}`}>
               {(["en", "id"] as const).map((l) => (
                 <button
                   key={l}
                   onClick={() => setLocale(l)}
-                  className={`px-2.5 py-1 font-medium transition-colors ${locale === l ? "bg-gray-900 text-white" : "hover:text-gray-800"}`}
+                  className={`px-2.5 py-1 font-medium transition-colors ${locale === l ? (dark ? "bg-white text-gray-900 border border-white" : "bg-white text-gray-900 border border-gray-900") : dark ? "hover:text-white" : "hover:text-gray-800"}`}
                 >
                   {l.toUpperCase()}
                 </button>
@@ -289,7 +293,7 @@ export default function Navbar() {
             <Link
               href="/contact"
               onClick={() => setMobileOpen(false)}
-              className="text-[12.5px] font-medium text-white bg-gray-900 px-4 py-1.5"
+              className={`text-[12.5px] font-medium border px-4 py-1.5 ${dark ? "text-white border-white/60" : "text-gray-900 border-gray-900"}`}
             >
               {t("nav_get_in_touch")}
             </Link>

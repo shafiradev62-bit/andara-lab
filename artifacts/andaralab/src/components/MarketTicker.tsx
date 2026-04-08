@@ -1,4 +1,8 @@
-const tickers = [
+import { useLocale } from "@/lib/locale";
+import { useExchangeRates } from "@/lib/cms-store";
+
+// Default fallback tickers if API is unavailable
+const FALLBACK_TICKERS_EN = [
   { symbol: "IDR/USD", value: "15,890", change: "+0.32%", up: false },
   { symbol: "JCI", value: "7,214.3", change: "+1.14%", up: true },
   { symbol: "BI Rate", value: "6.00%", change: "Unch", up: null },
@@ -13,29 +17,46 @@ const tickers = [
   { symbol: "CPI ID", value: "2.51%", change: "-0.33pp", up: true },
 ];
 
-const double = [...tickers, ...tickers];
+export default function MarketTicker({ dark = false }: { dark?: boolean }) {
+  const { locale, t } = useLocale();
+  const { data: exchangeRates = [] } = useExchangeRates();
 
-export default function MarketTicker() {
+  // Use CMS data if available, otherwise fall back
+  const tickers = exchangeRates.length > 0
+    ? exchangeRates
+        .filter((er) => er.enabled)
+        .map((er) => ({
+          symbol: locale === "id" && er.labelId ? er.labelId : (er.labelEn ?? er.label),
+          value: er.value,
+          change: er.change,
+          up: er.up,
+        }))
+    : FALLBACK_TICKERS_EN;
+
+  const double = [...tickers, ...tickers];
+
   return (
-    <div className="bg-[#F9FAFB] border-b border-[#E5E7EB] overflow-hidden h-8 flex items-center">
-      <div className="flex-shrink-0 flex items-center gap-2 px-3 border-r border-[#E5E7EB] h-full bg-[#F9FAFB] z-10">
-        <span className="live-dot w-1.5 h-1.5 rounded-full bg-gray-900 inline-block" />
-        <span className="text-[10.5px] font-semibold text-gray-400 uppercase tracking-widest">Live</span>
+    <div className={`relative h-8 flex items-center ${dark ? "bg-black/50 border-b border-white/10" : "bg-[#F9FAFB] border-b border-[#E5E7EB]"}`}>
+      <div className={`flex-shrink-0 flex items-center gap-2 px-3 border-r h-full z-10 ${dark ? "border-white/10" : "border-[#E5E7EB]"} ${dark ? "bg-transparent" : "bg-[#F9FAFB]"}`}>
+        <span className={`live-dot w-1.5 h-1.5 rounded-full inline-block ${dark ? "bg-green-400" : "bg-gray-400"}`} />
+        <span className={`text-[10.5px] font-semibold uppercase tracking-widest ${dark ? "text-white/60" : "text-gray-400"}`}>{t("live_label")}</span>
       </div>
-      <div className="flex-1 overflow-hidden relative">
+      {/* Clipping wrapper — overflow hidden so ticker items outside viewport are clipped */}
+      <div className="flex-1 overflow-hidden">
+        {/* ticker-track = all items (duplicated for seamless loop) */}
         <div className="ticker-track">
-          {double.map((t, i) => (
-            <div key={i} className="flex items-center gap-2 px-5 border-r border-[#F3F4F6] h-8">
-              <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide whitespace-nowrap">
-                {t.symbol}
+          {double.map((ticker, i) => (
+            <div key={i} className={`flex items-center gap-2 px-5 border-r h-8 flex-shrink-0 ${dark ? "border-white/10" : "border-[#F3F4F6]"}`}>
+              <span className={`text-[11px] font-semibold uppercase tracking-wide whitespace-nowrap ${dark ? "text-white/50" : "text-gray-400"}`}>
+                {ticker.symbol}
               </span>
-              <span className="text-[11.5px] font-semibold text-gray-900 whitespace-nowrap">{t.value}</span>
+              <span className={`text-[11.5px] font-semibold whitespace-nowrap ${dark ? "text-white" : "text-gray-900"}`}>{ticker.value}</span>
               <span
                 className={`text-[10.5px] font-semibold whitespace-nowrap ${
-                  t.up === null ? "text-gray-400" : t.up ? "text-green-600" : "text-red-500"
+                  ticker.up === null ? (dark ? "text-white/40" : "text-gray-400") : (dark ? (ticker.up ? "text-green-400" : "text-red-400") : "text-gray-600")
                 }`}
               >
-                {t.up === null ? t.change : (t.up ? "▲ " : "▼ ") + t.change}
+                {ticker.change}
               </span>
             </div>
           ))}

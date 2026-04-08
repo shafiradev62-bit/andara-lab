@@ -13,7 +13,7 @@ export default function NewsletterSection() {
   return (
     <section className="bg-[#F9FAFB] border-t border-[#E5E7EB] py-12">
       <div className="max-w-[1200px] mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+        <div className="grid grid-cols-1 gap-10 items-center">
           <div>
             <div className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 mb-4">
               Research Digest

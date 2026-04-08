@@ -25,7 +25,7 @@ function HeroSection({ headline, subheadline, ctaText, ctaHref }: any) {
           <h1 className="text-[38px] font-bold text-gray-900 leading-tight mb-4">{headline}</h1>
           {subheadline && <p className="text-[16px] text-gray-500 leading-relaxed mb-6">{subheadline}</p>}
           {ctaText && ctaHref && (
-            <Link href={ctaHref} className="inline-flex items-center gap-2 text-[13.5px] font-medium text-white bg-gray-900 px-5 py-2.5 hover:bg-gray-700">
+            <Link href={ctaHref} className="inline-flex items-center gap-2 text-[13.5px] font-medium text-gray-900 border border-gray-900 px-5 py-2.5 hover:bg-gray-100">
               {ctaText} <ArrowRight className="w-4 h-4" />
             </Link>
           )}
@@ -65,13 +65,13 @@ function StatsSection({ items }: any) {
 
 function CTASection({ heading, body, buttonText, buttonHref }: any) {
   return (
-    <section className="bg-gray-900 py-12">
+    <section className="bg-white border-y border-[#E5E7EB] py-12">
       <div className="max-w-[1200px] mx-auto px-6 flex items-center justify-between">
         <div>
-          <h3 className="text-[20px] font-semibold text-white mb-2">{heading}</h3>
-          <p className="text-[14px] text-gray-300">{body}</p>
+          <h3 className="text-[20px] font-semibold text-gray-900 mb-2">{heading}</h3>
+          <p className="text-[14px] text-gray-500">{body}</p>
         </div>
-        <Link href={buttonHref} className="flex-shrink-0 inline-flex items-center gap-2 text-[13px] font-medium text-gray-900 bg-white px-5 py-2.5 hover:bg-gray-100">
+        <Link href={buttonHref} className="flex-shrink-0 inline-flex items-center gap-2 text-[13px] font-medium text-gray-900 border border-gray-900 px-5 py-2.5 hover:bg-gray-100">
           {buttonText} <ArrowRight className="w-4 h-4" />
         </Link>
       </div>
@@ -84,6 +84,7 @@ function DividerSection() {
 }
 
 function FeaturedSection({ slugs, limit }: any) {
+  const { t, locale } = useLocale();
   const { data: allPosts = [] } = usePosts({ status: "published" });
   const raw = Array.isArray(slugs) ? slugs : [];
   const targetSlugs: string[] = limit ? raw.slice(0, limit) : raw;
@@ -95,7 +96,7 @@ function FeaturedSection({ slugs, limit }: any) {
   if (!items.length) return null;
   return (
     <section className="max-w-[1200px] mx-auto px-6 py-10">
-      <h2 className="text-[18px] font-semibold text-gray-900 mb-6">Featured Insights</h2>
+      <h2 className="text-[18px] font-semibold text-gray-900 mb-6">{t("featured_insights_title")}</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {items.map((post, i) => (
           <Link key={post.slug} href={"/article/" + post.slug}
@@ -116,7 +117,7 @@ function FeaturedSection({ slugs, limit }: any) {
 }
 
 function PostsSection({ categories, title }: { categories: string[]; title?: string }) {
-  const { locale } = useLocale();
+  const { locale, t } = useLocale();
   const cats = Array.isArray(categories) ? categories : [];
   const { data: allPosts = [], isLoading } = usePosts({ status: "published" });
 
@@ -138,11 +139,11 @@ function PostsSection({ categories, title }: { categories: string[]; title?: str
       {isLoading && (
         <div className="flex items-center justify-center py-24 gap-3 text-gray-400">
           <Loader2 className="w-5 h-5 animate-spin" />
-          <span className="text-[13.5px]">Loading articles…</span>
+          <span className="text-[13.5px]">{t("loading_articles")}</span>
         </div>
       )}
       {!isLoading && posts.length === 0 && (
-        <div className="text-center py-16 text-gray-400 text-[14px]">No articles match this section yet.</div>
+        <div className="text-center py-16 text-gray-400 text-[14px]">{t("no_articles_match")}</div>
       )}
       {!isLoading && posts.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -192,7 +193,7 @@ function PostsSection({ categories, title }: { categories: string[]; title?: str
                   <p className="text-[13px] text-gray-500 leading-relaxed mb-4">{post.excerpt}</p>
                 )}
                 <span className="flex items-center gap-1.5 text-[12.5px] font-medium text-gray-700 group-hover:text-gray-900 transition-colors">
-                  Read More <ArrowRight className="w-3.5 h-3.5" />
+                  {t("read_more_label")} <ArrowRight className="w-3.5 h-3.5" />
                 </span>
               </div>
             </Link>
@@ -204,13 +205,14 @@ function PostsSection({ categories, title }: { categories: string[]; title?: str
 }
 
 function ChartSection({ datasetId, title }: any) {
+  const { t } = useLocale();
   const { data: datasets = [] } = useDatasets();
   const dataset = datasets.find((d: any) => d.id === datasetId);
   if (!dataset) return (
     <section className="max-w-[1200px] mx-auto px-6 py-10">
       <div className="border border-[#E5E7EB] p-8 text-center text-gray-400 text-[13px]">
         <BarChart2 className="w-8 h-8 mx-auto mb-2 opacity-30" />
-        Dataset not found: {datasetId}
+        {t("dataset_not_found")}: {datasetId}
       </div>
     </section>
   );
@@ -240,29 +242,22 @@ function SectionBlock({ section }: { section: ContentSection }) {
   }
 }
 
-function AboutSectionContent({ items, content: textContent }: { items?: { label: string; value: string; unit?: string }[]; content?: string }) {
+function AboutSectionContent({ headline, items, description }: { headline?: string; items?: { label: string; value: string; unit?: string }[]; description?: string }) {
+  const { t } = useLocale();
   return (
     <section className="border-t border-[#E5E7EB] bg-white">
       <div className="max-w-[1200px] mx-auto px-6 py-14">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
           <div>
-            <div className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 mb-4">About AndaraLab</div>
-            {textContent ? (
-              <p className="text-[14.5px] text-gray-500 leading-relaxed">{textContent}</p>
-            ) : (
-              <p className="text-[14.5px] text-gray-500 leading-relaxed">
-                At AndaraLab, we operate as a premier economic research hub under PT. Andara Investasi Cerdas — bridging the gap between complex macro-economic data and actionable intelligence for Indonesia and beyond.
-              </p>
-            )}
+            <div className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 mb-4">{t("about_andaralab")}</div>
+            {description ? (
+              <p className="text-[14.5px] text-gray-500 leading-relaxed">{description}</p>
+            ) : null}
           </div>
           <div>
-            <div className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 mb-4">Our Approach</div>
+            <div className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 mb-4">{headline ?? t("our_approach")}</div>
             <div className="space-y-0 border border-[#E5E7EB]">
-              {(items ?? [
-                { label: "Rigor", value: "Every analysis is grounded in verified data sources, peer-reviewed methodology, and transparent assumptions." },
-                { label: "Relevance", value: "We focus on what matters now — policy shifts, market dislocations, and structural economic changes." },
-                { label: "Clarity", value: "Complex economic intelligence translated into clear, actionable insights for decision-makers." },
-              ]).map((item, i, arr) => (
+              {(items ?? []).map((item, i, arr) => (
                 <div key={i} className={`flex gap-4 p-5 ${i < arr.length - 1 ? "border-b border-[#E5E7EB]" : ""}`}>
                   <div className="text-[11px] font-bold text-gray-300 w-6 flex-shrink-0 mt-0.5">0{i + 1}</div>
                   <div>
@@ -279,8 +274,9 @@ function AboutSectionContent({ items, content: textContent }: { items?: { label:
   );
 }
 
-export default function DynamicPage({ pageSlug, locale }: { pageSlug: string; locale?: "en" | "id" }) {
-  const { t } = useLocale();
+export default function DynamicPage({ pageSlug, locale: propLocale }: { pageSlug: string; locale?: "en" | "id" }) {
+  const { t, locale: ctxLocale } = useLocale();
+  const locale = propLocale ?? ctxLocale;
   const [pathname] = useLocation();
   const { data: page, isLoading, error } = usePageBySlug(pageSlug, locale);
 
@@ -305,7 +301,7 @@ export default function DynamicPage({ pageSlug, locale }: { pageSlug: string; lo
       <div>DEBUG ERROR: {error ? String(error) : "NONE"}</div>
       <div className="flex items-center gap-3 text-gray-400 mt-4">
         <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
-        <span className="text-[13px]">Loading</span>
+        <span className="text-[13px]">{t("loading_label")}</span>
       </div>
     </div>
   );
@@ -323,11 +319,11 @@ export default function DynamicPage({ pageSlug, locale }: { pageSlug: string; lo
       <div className="max-w-[1200px] mx-auto px-6 py-24 text-center">
         <div className="text-[60px] font-bold text-gray-100 mb-4">404</div>
         <h1 className="text-[22px] font-semibold text-gray-900 mb-3">
-          {locale === "id" ? "Halaman tidak ditemukan" : "Page not found"}
+          {locale === "id" ? "Halaman tidak ditemukan" : t("page_not_found_title")}
         </h1>
         <p className="text-gray-500 mb-8 max-w-lg mx-auto leading-relaxed">{hint}</p>
-        <Link href="/" className="text-[13px] font-medium text-white bg-gray-900 px-6 py-2.5 hover:bg-gray-700">
-          {locale === "id" ? "Ke beranda" : "Go Home"}
+        <Link href="/" className="text-[13px] font-medium text-gray-900 border border-gray-900 px-6 py-2.5 hover:bg-gray-100">
+          {t("go_home")}
         </Link>
       </div>
     );
@@ -339,12 +335,12 @@ export default function DynamicPage({ pageSlug, locale }: { pageSlug: string; lo
     <>
       {blocks.length === 0 ? (
         <>
-          <HeroSection 
-            headline={page.title || "Untitled Page"} 
-            subheadline={page.description || "This page has been created but no content blocks have been added yet."} 
+          <HeroSection
+            headline={page.title || t("untitled_page")}
+            subheadline={page.description || t("no_content_yet")}
           />
           <div className="max-w-[1200px] mx-auto px-6 py-16 text-center text-gray-400">
-            <p className="text-[14px]">You can structure this page using JSON blocks via the CMS API.</p>
+            <p className="text-[14px]">{t("structure_json_blocks")}</p>
           </div>
         </>
       ) : (

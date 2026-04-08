@@ -7,11 +7,13 @@ import {
   useAnalisisList, useAnalisis, useCreateAnalisis, useUpdateAnalisis,
   useDeleteAnalisis, useResetAnalisis,
   useFeaturedInsights, useUpdateFeaturedInsights, useResetFeaturedInsights,
+  useExchangeRates, useCreateExchangeRate, useUpdateExchangeRate,
+  useDeleteExchangeRate, useResetExchangeRates,
   type ChartDataset, type Page, type BlogPost,
   type AnalisisDeskriptif, type AnalysisSection, type AnalysisWidget,
   type AnalysisMetric, type AnalysisWidgetType,
   type FeaturedInsight, type FeaturedInsightsConfig,
-  type DataUnitType,
+  type DataUnitType, type ExchangeRate,
 } from "@/lib/cms-store";
 import InteractiveChart from "@/components/InteractiveChart";
 import { UNIT_TYPE_LABELS } from "@/lib/utils";
@@ -27,8 +29,8 @@ import {
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
-const COLORS = ["#1e3a5f", "#374151", "#6b7280", "#9ca3af", "#d1d5db", "#e5e7eb"];
-const CHART_PALETTE = ["#1e3a5f", "#374151", "#6b7280", "#9ca3af", "#d1d5db", "#e5e7eb"];
+const COLORS = ["#1a3a5c", "#2a5a8c", "#0d9fbf", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6", "#5b21b6"];
+const CHART_PALETTE = ["#1a3a5c", "#2a5a8c", "#0d9fbf", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6", "#5b21b6"];
 const CATEGORIES = [
   "Macro Foundations", "Sectoral Intelligence",
   "Market Dashboard", "Geopolitical Analysis", "ESG",
@@ -48,17 +50,18 @@ function newDataset(): Omit<ChartDataset, "id" | "createdAt" | "updatedAt"> {
     description: "",
     category: "Macro Foundations",
     chartType: "line",
-    color: "#1e3a5f",
+    color: "#1a3a5c",
     unit: "%",
     unitType: "percent",
     columns: ["Period", "Value"],
+    columnNames: { en: ["Period", "Value"], id: ["Periode", "Nilai"] },
     rows: [
       { Period: "2023 Q1", Value: 0 },
       { Period: "2023 Q2", Value: 0 },
       { Period: "2023 Q3", Value: 0 },
       { Period: "2023 Q4", Value: 0 },
     ],
-    colors: ["#374151"],
+    colors: ["#1a3a5c"],
   };
 }
 
@@ -132,7 +135,7 @@ function DatasetEditor({
   onBack: () => void; onSave: () => void;
   isSaving: boolean; isSuccess: boolean;
 }) {
-  const [tab, setTab] = useState<"meta" | "chart" | "data" | "preview">("meta");
+  const [tab, setTab] = useState<"meta" | "chart" | "columns" | "data" | "preview">("meta");
   const effective = draft !== null ? { ...selected, ...draft } as ChartDataset : selected;
   if (!effective) return null;
 
@@ -142,7 +145,7 @@ function DatasetEditor({
   const addColumn = () => {
     const name = `Series ${effective.columns.length}`;
     const prevColors = effective.colors ?? [];
-    const defaultColor = "#374151";
+    const defaultColor = "#1a3a5c";
     const newColors = [...prevColors, defaultColor];
     patch({ columns: [...effective.columns, name], rows: effective.rows.map((r) => ({ ...r, [name]: 0 })), colors: newColors });
   };
@@ -193,12 +196,12 @@ function DatasetEditor({
 
       {/* Editor tabs */}
       <div className="flex gap-0 border-b border-[#E5E7EB] mb-6">
-        {(["meta", "chart", "data", "preview"] as const).map((t) => (
+        {(["meta", "chart", "columns", "data", "preview"] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)}
             className={`px-5 py-2.5 text-[13px] font-medium border-b-2 capitalize transition-colors ${
               tab === t ? "border-gray-900 text-gray-900" : "border-transparent text-gray-500 hover:text-gray-800"
             }`}>
-            {t === "meta" ? "Metadata" : t === "chart" ? "Chart Labels" : t === "data" ? "Table Data" : "Preview"}
+            {t === "meta" ? "Metadata" : t === "chart" ? "Chart Labels" : t === "columns" ? "Column Labels" : t === "data" ? "Table Data" : "Preview"}
           </button>
         ))}
       </div>
@@ -265,7 +268,7 @@ function DatasetEditor({
         </div>
       )}
 
-      {/* Chart Labels tab — NEW */}
+      {/* Chart Labels tab */}
       {tab === "chart" && (
         <div className="bg-white border border-[#E5E7EB] p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="md:col-span-2">
@@ -293,6 +296,101 @@ function DatasetEditor({
               )}
             </div>
           ))}
+
+          {/* Series Colors */}
+          {effective.columns.slice(1).map((col, i) => {
+            const currentColor = (effective.colors ?? [])[i] ?? "#1a3a5c";
+            return (
+              <div key={col} className="md:col-span-2">
+                <label className="block text-[11.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                  Color — {col}
+                </label>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {CHART_PALETTE.map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => updateSeriesColor(i, c)}
+                      className={`w-6 h-6 rounded border-2 cursor-pointer transition-transform ${currentColor.toLowerCase() === c.toLowerCase() ? "border-gray-900 scale-110" : "border-gray-200 hover:border-gray-400"}`}
+                      style={{ backgroundColor: c }}
+                      title={c}
+                    />
+                  ))}
+                  <span className="text-[11px] text-gray-400 font-mono ml-1">{currentColor}</span>
+                  <input
+                    type="color"
+                    value={currentColor}
+                    onChange={(e) => updateSeriesColor(i, e.target.value)}
+                    className="w-8 h-6 cursor-pointer border border-gray-200 rounded"
+                    title="Custom color"
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Column Labels tab — locale-specific display names */}
+      {tab === "columns" && (
+        <div className="bg-white border border-[#E5E7EB] p-6">
+          <div className="mb-5 pb-4 border-b border-[#E5E7EB]">
+            <p className="text-[12.5px] text-gray-600">
+              Set display names for columns per language. Leave blank to use the raw column key.
+            </p>
+          </div>
+          {effective.columns.map((col, colIdx) => (
+            <div key={col} className="mb-5 p-4 border border-[#E5E7EB]">
+              <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-3">
+                Column {colIdx + 1}: <span className="text-gray-700 font-mono">{col}</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                    English Label
+                  </label>
+                  <input
+                    type="text"
+                    value={(effective.columnNames?.en ?? [])[colIdx] ?? ""}
+                    onChange={(e) => {
+                      const currentEn = effective.columnNames?.en ?? [...effective.columns];
+                      const newEn = [...currentEn];
+                      newEn[colIdx] = e.target.value;
+                      patch({
+                        columnNames: {
+                          ...effective.columnNames,
+                          en: newEn,
+                        },
+                      });
+                    }}
+                    placeholder={col}
+                    className="w-full border border-[#E5E7EB] px-3 py-2 text-[13px] text-gray-900 focus:outline-none focus:border-gray-900"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                    Indonesian Label
+                  </label>
+                  <input
+                    type="text"
+                    value={(effective.columnNames?.id ?? [])[colIdx] ?? ""}
+                    onChange={(e) => {
+                      const currentId = effective.columnNames?.id ?? [...effective.columns];
+                      const newId = [...currentId];
+                      newId[colIdx] = e.target.value;
+                      patch({
+                        columnNames: {
+                          ...effective.columnNames,
+                          id: newId,
+                        },
+                      });
+                    }}
+                    placeholder={col}
+                    className="w-full border border-[#E5E7EB] px-3 py-2 text-[13px] text-gray-900 focus:outline-none focus:border-gray-900"
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
@@ -311,6 +409,40 @@ function DatasetEditor({
             </div>
           </div>
           <div className="overflow-x-auto">
+            {/* Series Colors */}
+            {effective.columns.slice(1).length > 0 && (
+              <div className="mb-3 pb-3 border-b border-[#E5E7EB]">
+                <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-2">Series Colors</div>
+                <div className="flex flex-wrap gap-3">
+                  {effective.columns.slice(1).map((col, i) => {
+                    const currentColor = (effective.colors ?? [])[i] ?? "#1a3a5c";
+                    return (
+                      <div key={col} className="flex items-center gap-1.5">
+                        <span className="text-[11px] text-gray-600 font-medium w-20 truncate">{col}</span>
+                        <div className="flex items-center gap-0.5">
+                          {CHART_PALETTE.map((c) => (
+                            <button
+                              key={c}
+                              onClick={() => updateSeriesColor(i, c)}
+                              className={`w-4 h-4 rounded border cursor-pointer transition-transform ${currentColor.toLowerCase() === c.toLowerCase() ? "border-gray-900 scale-110" : "border-gray-200 hover:border-gray-400"}`}
+                              style={{ backgroundColor: c }}
+                              title={c}
+                            />
+                          ))}
+                          <input
+                            type="color"
+                            value={currentColor}
+                            onChange={(e) => updateSeriesColor(i, e.target.value)}
+                            className="w-5 h-4 cursor-pointer border border-gray-200 rounded"
+                            title="Custom color"
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             <table className="w-full text-[12.5px] border-collapse">
               <thead>
                 <tr>
@@ -326,26 +458,6 @@ function DatasetEditor({
                             </button>
                           )}
                         </div>
-                        {i > 0 && (
-                          <div className="flex items-center gap-1 flex-wrap">
-                            {CHART_PALETTE.map((c) => {
-                              const currentColor = (effective.colors ?? [])[i - 1] ?? "#374151";
-                              const isSelected = currentColor.toLowerCase() === c.toLowerCase();
-                              return (
-                                <button
-                                  key={c}
-                                  onClick={() => updateSeriesColor(i - 1, c)}
-                                  className={`w-5 h-5 rounded border-2 cursor-pointer transition-transform ${isSelected ? "border-gray-900 scale-110" : "border-gray-200 hover:border-gray-400"}`}
-                                  style={{ backgroundColor: c }}
-                                  title={c}
-                                />
-                              );
-                            })}
-                            <span className="text-[10px] text-gray-400 font-mono">
-                              {(effective.colors ?? [])[i - 1] ?? "#374151"}
-                            </span>
-                          </div>
-                        )}
                       </div>
                     </th>
                   ))}
@@ -377,6 +489,38 @@ function DatasetEditor({
       {/* Preview tab */}
       {tab === "preview" && (
         <div className="bg-white border border-[#E5E7EB] p-6">
+          {/* Series Colors */}
+          <div className="mb-4 pb-4 border-b border-[#E5E7EB]">
+            <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-3">Series Colors</div>
+            <div className="flex flex-wrap gap-4">
+              {effective.columns.slice(1).map((col, i) => {
+                const currentColor = (effective.colors ?? [])[i] ?? "#1a3a5c";
+                return (
+                  <div key={col} className="flex items-center gap-2">
+                    <span className="text-[12px] font-medium text-gray-700 w-28 truncate">{col}</span>
+                    <div className="flex items-center gap-1">
+                      {CHART_PALETTE.map((c) => (
+                        <button
+                          key={c}
+                          onClick={() => updateSeriesColor(i, c)}
+                          className={`w-5 h-5 rounded border-2 cursor-pointer transition-transform ${currentColor.toLowerCase() === c.toLowerCase() ? "border-gray-900 scale-110" : "border-gray-200 hover:border-gray-400"}`}
+                          style={{ backgroundColor: c }}
+                          title={c}
+                        />
+                      ))}
+                      <input
+                        type="color"
+                        value={currentColor}
+                        onChange={(e) => updateSeriesColor(i, e.target.value)}
+                        className="w-6 h-5 cursor-pointer border border-gray-200 rounded"
+                        title="Custom color"
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
           <h3 className="text-[16px] font-semibold text-gray-900 mb-1">{effective.title}</h3>
           {effective.description && <p className="text-[12.5px] text-gray-500 mb-5">{effective.description}</p>}
           <InteractiveChart dataset={effective} height={320} />
@@ -1777,7 +1921,7 @@ function newWidget(type: AnalysisWidgetType): AnalysisWidget {
   if (type === "metric-card") return { ...base, metrics: [newMetric()] };
   if (type === "distribution") return { ...base, distributionItems: [] };
   if (type === "comparison") return { ...base, compareHeaders: ["Item", "Value 1", "Value 2"], compareItems: [] };
-  if (type === "highlight") return { ...base, calloutColor: "#1e3a5f", text: "" };
+  if (type === "highlight") return { ...base, calloutColor: "#1a3a5c", text: "" };
   if (type === "bar-chart") return { ...base, barData: [] };
   if (type === "donut-chart") return { ...base, barData: [] };
   if (type === "custom-text") return { ...base, text: "" };
@@ -1815,24 +1959,27 @@ function WidgetEditor({
     patch({ metrics: widget.metrics?.map((m) => (m.id === mid ? { ...m, ...fields } : m)) });
 
   const addDistItem = () =>
-    patch({ distributionItems: [...(widget.distributionItems ?? []), { label: "New Item", value: 0, percentage: 0, color: "#1e3a5f" }] });
+    patch({ distributionItems: [...(widget.distributionItems ?? []), { label: "New Item", value: 0, percentage: 0, color: "#1a3a5c" }] });
   const removeDistItem = (idx: number) =>
     patch({ distributionItems: widget.distributionItems?.filter((_, i) => i !== idx) });
-  const updateDistItem = (idx: number, fields: Partial<typeof widget.distributionItems[0]>) =>
+  type DistItem = { label: string; value: number; percentage: number; color?: string };
+  type CompareItem = { label: string; values: string[] };
+  type BarItem = { label: string; value: number; color?: string };
+  const updateDistItem = (idx: number, fields: Partial<DistItem>) =>
     patch({ distributionItems: widget.distributionItems?.map((d, i) => (i === idx ? { ...d, ...fields } : d)) });
 
   const addCompareRow = () =>
     patch({ compareItems: [...(widget.compareItems ?? []), { label: "New Row", values: ["", ""] }] });
   const removeCompareRow = (idx: number) =>
     patch({ compareItems: widget.compareItems?.filter((_, i) => i !== idx) });
-  const updateCompareRow = (idx: number, fields: Partial<typeof widget.compareItems[0]>) =>
+  const updateCompareRow = (idx: number, fields: Partial<CompareItem>) =>
     patch({ compareItems: widget.compareItems?.map((c, i) => (i === idx ? { ...c, ...fields } : c)) });
 
   const addBarItem = () =>
-    patch({ barData: [...(widget.barData ?? []), { label: "Item", value: 0, color: "#1e3a5f" }] });
+    patch({ barData: [...(widget.barData ?? []), { label: "Item", value: 0, color: "#1a3a5c" }] });
   const removeBarItem = (idx: number) =>
     patch({ barData: widget.barData?.filter((_, i) => i !== idx) });
-  const updateBarItem = (idx: number, fields: Partial<typeof widget.barData[0]>) =>
+  const updateBarItem = (idx: number, fields: Partial<BarItem>) =>
     patch({ barData: widget.barData?.map((b, i) => (i === idx ? { ...b, ...fields } : b)) });
 
   return (
@@ -1928,7 +2075,7 @@ function WidgetEditor({
           {(widget.distributionItems ?? []).map((d, i) => (
             <div key={i} className="bg-white border border-gray-200 rounded p-3 grid grid-cols-12 gap-2 items-center">
               <div className="col-span-1">
-                <input type="color" value={d.color ?? "#1e3a5f"} onChange={(e) => updateDistItem(i, { color: e.target.value })}
+                <input type="color" value={d.color ?? "#1a3a5c"} onChange={(e) => updateDistItem(i, { color: e.target.value })}
                   className="w-8 h-8 rounded border border-gray-300 cursor-pointer" />
               </div>
               <div className="col-span-4">
@@ -2001,7 +2148,7 @@ function WidgetEditor({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label className="block text-[10px] text-gray-500 mb-1">Callout Color</label>
-              <input type="color" value={widget.calloutColor ?? "#1e3a5f"}
+              <input type="color" value={widget.calloutColor ?? "#1a3a5c"}
                 onChange={(e) => patch({ calloutColor: e.target.value })}
                 className="w-16 h-9 rounded border border-gray-300 cursor-pointer" />
             </div>
@@ -2028,7 +2175,7 @@ function WidgetEditor({
           {(widget.barData ?? []).map((b, i) => (
             <div key={i} className="bg-white border border-gray-200 rounded p-3 grid grid-cols-12 gap-2 items-center">
               <div className="col-span-1">
-                <input type="color" value={b.color ?? "#1e3a5f"} onChange={(e) => updateBarItem(i, { color: e.target.value })}
+                <input type="color" value={b.color ?? "#1a3a5c"} onChange={(e) => updateBarItem(i, { color: e.target.value })}
                   className="w-8 h-8 rounded border border-gray-300 cursor-pointer" />
               </div>
               <div className="col-span-6">
@@ -2339,7 +2486,7 @@ function AnalisisEditor({
               {(["active", "archived"] as const).map((s) => (
                 <button key={s} onClick={() => patch({ status: s })}
                   className={`px-4 py-2 text-[12px] font-semibold border capitalize ${
-                    draft.status === s ? "bg-[#1e3a5f] text-white border-[#1e3a5f]" : "border-gray-300 text-gray-600 hover:bg-gray-50"
+                    draft.status === s ? "bg-[#1a3a5c] text-white border-[#1a3a5c]" : "border-gray-300 text-gray-600 hover:bg-gray-50"
                   }`}>
                   {s}
                 </button>
@@ -2576,17 +2723,283 @@ function AnalisisTab() {
   );
 }
 
+// ─── Exchange Rates Tab ────────────────────────────────────────────────────────
+
+const CATEGORIES_ER = ["currency", "index", "commodity", "bond"];
+
+function newExchangeRate(order: number): Omit<ExchangeRate, "id" | "createdAt" | "updatedAt"> {
+  return {
+    symbol: "NEW/USD",
+    label: "NEW/USD",
+    labelEn: "NEW/USD",
+    labelId: "NEW/USD",
+    value: "0.00",
+    change: "0.00%",
+    changeValue: 0,
+    up: null,
+    category: "currency",
+    order,
+    enabled: true,
+  };
+}
+
+function ExchangeRatesTab() {
+  const { data: exchangeRates = [], isLoading } = useExchangeRates();
+  const createMutation = useCreateExchangeRate();
+  const updateMutation = useUpdateExchangeRate();
+  const deleteMutation = useDeleteExchangeRate();
+  const resetMutation = useResetExchangeRates();
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [drafts, setDrafts] = useState<Record<string, Partial<ExchangeRate>>>({});
+  const [newCount, setNewCount] = useState(0);
+
+  const getDraft = (id: string): Partial<ExchangeRate> => {
+    if (id.startsWith("new-")) return drafts[id] ?? {};
+    const er = exchangeRates.find((e) => e.id === id);
+    return drafts[id] ?? (er ? { ...er } : {});
+  };
+
+  const patchDraft = (id: string, fields: Partial<ExchangeRate>) => {
+    setDrafts((prev) => ({ ...prev, [id]: { ...prev[id], ...fields } }));
+  };
+
+  const handleSave = async (id: string) => {
+    const d = getDraft(id);
+    if (id.startsWith("new-")) {
+      await createMutation.mutateAsync(d as any);
+      setDrafts((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+    } else {
+      await updateMutation.mutateAsync({ id, data: d });
+      setEditingId(null);
+      setDrafts((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!id.startsWith("new-")) {
+      if (!confirm(`Delete exchange rate "${getDraft(id).symbol}"?`)) return;
+      await deleteMutation.mutateAsync(id);
+    }
+    setDrafts((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  };
+
+  const handleAddNew = () => {
+    const tempId = `new-${Date.now()}`;
+    setDrafts((prev) => ({
+      ...prev,
+      [tempId]: newExchangeRate(exchangeRates.length + newCount),
+    }));
+    setNewCount((c) => c + 1);
+  };
+
+  const allItems: Array<{ id: string; isNew: boolean }> = [
+    ...exchangeRates.map((er) => ({ id: er.id, isNew: false })),
+    ...Object.keys(drafts).filter((id) => id.startsWith("new-")).map((id) => ({ id, isNew: true })),
+  ];
+
+  return (
+    <div>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-[16px] font-semibold text-gray-900">Exchange Rates</h2>
+          <p className="text-[12px] text-gray-500 mt-1">Customize market ticker items. Changes appear in the header ticker on all pages.</p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={handleAddNew}
+            className="flex items-center gap-1.5 px-4 py-2 text-[12.5px] font-medium text-white bg-gray-900 hover:bg-gray-700"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Add Exchange Rate
+          </button>
+          <button
+            onClick={() => resetMutation.mutate()}
+            className="flex items-center gap-1.5 px-4 py-2 text-[12.5px] font-medium text-gray-600 border border-[#E5E7EB] hover:bg-gray-50"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${resetMutation.isPending ? "animate-spin" : ""}`} />
+            Reset to Default
+          </button>
+        </div>
+      </div>
+
+      {isLoading && (
+        <div className="flex items-center gap-3 py-16 text-gray-400">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span className="text-[13px]">Loading…</span>
+        </div>
+      )}
+
+      {!isLoading && (
+        <div className="space-y-3">
+          {allItems.length === 0 && (
+            <div className="text-center py-16 text-gray-400 text-[13px]">
+              No exchange rates yet. Click "Add Exchange Rate" to create one.
+            </div>
+          )}
+
+          {allItems.map(({ id, isNew }) => {
+            const d = getDraft(id);
+            const isEditing = isNew || editingId === id;
+            return (
+              <div key={id} className={`border p-5 ${isEditing ? "border-gray-900 bg-white" : "border-[#E5E7EB] bg-white"}`}>
+                <div className="flex items-start gap-4 flex-wrap">
+                  {/* Symbol + Category */}
+                  <div className="min-w-[120px]">
+                    <label className="block text-[10.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Symbol</label>
+                    <input
+                      type="text"
+                      value={d.symbol ?? ""}
+                      onChange={(e) => patchDraft(id, { symbol: e.target.value, label: e.target.value, labelEn: e.target.value, labelId: e.target.value })}
+                      className="w-full border border-[#E5E7EB] px-2.5 py-1.5 text-[13px] font-medium text-gray-900 focus:outline-none focus:border-gray-900"
+                      placeholder="IDR/USD"
+                    />
+                  </div>
+
+                  {/* English Label */}
+                  <div className="min-w-[140px]">
+                    <label className="block text-[10.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">English Label</label>
+                    <input
+                      type="text"
+                      value={d.labelEn ?? ""}
+                      onChange={(e) => patchDraft(id, { labelEn: e.target.value })}
+                      className="w-full border border-[#E5E7EB] px-2.5 py-1.5 text-[13px] text-gray-900 focus:outline-none focus:border-gray-900"
+                      placeholder="English name"
+                    />
+                  </div>
+
+                  {/* Indonesian Label */}
+                  <div className="min-w-[140px]">
+                    <label className="block text-[10.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Indonesian Label</label>
+                    <input
+                      type="text"
+                      value={d.labelId ?? ""}
+                      onChange={(e) => patchDraft(id, { labelId: e.target.value })}
+                      className="w-full border border-[#E5E7EB] px-2.5 py-1.5 text-[13px] text-gray-900 focus:outline-none focus:border-gray-900"
+                      placeholder="Nama Indonesia"
+                    />
+                  </div>
+
+                  {/* Value */}
+                  <div className="min-w-[100px]">
+                    <label className="block text-[10.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Rate</label>
+                    <input
+                      type="text"
+                      value={d.value ?? ""}
+                      onChange={(e) => patchDraft(id, { value: e.target.value })}
+                      className="w-full border border-[#E5E7EB] px-2.5 py-1.5 text-[13px] font-medium text-gray-900 focus:outline-none focus:border-gray-900"
+                      placeholder="15,890"
+                    />
+                  </div>
+
+                  {/* Change */}
+                  <div className="min-w-[100px]">
+                    <label className="block text-[10.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Change</label>
+                    <input
+                      type="text"
+                      value={d.change ?? ""}
+                      onChange={(e) => patchDraft(id, { change: e.target.value })}
+                      className="w-full border border-[#E5E7EB] px-2.5 py-1.5 text-[13px] text-gray-900 focus:outline-none focus:border-gray-900"
+                      placeholder="+0.32%"
+                    />
+                  </div>
+
+                  {/* Category */}
+                  <div className="min-w-[120px]">
+                    <label className="block text-[10.5px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Category</label>
+                    <select
+                      value={d.category ?? "currency"}
+                      onChange={(e) => patchDraft(id, { category: e.target.value as ExchangeRate["category"] })}
+                      className="w-full border border-[#E5E7EB] px-2.5 py-1.5 text-[13px] text-gray-900 focus:outline-none focus:border-gray-900 bg-white"
+                    >
+                      {CATEGORIES_ER.map((c) => (
+                        <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Enabled */}
+                  <div className="flex items-center gap-2 pt-5">
+                    <button
+                      onClick={() => patchDraft(id, { enabled: !d.enabled })}
+                      className={`w-10 h-5 rounded-full transition-colors relative ${d.enabled ? "bg-gray-900" : "bg-gray-300"}`}
+                    >
+                      <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${d.enabled ? "left-5" : "left-0.5"}`} />
+                    </button>
+                    <span className="text-[11px] text-gray-500">{d.enabled ? "Visible" : "Hidden"}</span>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-1.5 pt-4">
+                    {isEditing ? (
+                      <>
+                        <button
+                          onClick={() => handleSave(id)}
+                          disabled={createMutation.isPending || updateMutation.isPending}
+                          className="flex items-center gap-1 px-3 py-1.5 text-[12px] font-medium text-white bg-gray-900 hover:bg-gray-700 disabled:opacity-50"
+                        >
+                          <CheckCircle className="w-3.5 h-3.5" /> Save
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingId(null);
+                            setDrafts((prev) => { const n = {...prev}; delete n[id]; return n; });
+                          }}
+                          className="flex items-center gap-1 px-3 py-1.5 text-[12px] font-medium text-gray-600 border border-[#E5E7EB] hover:bg-gray-50"
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => setEditingId(id)}
+                        className="flex items-center gap-1 px-3 py-1.5 text-[12px] font-medium text-gray-600 border border-[#E5E7EB] hover:bg-gray-50"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" /> Edit
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDelete(id)}
+                      className="flex items-center gap-1 px-3 py-1.5 text-[12px] font-medium text-red-600 border border-red-200 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main AdminPage ────────────────────────────────────────────────────────────
 
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState<"data" | "pages" | "blog" | "analisis" | "featured">("data");
+  const [activeTab, setActiveTab] = useState<"data" | "pages" | "blog" | "analisis" | "featured" | "exchange-rates">("data");
 
   const tabs = [
-    { key: "data" as const,      label: "Data Hub",           icon: <Database className="w-4 h-4" /> },
-    { key: "pages" as const,      label: "Pages",              icon: <FileText className="w-4 h-4" /> },
-    { key: "blog" as const,       label: "Blog",               icon: <BookOpen className="w-4 h-4" /> },
-    { key: "analisis" as const,   label: "Analisis Deskriptif",  icon: <BarChart3 className="w-4 h-4" /> },
-    { key: "featured" as const,    label: "Featured Insights",   icon: <Star className="w-4 h-4" /> },
+    { key: "data" as const,          label: "Data Hub",           icon: <Database className="w-4 h-4" /> },
+    { key: "pages" as const,          label: "Pages",              icon: <FileText className="w-4 h-4" /> },
+    { key: "blog" as const,           label: "Blog",               icon: <BookOpen className="w-4 h-4" /> },
+    { key: "analisis" as const,       label: "Analisis Deskriptif",  icon: <BarChart3 className="w-4 h-4" /> },
+    { key: "featured" as const,       label: "Featured Insights",   icon: <Star className="w-4 h-4" /> },
+    { key: "exchange-rates" as const, label: "Exchange Rates",     icon: <TrendingUp className="w-4 h-4" /> },
   ];
 
   return (
@@ -2619,6 +3032,7 @@ export default function AdminPage() {
         {activeTab === "blog"      && <BlogTab />}
         {activeTab === "analisis"  && <AnalisisTab />}
         {activeTab === "featured"  && <FeaturedInsightsTab />}
+        {activeTab === "exchange-rates" && <ExchangeRatesTab />}
       </div>
     </div>
   );

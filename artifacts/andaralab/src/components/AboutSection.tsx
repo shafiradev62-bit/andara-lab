@@ -54,7 +54,7 @@ export default function AboutSection() {
             <div className="flex items-center gap-3">
               <Link
                 href="/about"
-                className="inline-flex items-center gap-2 text-[13.5px] font-medium text-white bg-gray-900 px-6 py-2.5 hover:bg-gray-700 transition-colors"
+                className="inline-flex items-center gap-2 text-[13.5px] font-medium text-gray-900 border border-gray-900 px-6 py-2.5 hover:bg-gray-100 transition-colors"
               >
                 About Us <ArrowRight className="w-4 h-4" />
               </Link>

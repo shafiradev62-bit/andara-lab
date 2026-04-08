@@ -1,6 +1,7 @@
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { Link } from "wouter";
 import { useDatasets } from "../lib/cms-store";
+import { useLocale } from "@/lib/locale";
 
 function MiniSparkline({ data, color }: { data: number[]; color: string }) {
   if (data.length < 2) return null;
@@ -50,12 +51,13 @@ function getLastAndChange(spark: number[]): { value: string; change: string; up:
 }
 
 export default function KeyMetrics() {
+  const { locale, t } = useLocale();
   const { data: datasets = [], isLoading } = useDatasets();
 
   // Map dataset IDs to metric config
   const metricConfigs = [
-    { id: "gdp-growth",     label: "GDP Growth",     valueKey: "GDP Growth",  unit: "%", color: "#1a3a5c", href: "/macro/macro-outlooks",   suffix: "%" },
-    { id: "inflation-rate", label: "Inflation (CPI)", valueKey: "Inflation",   unit: "%", color: "#6B7280", href: "/macro/policy-monetary",  suffix: "%" },
+    { id: "gdp-growth",     labelKey: "gdp_growth",     valueKey: "GDP Growth",  unit: "%", color: "#1a3a5c", href: "/macro/macro-outlooks",   suffix: "%" },
+    { id: "inflation-rate", labelKey: "inflation_cpi", valueKey: "Inflation",   unit: "%", color: "#6B7280", href: "/macro/policy-monetary",  suffix: "%" },
   ];
 
   const dynamicMetrics = metricConfigs.map((cfg) => {
@@ -65,7 +67,7 @@ export default function KeyMetrics() {
     const { value, change, up } = getLastAndChange(spark);
     const sub = ds.rows.length > 0 ? String(ds.rows[ds.rows.length - 1][ds.columns[0]] ?? "") : "";
     return {
-      label: cfg.label,
+      label: t(cfg.labelKey as any),
       value: value + cfg.suffix,
       sub,
       change: change + (cfg.suffix === "%" ? "pp" : ""),
@@ -82,9 +84,9 @@ export default function KeyMetrics() {
   // Static metrics that aren't in datasets (BI Rate, IDR/USD, Trade Balance)
   const staticMetrics = [
     {
-      label: "BI Rate",
+      label: t("bi_rate_label"),
       value: "6.00%",
-      sub: "Unchanged",
+      sub: t("unchanged"),
       change: "0.00pp",
       up: null as null,
       href: "/macro/policy-monetary",
@@ -92,9 +94,9 @@ export default function KeyMetrics() {
       spark: [5.75, 5.75, 5.75, 6.0, 6.0, 6.25, 6.25, 6.0],
     },
     {
-      label: "IDR/USD",
+      label: t("idr_usd_label"),
       value: "15,890",
-      sub: "Spot rate",
+      sub: t("spot_rate"),
       change: "+0.32%",
       up: false as false,
       href: "/data/market-dashboard",
@@ -102,9 +104,9 @@ export default function KeyMetrics() {
       spark: [15620, 15680, 15721, 16100, 16015, 16373, 16200, 15890],
     },
     {
-      label: "Trade Balance",
+      label: t("trade_balance"),
       value: "+$2.3B",
-      sub: "Jun 2024",
+      sub: locale === "id" ? "Jun 2024" : "Jun 2024",
       change: "-0.3B",
       up: false as false,
       href: "/sectoral/deep-dives",
@@ -136,12 +138,10 @@ export default function KeyMetrics() {
                 <div className="flex items-center gap-1 mt-0.5">
                   {m.up === null ? (
                     <Minus className="w-3 h-3 text-gray-400" />
-                  ) : m.up ? (
-                    <TrendingUp className="w-3 h-3 text-green-500" />
                   ) : (
-                    <TrendingDown className="w-3 h-3 text-red-500" />
+                    <Minus className="w-3 h-3 text-gray-400" />
                   )}
-                  <span className={`text-[10.5px] font-semibold ${m.up === null ? "text-gray-400" : m.up ? "text-green-600" : "text-red-500"}`}>
+                  <span className="text-[10.5px] font-semibold text-gray-600">
                     {m.change}
                   </span>
                   <span className="text-[10px] text-gray-400 truncate">{m.sub}</span>

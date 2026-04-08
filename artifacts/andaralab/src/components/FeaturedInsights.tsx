@@ -48,7 +48,7 @@ export default function FeaturedInsights() {
     return allPosts.slice(0, limit);
   })();
 
-  const sectionTitle = config?.title ?? (locale === "id" ? "Wawasan Pilihan" : "Featured Insights");
+  const sectionTitle = config?.title ?? t("featured_insights");
   const sectionSubtitle = config?.subtitle ?? "";
   const hero = postsToShow[0];
   const rest = postsToShow.slice(1);
@@ -79,7 +79,7 @@ export default function FeaturedInsights() {
           <div className="flex items-center gap-2 mb-3">
             <Star className="w-4 h-4 text-gray-900" />
             <span className="text-[11px] font-bold uppercase tracking-widest text-gray-900">
-              {config?.sectionLabel ?? (locale === "id" ? "Riset Pilihan" : "Featured Research")}
+              {config?.sectionLabel ?? t("featured_insights")}
             </span>
           </div>
           <div className="flex items-end justify-between gap-4">
@@ -93,7 +93,7 @@ export default function FeaturedInsights() {
               href="/blog"
               className="flex-shrink-0 text-[12.5px] font-medium text-gray-900 hover:underline flex items-center gap-1"
             >
-              {locale === "id" ? "Lihat semua" : "View all"} <ArrowRight className="w-3.5 h-3.5" />
+              {t("lihat_semua")} <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
         </div>

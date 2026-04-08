@@ -30,6 +30,9 @@ export interface ChartDataset {
   yAxisLabel?: string;
   subtitle?: string;
   columns: string[];
+  // Locale-specific column display names (keyed by locale)
+  // If not provided, falls back to the raw column key
+  columnNames?: Partial<Record<"en" | "id", string[]>>;
   rows: Record<string, string | number>[];
   colors?: string[];
   createdAt: string;
@@ -38,16 +41,17 @@ export interface ChartDataset {
 
 // ─── Content Section (matches DB schema) ────────────────────────────────────────
 
+// Allow extra fields so the admin page block editor can safely spread/update partial properties
 export type ContentSection =
-  | { type: "text";      content: string }
-  | { type: "hero";      headline: string; subheadline?: string; ctaText?: string; ctaHref?: string }
-  | { type: "stats";     items: { label: string; value: string; unit?: string }[] }
-  | { type: "featured";  slugs: string[]; limit?: number }
-  | { type: "posts";     categories: string[]; title?: string }
-  | { type: "chart";     datasetId: string; title?: string }
-  | { type: "cta";       heading: string; body: string; buttonText: string; buttonHref: string }
-  | { type: "divider" }
-  | { type: "about";     headline?: string; items?: { label: string; value: string }[] };
+  | { type: "text";      content?: string; headline?: string; subheadline?: string; items?: unknown; datasetId?: string; title?: string; description?: string }
+  | { type: "hero";      headline: string; subheadline?: string; ctaText?: string; ctaHref?: string; content?: string; items?: unknown; datasetId?: string; title?: string; description?: string }
+  | { type: "stats";     items: { label: string; value: string; unit?: string }[]; headline?: string; subheadline?: string; content?: string; datasetId?: string; title?: string; description?: string }
+  | { type: "featured";  slugs: string[]; limit?: number; headline?: string; subheadline?: string; content?: string; items?: unknown; datasetId?: string; title?: string; description?: string }
+  | { type: "posts";     categories: string[]; title?: string; headline?: string; subheadline?: string; content?: string; items?: unknown; datasetId?: string; description?: string }
+  | { type: "chart";     datasetId: string; title?: string; headline?: string; subheadline?: string; content?: string; items?: unknown; description?: string }
+  | { type: "cta";       heading: string; body: string; buttonText: string; buttonHref: string; headline?: string; subheadline?: string; content?: string; items?: unknown; datasetId?: string; title?: string; description?: string }
+  | { type: "divider";   headline?: string; subheadline?: string; content?: string; items?: unknown; datasetId?: string; title?: string; description?: string }
+  | { type: "about";     headline?: string; items?: { label: string; value: string }[]; subheadline?: string; content?: string; datasetId?: string; title?: string; description?: string };
 
 // ─── Page Type ──────────────────────────────────────────────────────────────────
 
@@ -1018,6 +1022,7 @@ export function useFeaturedInsights(locale: "en" | "id") {
     queryKey: QUERY_KEY.featuredInsights(locale),
     queryFn: () => fetchFeaturedInsights(locale),
     staleTime: 1000 * 60 * 5,
+    retry: false,
   });
 }
 
@@ -1073,8 +1078,10 @@ export async function fetchFeaturedInsights(locale: "en" | "id"): Promise<Featur
     const res = await apiGet<FeaturedInsightsResponse>(`/api/featured-insights/${locale}`);
     return res.data;
   } catch (error) {
-    console.warn('API unavailable for fetchFeaturedInsights:', error);
-    throw error;
+    console.warn('API unavailable for fetchFeaturedInsights, using fallback:', error);
+    return locale === "id"
+      ? { id: "fallback-id", locale: "id", slugs: [], title: "Wawasan Pilihan", subtitle: "", sectionLabel: "Riset Pilihan", limit: 3, showOnHomepage: true, createdAt: "", updatedAt: "" }
+      : { id: "fallback-en", locale: "en", slugs: [], title: "Featured Insights", subtitle: "", sectionLabel: "Featured Research", limit: 3, showOnHomepage: true, createdAt: "", updatedAt: "" };
   }
 }
 
@@ -1109,4 +1116,125 @@ export function loadDatasets(): ChartDataset[] {
 
 export function saveDatasets(datasets: ChartDataset[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(datasets));
+}
+
+// ─── Exchange Rate Types ─────────────────────────────────────────────────────────
+
+export interface ExchangeRate {
+  id: string;
+  symbol: string;
+  label: string;
+  labelEn?: string;
+  labelId?: string;
+  value: string;
+  change: string;
+  changeValue: number;
+  up: boolean | null;
+  category: "currency" | "index" | "commodity" | "bond";
+  order: number;
+  enabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ─── Exchange Rate API ──────────────────────────────────────────────────────────
+
+export async function fetchExchangeRates(): Promise<ExchangeRate[]> {
+  try {
+    const res = await apiGet<{ data: ExchangeRate[]; meta: { total: number } }>("/api/exchange-rates");
+    return res.data;
+  } catch (error) {
+    console.warn('API unavailable for fetchExchangeRates:', error);
+    return [];
+  }
+}
+
+export async function createExchangeRate(
+  data: Omit<ExchangeRate, "id" | "createdAt" | "updatedAt">
+): Promise<ExchangeRate> {
+  const res = await apiPost<{ data: ExchangeRate }>("/api/exchange-rates", data);
+  return res.data;
+}
+
+export async function updateExchangeRate(
+  id: string,
+  data: Partial<Omit<ExchangeRate, "id" | "createdAt" | "updatedAt">>
+): Promise<ExchangeRate> {
+  const res = await apiPut<{ data: ExchangeRate }>(`/api/exchange-rates/${id}`, data);
+  return res.data;
+}
+
+export async function deleteExchangeRateAPI(id: string): Promise<void> {
+  await apiDelete(`/api/exchange-rates/${id}`);
+}
+
+export async function resetExchangeRates(): Promise<ExchangeRate[]> {
+  const res = await apiPost<{ data: ExchangeRate[] }>("/api/exchange-rates/reset", {});
+  return res.data;
+}
+
+export async function reorderExchangeRates(ids: string[]): Promise<ExchangeRate[]> {
+  const res = await apiPost<{ data: ExchangeRate[] }>("/api/exchange-rates/reorder", { ids });
+  return res.data;
+}
+
+// ─── Exchange Rate Hooks ────────────────────────────────────────────────────────
+
+export function useExchangeRates() {
+  return useQuery({
+    queryKey: ["exchange-rates"] as const,
+    queryFn: fetchExchangeRates,
+    staleTime: 1000 * 60 * 5,
+  });
+}
+
+export function useCreateExchangeRate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: createExchangeRate,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["exchange-rates"] });
+    },
+  });
+}
+
+export function useUpdateExchangeRate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Parameters<typeof updateExchangeRate>[1] }) =>
+      updateExchangeRate(id, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["exchange-rates"] });
+    },
+  });
+}
+
+export function useDeleteExchangeRate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: deleteExchangeRateAPI,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["exchange-rates"] });
+    },
+  });
+}
+
+export function useResetExchangeRates() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: resetExchangeRates,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["exchange-rates"] });
+    },
+  });
+}
+
+export function useReorderExchangeRates() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: reorderExchangeRates,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["exchange-rates"] });
+    },
+  });
 }

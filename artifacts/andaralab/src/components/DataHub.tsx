@@ -157,7 +157,7 @@ export default function DataHub() {
                 </div>
                 <ResponsiveContainer width="100%" height={60}>
                   <LineChart data={jciSpark} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
-                    <Line type="monotone" dataKey="v" stroke="#374151" strokeWidth={1.5} dot={false} activeDot={{ r: 3, fill: "#374151" }} />
+                    <Line type="monotone" dataKey="v" stroke="#00205B" strokeWidth={1.5} dot={false} activeDot={{ r: 3, fill: "#00205B" }} />
                     <XAxis dataKey="t" hide />
                     <YAxis domain={["auto", "auto"]} hide />
                     <Tooltip content={<SparkTooltip />} />

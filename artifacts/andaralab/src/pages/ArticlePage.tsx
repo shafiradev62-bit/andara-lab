@@ -69,7 +69,7 @@ export default function ArticlePage() {
         <div className="text-[72px] font-bold text-gray-100 mb-4">404</div>
         <h1 className="text-[24px] font-semibold text-gray-900 mb-3">Article not found</h1>
         <p className="text-gray-500 mb-8">{hint}</p>
-        <Link href="/" className="text-[13.5px] font-medium text-white bg-gray-900 px-6 py-2.5">
+        <Link href="/" className="text-[13.5px] font-medium text-gray-900 border border-gray-900 px-6 py-2.5 hover:bg-gray-100">
           Go Home
         </Link>
       </div>

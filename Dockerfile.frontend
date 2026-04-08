@@ -56,9 +56,11 @@ server {
 
     # API proxy — route to backend container via Docker service name
     # resolver 127.0.0.11 enables Docker's embedded DNS to resolve container hostnames
+    # Using variable-based proxy_pass so nginx resolves DNS at request time, not startup
     resolver 127.0.0.11 valid=30s ipv6=off;
     location /api/ {
-        proxy_pass http://backend:8080/api/;
+        set \$upstream_backend backend:8080;
+        proxy_pass http://\$upstream_backend/api/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -84,4 +86,14 @@ EOF
 
 EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
+# Wait for backend to be resolvable before starting nginx
+RUN printf '#!/bin/sh\n\
+echo "Waiting for backend DNS..."\n\
+until nslookup backend > /dev/null 2>&1; do\n\
+  echo "  backend not ready, retrying in 2s..."\n\
+  sleep 2\n\
+done\n\
+echo "Backend DNS resolved, starting nginx..."\n\
+exec "$@"\n' > /wait-for-backend.sh && chmod +x /wait-for-backend.sh
+
+CMD ["/wait-for-backend.sh", "nginx", "-g", "daemon off;"]

@@ -7,6 +7,30 @@ import {
   ArrowRight,
 } from "lucide-react";
 
+// Remap vivid/AI-style chart colors to AndaraLab professional palette
+const COLOR_MAP: Record<string, string> = {
+  "#0d7377": "#0d9fbf",  // teal
+  "#1a3a5c": "#1a3a5c",  // navy (keep)
+  "#e67e22": "#f59e0b",  // orange → gold
+  "#2ecc71": "#10B981",  // green
+  "#9b59b6": "#8b5cf6",   // purple
+  "#3498db": "#3b82f6",   // bright blue
+  "#e74c3c": "#ef4444",  // red → coral
+  "#27ae60": "#10B981",   // green
+  "#8e44ad": "#8b5cf6",  // purple
+  "#16a085": "#0d9fbf",  // teal
+  "#2980b9": "#2a5a8c",  // blue
+  "#c0392b": "#ef4444",  // red → coral
+  "#d35400": "#f59e0b",   // orange → gold
+  "#f39c12": "#f59e0b",   // yellow → gold
+  "#1abc9c": "#0d9fbf",  // teal
+};
+
+function remapColor(color?: string): string {
+  if (!color) return "#1a3a5c";
+  return COLOR_MAP[color.toLowerCase()] ?? color;
+}
+
 // ─── Trend Icon ────────────────────────────────────────────────────────────────
 
 function TrendBadge({ trend, value }: { trend?: string; value?: string }) {
@@ -20,14 +44,14 @@ function TrendBadge({ trend, value }: { trend?: string; value?: string }) {
   }
   if (trend === "up") {
     return (
-      <span className="inline-flex items-center gap-1 text-xs text-green-600 font-semibold">
+      <span className="inline-flex items-center gap-1 text-xs text-gray-900 font-semibold">
         <TrendingUp className="w-3 h-3" />
         {value || "↑ Up"}
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 text-xs text-red-600 font-semibold">
+    <span className="inline-flex items-center gap-1 text-xs text-gray-900 font-semibold">
       <TrendingDown className="w-3 h-3" />
       {value || "↓ Down"}
     </span>
@@ -82,7 +106,7 @@ function DistributionWidget({ widget }: { widget: AnalysisWidget }) {
                 className="h-full rounded-full transition-all duration-500"
                 style={{
                   width: `${item.percentage}%`,
-                  backgroundColor: item.color ?? "#1a3a5c",
+                  backgroundColor: remapColor(item.color),
                 }}
               />
             </div>
@@ -140,7 +164,7 @@ function ComparisonWidget({ widget }: { widget: AnalysisWidget }) {
 // ─── Highlight / Callout ───────────────────────────────────────────────────────
 
 function HighlightWidget({ widget }: { widget: AnalysisWidget }) {
-  const color = widget.calloutColor ?? "#1a3a5c";
+  const color = remapColor(widget.calloutColor ?? "#1a3a5c");
   const text = widget.text ?? "";
 
   // Parse simple markdown-style bold **text** → <strong>
@@ -183,7 +207,7 @@ function BarChartWidget({ widget }: { widget: AnalysisWidget }) {
               className="h-full rounded-full flex items-center justify-end pr-2 transition-all duration-700"
               style={{
                 width: `${(item.value / maxVal) * 100}%`,
-                backgroundColor: item.color ?? "#1a3a5c",
+                backgroundColor: remapColor(item.color),
                 minWidth: item.value > 0 ? "1.5rem" : "0",
               }}
             >
@@ -232,7 +256,7 @@ function DonutChartWidget({ widget }: { widget: AnalysisWidget }) {
       <svg width="140" height="140" viewBox="0 0 140 140" className="flex-shrink-0">
         <circle cx={cx} cy={cy} r={r * 0.55} fill="white" />
         {slices.map((s, i) => (
-          <path key={i} d={s.d} fill={s.color ?? `hsl(${i * 60}, 60%, 50%)`} />
+          <path key={i} d={s.d} fill={remapColor(s.color)} />
         ))}
         {/* Center text */}
         <text
@@ -254,7 +278,7 @@ function DonutChartWidget({ widget }: { widget: AnalysisWidget }) {
           <div key={i} className="flex items-center gap-3">
             <div
               className="w-3 h-3 rounded-sm flex-shrink-0"
-              style={{ backgroundColor: s.color ?? `hsl(${i * 60}, 60%, 50%)` }}
+              style={{ backgroundColor: remapColor(s.color) }}
             />
             <span className="text-sm text-gray-700 flex-1">{s.label}</span>
             <span className="text-xs font-semibold text-gray-500">

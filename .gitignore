@@ -54,3 +54,5 @@ artifacts/andaralab/.env.local
 # .env.production is committed — it only contains the non-sensitive API URL
 
 .vercel
+
+.vercel
