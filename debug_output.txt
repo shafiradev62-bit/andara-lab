@@ -1,0 +1,92 @@
+=== DEBUG /article/what-is-current-account-deficit ===
+Body length: 1152
+Body preview: LIVE
+IDR/USD
+15,890
+▼ +0.32%
+JCI
+7,214.3
+▲ +1.14%
+BI RATE
+6.00%
+Unch
+US 10Y
+4.28%
+▲ -0.05%
+GOLD
+$2,285
+▲ +0.63%
+BRENT
+$82.4
+▲ +0.78%
+EUR/USD
+1.0831
+▼ -0.15%
+DXY
+104.2
+▼ +0.18%
+S&P 500
+5,248
+▲ +0.52%
+S
+Page URL: http://76.13.17.91/article/what-is-current-account-deficit
+Page title: Article not found | AndaraLab
+
+API calls made (6):
+  REQ: GET http://76.13.17.91/api/api/pages?locale=en&status=published
+  REQ: GET http://76.13.17.91/api/api/blog/slug/what-is-current-account-deficit?locale=en
+  REQ: GET http://76.13.17.91/api/api/blog?status=published
+  RES: 404 http://76.13.17.91/api/api/blog/slug/what-is-current-account-deficit?locale=en
+  RES: 404 http://76.13.17.91/api/api/pages?locale=en&status=published
+  RES: 404 http://76.13.17.91/api/api/blog?status=published
+
+Headings: ['H1:Article not found']
+Error divs: 0
+
+HTML snippet: <!DOCTYPE html><html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+    <title>Article not found | AndaraLab</title>
+    
+    <!-- Favicon with cache busting -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2026040115">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2026040115">
+    <link rel="manifest" href="/manifest.json?v=2026040115">
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#1a3a5c">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+    <script type="module" crossorigin="" src="/assets/index.DC2muqy3.js"></script>
+    <link rel="stylesheet" crossorigin="" href="/assets/index.CKmhYgUS.css">
+  <meta name="description" content="This article does not exist or is still a draft in the CMS."><meta property="og:description" content="This article does not exist or is still a draft in the CMS."><meta name="twitter:description" content="This article does not exist or is still a draft in the CMS."><meta property="og:title" content="Article not found | AndaraLab"><meta name="twitter:title" content="Article not found | AndaraLab"><meta property="og:type" content="website"><meta name="twitter:card" content="summary_large_image"><meta property="og:url" content="http://76.13.17.91/article/what-is-current-account-deficit"><link rel="canonical" href="http://76.13.17.91/article/what-is-current-account-deficit"></head>
+  <body>
+    <div id="root"><div class="min-h-screen bg-white text-gray-900 font-sans"><div class="fixed top-0 left-0 right-0 z-50"><div class="bg-[#F9FAFB] border-b border-[#E5E7EB] overflow-hidden h-8 flex items-center"><div class="flex-shrink-0 flex items-center gap-2 px-3 border-r border-[#E5E7EB] h-full bg-[#F9FAFB] z-10"><span class="live-dot w-1.5 h-1.5 rounded-full bg-gray-900 inline-block"></span><span class="text-[10.5px] font-semibold text-gray-400 uppercase tracking-widest">Live</span></div><div class="flex-1 overflow-hidden relative"><div class="ticker-track"><div class="flex items-center gap-2 px-5 border-r border-[#F3F4F6] h-8"><span class="text-[11px] font-semibold text-gray-400 uppercase tracking-wide whitespace-nowrap">IDR/USD</span><span class="text-[11.5px] font-semibold text-gray-900 whitespace-nowrap">15,890</span><span class="text-[10.5px] font-semibold whitespace-nowrap text-red-500">▼ +0.32%</span></div><div class="flex items-center gap-2 px-5 border-r border-[#F3F4F6] h-8"><span class="text-[11px] font-semibold text-gray-400 uppercase tracking-wide whitespace-nowrap">JCI</span><span class="text-[11.5px] font-semibold text-gray-900 whitespace-nowrap">7,214.3</span><span class="text-[10.5px] font-semibold whitespace-nowrap text-green-600">▲
+
+Homepage body length: 3207
+Homepage about section preview: 
+▲ +0.87%
+CPI ID
+2.51%
+▲ -0.33pp
+AL
+AndaraLab
+Home
+About Us
+Macro Foundations
+Sectoral Intelligence
+Data Hub
+Blog
+Analysis
+Contact
+EN
+ID
+Get in Touch
+INDEPENDENT ECONOMIC RESEARCH · INDONESIA
+Decoding Economies,
+Empowering Growth
+
+AndaraLab transforms Indonesia's complex economic data into high-precision strategic intelligence — from macro policy shifts to sectoral deep-dives across 8 key industri
