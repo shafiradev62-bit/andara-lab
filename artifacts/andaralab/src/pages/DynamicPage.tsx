@@ -4,6 +4,7 @@ import { Link, useLocation } from "wouter";
 import { usePageBySlug, useDatasets, usePosts } from "@/lib/cms-store";
 import type { ContentSection } from "@/lib/cms-store";
 import InteractiveChart from "@/components/InteractiveChart";
+import CalendarWidget from "@/components/CalendarWidget";
 import { useLocale } from "@/lib/locale";
 import { RESEARCH_TAG_PILL } from "@/lib/research-tag-styles";
 import { applyDocumentSeo, seoFromCmsPage } from "@/lib/document-meta";
@@ -227,6 +228,30 @@ function ChartSection({ datasetId, title }: any) {
   );
 }
 
+function CalendarSection({ title, titleId, subtitle, subtitleId, impactFilter, regionFilter, categoryFilter, defaultDays, showTimezone, showActual, showPrevious, showConsensus, showForecast }: any) {
+  return (
+    <section className="max-w-[1200px] mx-auto px-6 py-10">
+      <div className="border border-[#E5E7EB]">
+        <CalendarWidget
+          title={title}
+          titleId={titleId}
+          subtitle={subtitle}
+          subtitleId={subtitleId}
+          impactFilter={impactFilter}
+          regionFilter={regionFilter}
+          categoryFilter={categoryFilter}
+          defaultDays={defaultDays}
+          showTimezone={showTimezone}
+          showActual={showActual}
+          showPrevious={showPrevious}
+          showConsensus={showConsensus}
+          showForecast={showForecast}
+        />
+      </div>
+    </section>
+  );
+}
+
 function SectionBlock({ section }: { section: ContentSection }) {
   switch (section.type) {
     case "hero":     return <HeroSection {...section} />;
@@ -237,6 +262,7 @@ function SectionBlock({ section }: { section: ContentSection }) {
     case "featured": return <FeaturedSection slugs={section.slugs} limit={section.limit} />;
     case "posts":    return <PostsSection categories={section.categories} title={section.title} />;
     case "chart":    return <ChartSection datasetId={section.datasetId} title={section.title} />;
+    case "calendar": return <CalendarSection {...section} />;
     case "about":    return <AboutSectionContent {...section} />;
     default:         return null;
   }

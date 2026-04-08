@@ -51,7 +51,8 @@ export type ContentSection =
   | { type: "chart";     datasetId: string; title?: string; headline?: string; subheadline?: string; content?: string; items?: unknown; description?: string }
   | { type: "cta";       heading: string; body: string; buttonText: string; buttonHref: string; headline?: string; subheadline?: string; content?: string; items?: unknown; datasetId?: string; title?: string; description?: string }
   | { type: "divider";   headline?: string; subheadline?: string; content?: string; items?: unknown; datasetId?: string; title?: string; description?: string }
-  | { type: "about";     headline?: string; items?: { label: string; value: string }[]; subheadline?: string; content?: string; datasetId?: string; title?: string; description?: string };
+  | { type: "about";     headline?: string; items?: { label: string; value: string }[]; subheadline?: string; content?: string; datasetId?: string; title?: string; description?: string }
+  | { type: "calendar";  title?: string; titleId?: string; subtitle?: string; subtitleId?: string; impactFilter?: string[]; regionFilter?: string; categoryFilter?: string; defaultDays?: number; showTimezone?: boolean; showActual?: boolean; showPrevious?: boolean; showConsensus?: boolean; showForecast?: boolean; headline?: string; subheadline?: string; content?: string; items?: unknown; datasetId?: string; description?: string };
 
 // ─── Page Type ──────────────────────────────────────────────────────────────────
 
@@ -1235,6 +1236,203 @@ export function useReorderExchangeRates() {
     mutationFn: reorderExchangeRates,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["exchange-rates"] });
+    },
+  });
+}
+
+// ─── Calendar Event Types ────────────────────────────────────────────────────────
+
+export type CalendarImpact = "low" | "medium" | "high";
+export type CalendarRegion = "all" | "major" | "america" | "europe" | "asia" | "africa";
+
+export interface CalendarEvent {
+  id: string;
+  date: string;           // ISO date string e.g. "2026-04-08"
+  time: string;           // e.g. "13:30" (24h format)
+  countryCode: string;    // e.g. "US", "ID", "CN"
+  countryLabel: string;   // e.g. "United States", "Indonesia"
+  eventName: string;
+  eventNameId?: string;   // Indonesian translation
+  impact: CalendarImpact;
+  actual?: string;
+  previous?: string;
+  consensus?: string;
+  forecast?: string;
+  category: string;       // e.g. "Interest Rate", "GDP Growth", "Inflation"
+  region: CalendarRegion;
+  enabled: boolean;
+  order: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CalendarConfig {
+  id: string;
+  title: string;
+  titleId: string;
+  subtitle?: string;
+  subtitleId?: string;
+  impactFilter: CalendarImpact[];
+  regionFilter: CalendarRegion;
+  categoryFilter: string;
+  defaultDays: number;   // e.g. 7 = show next 7 days
+  showTimezone: boolean;
+  showActual: boolean;
+  showPrevious: boolean;
+  showConsensus: boolean;
+  showForecast: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ─── Calendar Event API ─────────────────────────────────────────────────────────
+
+export async function fetchCalendarEvents(params?: {
+  days?: number;
+  impact?: CalendarImpact[];
+  region?: CalendarRegion;
+  category?: string;
+  country?: string;
+}): Promise<CalendarEvent[]> {
+  try {
+    const qp = new URLSearchParams();
+    if (params?.days)      qp.set("days",      String(params.days));
+    if (params?.impact)    qp.set("impact",     params.impact.join(","));
+    if (params?.region)    qp.set("region",     params.region);
+    if (params?.category)  qp.set("category",   params.category);
+    if (params?.country)   qp.set("country",    params.country);
+    const qs = qp.toString() ? `?${qp.toString()}` : "";
+    const res = await apiGet<{ data: CalendarEvent[]; meta: { total: number } }>(`/api/calendar/events${qs}`);
+    return res.data;
+  } catch (error) {
+    console.warn('API unavailable for fetchCalendarEvents:', error);
+    return [];
+  }
+}
+
+export async function createCalendarEvent(
+  data: Omit<CalendarEvent, "id" | "createdAt" | "updatedAt">
+): Promise<CalendarEvent> {
+  const res = await apiPost<{ data: CalendarEvent }>("/api/calendar/events", data);
+  return res.data;
+}
+
+export async function updateCalendarEvent(
+  id: string,
+  data: Partial<Omit<CalendarEvent, "id" | "createdAt" | "updatedAt">>
+): Promise<CalendarEvent> {
+  const res = await apiPut<{ data: CalendarEvent }>(`/api/calendar/events/${id}`, data);
+  return res.data;
+}
+
+export async function deleteCalendarEventAPI(id: string): Promise<void> {
+  await apiDelete(`/api/calendar/events/${id}`);
+}
+
+export async function resetCalendarEvents(): Promise<CalendarEvent[]> {
+  const res = await apiPost<{ data: CalendarEvent[] }>("/api/calendar/events/reset", {});
+  return res.data;
+}
+
+export async function fetchCalendarConfig(): Promise<CalendarConfig> {
+  try {
+    const res = await apiGet<{ data: CalendarConfig }>("/api/calendar/config");
+    return res.data;
+  } catch (error) {
+    console.warn('API unavailable for fetchCalendarConfig:', error);
+    return {
+      id: "default",
+      title: "Economic Calendar",
+      titleId: "Kalender Ekonomi",
+      subtitle: "",
+      subtitleId: "",
+      impactFilter: ["low", "medium", "high"],
+      regionFilter: "all",
+      categoryFilter: "all",
+      defaultDays: 7,
+      showTimezone: true,
+      showActual: true,
+      showPrevious: true,
+      showConsensus: true,
+      showForecast: true,
+      createdAt: "",
+      updatedAt: "",
+    };
+  }
+}
+
+export async function updateCalendarConfig(
+  data: Partial<Omit<CalendarConfig, "id" | "createdAt" | "updatedAt">>
+): Promise<CalendarConfig> {
+  const res = await apiPut<{ data: CalendarConfig }>("/api/calendar/config", data);
+  return res.data;
+}
+
+// ─── Calendar Hooks ─────────────────────────────────────────────────────────────
+
+export function useCalendarEvents(params?: Parameters<typeof fetchCalendarEvents>[0]) {
+  return useQuery({
+    queryKey: ["calendar-events", params ?? {}] as const,
+    queryFn: () => fetchCalendarEvents(params),
+    staleTime: 1000 * 60 * 10, // 10 minutes
+  });
+}
+
+export function useCalendarConfig() {
+  return useQuery({
+    queryKey: ["calendar-config"] as const,
+    queryFn: fetchCalendarConfig,
+    staleTime: 1000 * 60 * 30,
+  });
+}
+
+export function useCreateCalendarEvent() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: createCalendarEvent,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["calendar-events"] });
+    },
+  });
+}
+
+export function useUpdateCalendarEvent() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Parameters<typeof updateCalendarEvent>[1] }) =>
+      updateCalendarEvent(id, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["calendar-events"] });
+    },
+  });
+}
+
+export function useDeleteCalendarEvent() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: deleteCalendarEventAPI,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["calendar-events"] });
+    },
+  });
+}
+
+export function useResetCalendarEvents() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: resetCalendarEvents,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["calendar-events"] });
+    },
+  });
+}
+
+export function useUpdateCalendarConfig() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: updateCalendarConfig,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["calendar-config"] });
     },
   });
 }

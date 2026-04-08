@@ -6,6 +6,8 @@ import blogPostsRouter from "./blog-posts.js";
 import analisisRouter from "./analisis.js";
 import featuredInsightsRouter from "./featured-insights.js";
 import exchangeRatesRouter from "./exchange-rates.js";
+import calendarRouter from "./calendar.js";
+import calendarConfigRouter from "./calendar-config.js";
 
 const router: IRouter = Router();
 
@@ -16,5 +18,7 @@ router.use("/blog",     blogPostsRouter);
 router.use("/analisis", analisisRouter);
 router.use("/featured-insights", featuredInsightsRouter);
 router.use("/exchange-rates", exchangeRatesRouter);
+router.use("/calendar/events", calendarRouter);
+router.use("/calendar/config", calendarConfigRouter);
 
 export default router;

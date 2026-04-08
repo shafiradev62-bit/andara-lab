@@ -38,7 +38,9 @@ export type ContentSection =
   | { type: "posts";     categories: string[]; title?: string }
   | { type: "chart";     datasetId: string; title?: string }
   | { type: "cta";       heading: string; body: string; buttonText: string; buttonHref: string }
-  | { type: "divider" };
+  | { type: "divider" }
+  | { type: "about";     headline?: string; items?: { label: string; value: string }[]; description?: string }
+  | { type: "calendar";  title?: string; titleId?: string; subtitle?: string; subtitleId?: string; impactFilter?: string[]; regionFilter?: string; categoryFilter?: string; defaultDays?: number; showTimezone?: boolean; showActual?: boolean; showPrevious?: boolean; showConsensus?: boolean; showForecast?: boolean };
 
 export interface SeedPage {
   slug: string;

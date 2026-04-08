@@ -1126,3 +1126,300 @@ class PersistentExchangeRateStore implements ExchangeRateStore {
 }
 
 export const exchangeRateStore: ExchangeRateStore = new PersistentExchangeRateStore();
+
+// ─── Calendar Event & Config Stores ────────────────────────────────────────────
+
+export type CalendarImpact = "low" | "medium" | "high";
+export type CalendarRegion = "all" | "major" | "america" | "europe" | "asia" | "africa";
+
+export interface CalendarEvent {
+  id: string;
+  date: string;
+  time: string;
+  countryCode: string;
+  countryLabel: string;
+  eventName: string;
+  eventNameId?: string;
+  impact: CalendarImpact;
+  actual?: string;
+  previous?: string;
+  consensus?: string;
+  forecast?: string;
+  category: string;
+  region: CalendarRegion;
+  enabled: boolean;
+  order: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CalendarConfig {
+  id: string;
+  title: string;
+  titleId: string;
+  subtitle?: string;
+  subtitleId?: string;
+  impactFilter: CalendarImpact[];
+  regionFilter: CalendarRegion;
+  categoryFilter: string;
+  defaultDays: number;
+  showTimezone: boolean;
+  showActual: boolean;
+  showPrevious: boolean;
+  showConsensus: boolean;
+  showForecast: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CalendarEventStore {
+  list(filter?: { days?: number; impact?: CalendarImpact[]; region?: CalendarRegion; category?: string; country?: string }): CalendarEvent[];
+  get(id: string): CalendarEvent | undefined;
+  create(data: Omit<CalendarEvent, "id" | "createdAt" | "updatedAt">): CalendarEvent;
+  update(id: string, data: Partial<Omit<CalendarEvent, "id" | "createdAt" | "updatedAt">>): CalendarEvent | null;
+  delete(id: string): boolean;
+  reset(): void;
+}
+
+const SEED_CALENDAR_EVENTS: CalendarEvent[] = [
+  {
+    id: "cal-1",
+    date: new Date().toISOString().split("T")[0],
+    time: "13:30",
+    countryCode: "US",
+    countryLabel: "United States",
+    eventName: "Non-Farm Payrolls",
+    eventNameId: "Data Gaji Non-Pertanian",
+    impact: "high",
+    actual: "",
+    previous: "275K",
+    consensus: "198K",
+    forecast: "210K",
+    category: "Labour Market",
+    region: "all",
+    enabled: true,
+    order: 1,
+    createdAt: now(),
+    updatedAt: now(),
+  },
+  {
+    id: "cal-2",
+    date: new Date().toISOString().split("T")[0],
+    time: "15:00",
+    countryCode: "US",
+    countryLabel: "United States",
+    eventName: "ISM Manufacturing PMI",
+    eventNameId: "PMI Manufaktur ISM",
+    impact: "high",
+    actual: "",
+    previous: "50.3",
+    consensus: "50.5",
+    forecast: "50.8",
+    category: "Business Confidence",
+    region: "all",
+    enabled: true,
+    order: 2,
+    createdAt: now(),
+    updatedAt: now(),
+  },
+  {
+    id: "cal-3",
+    date: new Date(Date.now() + 86400000).toISOString().split("T")[0],
+    time: "07:30",
+    countryCode: "ID",
+    countryLabel: "Indonesia",
+    eventName: "BI Rate Decision",
+    eventNameId: "Keputusan Suku Bunga BI",
+    impact: "high",
+    actual: "",
+    previous: "6.00%",
+    consensus: "6.00%",
+    forecast: "6.00%",
+    category: "Interest Rate",
+    region: "all",
+    enabled: true,
+    order: 1,
+    createdAt: now(),
+    updatedAt: now(),
+  },
+  {
+    id: "cal-4",
+    date: new Date(Date.now() + 86400000).toISOString().split("T")[0],
+    time: "09:00",
+    countryCode: "CN",
+    countryLabel: "China",
+    eventName: "CPI YoY",
+    eventNameId: "IHK YoY",
+    impact: "medium",
+    actual: "",
+    previous: "0.2%",
+    consensus: "0.3%",
+    forecast: "0.4%",
+    category: "Prices & Inflation",
+    region: "all",
+    enabled: true,
+    order: 2,
+    createdAt: now(),
+    updatedAt: now(),
+  },
+  {
+    id: "cal-5",
+    date: new Date(Date.now() + 86400000 * 2).toISOString().split("T")[0],
+    time: "14:00",
+    countryCode: "EU",
+    countryLabel: "Euro Area",
+    eventName: "ECB Interest Rate Decision",
+    eventNameId: "Keputusan Suku Bunga ECB",
+    impact: "high",
+    actual: "",
+    previous: "4.50%",
+    consensus: "4.25%",
+    forecast: "4.25%",
+    category: "Interest Rate",
+    region: "europe",
+    enabled: true,
+    order: 1,
+    createdAt: now(),
+    updatedAt: now(),
+  },
+];
+
+const SEED_CALENDAR_CONFIG: CalendarConfig = {
+  id: "default",
+  title: "Economic Calendar",
+  titleId: "Kalender Ekonomi",
+  subtitle: "Track key economic releases and events",
+  subtitleId: "Lacak rilis dan peristiwa ekonomi penting",
+  impactFilter: ["low", "medium", "high"],
+  regionFilter: "all",
+  categoryFilter: "all",
+  defaultDays: 7,
+  showTimezone: true,
+  showActual: true,
+  showPrevious: true,
+  showConsensus: true,
+  showForecast: true,
+  createdAt: now(),
+  updatedAt: now(),
+};
+
+class PersistentCalendarEventStore implements CalendarEventStore {
+  private records: Map<string, CalendarEvent>;
+  private readonly FILE = "calendar-events.json";
+
+  constructor() {
+    this.records = new Map();
+    this.load();
+  }
+
+  private load() {
+    const saved = readJson<CalendarEvent[]>(this.FILE, []);
+    if (saved.length > 0) {
+      this.records = new Map(saved.map((e) => [e.id, e]));
+    } else {
+      this.seed();
+    }
+  }
+
+  private save() {
+    writeJson(this.FILE, [...this.records.values()]);
+  }
+
+  private seed() {
+    this.records.clear();
+    for (const ev of SEED_CALENDAR_EVENTS) {
+      this.records.set(ev.id, cloneDeep(ev));
+    }
+    this.save();
+  }
+
+  list(filter?: { days?: number; impact?: CalendarImpact[]; region?: CalendarRegion; category?: string; country?: string }): CalendarEvent[] {
+    let all = [...this.records.values()].filter((e) => e.enabled);
+
+    if (filter?.impact?.length) {
+      all = all.filter((e) => filter.impact!.includes(e.impact));
+    }
+    if (filter?.region && filter.region !== "all") {
+      all = all.filter((e) => e.region === "all" || e.region === filter.region);
+    }
+    if (filter?.category && filter.category !== "all") {
+      all = all.filter((e) => e.category === filter.category);
+    }
+    if (filter?.country) {
+      all = all.filter((e) => e.countryCode === filter.country);
+    }
+
+    // Sort by date + time
+    all.sort((a, b) => {
+      const dateCompare = a.date.localeCompare(b.date);
+      if (dateCompare !== 0) return dateCompare;
+      return a.time.localeCompare(b.time);
+    });
+
+    return all;
+  }
+
+  get(id: string): CalendarEvent | undefined { return this.records.get(id); }
+
+  create(data: Omit<CalendarEvent, "id" | "createdAt" | "updatedAt">): CalendarEvent {
+    const id = `cal-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    const record: CalendarEvent = { ...cloneDeep(data), id, createdAt: now(), updatedAt: now() };
+    this.records.set(id, record);
+    this.save();
+    return record;
+  }
+
+  update(id: string, data: Partial<Omit<CalendarEvent, "id" | "createdAt" | "updatedAt">>): CalendarEvent | null {
+    const existing = this.records.get(id);
+    if (!existing) return null;
+    const updated: CalendarEvent = { ...existing, ...cloneDeep(data), updatedAt: now() };
+    this.records.set(id, updated);
+    this.save();
+    return updated;
+  }
+
+  delete(id: string): boolean {
+    const result = this.records.delete(id);
+    if (result) this.save();
+    return result;
+  }
+
+  reset() { this.seed(); }
+}
+
+export interface CalendarConfigStore {
+  get(): CalendarConfig;
+  update(data: Partial<Omit<CalendarConfig, "id" | "createdAt" | "updatedAt">>): CalendarConfig;
+}
+
+class PersistentCalendarConfigStore implements CalendarConfigStore {
+  private config: CalendarConfig;
+  private readonly FILE = "calendar-config.json";
+
+  constructor() {
+    this.config = cloneDeep(SEED_CALENDAR_CONFIG);
+    this.load();
+  }
+
+  private load() {
+    const saved = readJson<CalendarConfig | null>(this.FILE, null);
+    if (saved) this.config = { ...this.config, ...saved };
+  }
+
+  private save() {
+    writeJson(this.FILE, this.config);
+  }
+
+  get(): CalendarConfig {
+    return cloneDeep(this.config);
+  }
+
+  update(data: Partial<Omit<CalendarConfig, "id" | "createdAt" | "updatedAt">>): CalendarConfig {
+    this.config = { ...this.config, ...cloneDeep(data), updatedAt: now() };
+    this.save();
+    return this.get();
+  }
+}
+
+export const calendarEventStore: CalendarEventStore = new PersistentCalendarEventStore();
+export const calendarConfigStore: CalendarConfigStore = new PersistentCalendarConfigStore();
