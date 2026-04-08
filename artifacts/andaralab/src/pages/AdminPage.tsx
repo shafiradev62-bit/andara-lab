@@ -3527,7 +3527,7 @@ export default function AdminPage() {
             className={`flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold border transition-all ${
               deployMut.isPending
                 ? "bg-gray-100 text-gray-400 border-gray-200"
-                : "bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100"
+                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
             }`}
           >
             {deployMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
