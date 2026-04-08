@@ -26,5 +26,6 @@ EXPOSE 8080
 
 ENV NODE_ENV=production
 ENV PORT=8080
+ENV DEPLOY_WEBHOOK_SECRET=${DEPLOY_WEBHOOK_SECRET:-}
 
 CMD ["sh", "-c", "node --enable-source-maps ./dist/index.mjs"]

@@ -93,82 +93,91 @@ export default function DataHubPage() {
       {/* Charts Tab */}
       {activeTab === "charts" && (
         <div className="max-w-[1200px] mx-auto px-6 py-10">
-          {!selectedChart ? (
-            <>
-              <div className="flex items-center justify-between mb-6">
+          {!selectedDataset && (
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+              <div>
                 <h2 className="text-[18px] font-semibold text-gray-900">{t("available_datasets")}</h2>
-                <Link href="/admin" className="text-[12.5px] font-medium text-gray-900 flex items-center gap-1 hover:underline">
-                  {t("manage_in_cms")} <ExternalLink className="w-3.5 h-3.5" />
-                </Link>
+                <p className="text-[13px] text-gray-500 mt-1">Select a dataset to view interactive chart</p>
               </div>
-
-              {/* Loading state */}
-              {isLoading && (
-                <div className="flex items-center justify-center py-24 gap-3 text-gray-400">
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span className="text-[13.5px]">{t("loading_datasets")}</span>
-                </div>
-              )}
-
-              {/* Error state — fallback to localStorage */}
-              {error && (
-                <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl mb-6">
-                  <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="text-[13px] font-semibold text-red-700">{t("could_not_reach_api")}</p>
-                    <p className="text-[12px] text-red-500 mt-0.5">
-                      {t("showing_cached_data")}: <code className="bg-red-100 px-1 rounded">{t("start_api_server")}</code>
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {!isLoading && (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+              <div className="w-full sm:w-auto">
+                <select
+                  className="w-full sm:w-[300px] border border-[#E5E7EB] bg-white rounded-md px-3 py-2 text-[13px] font-medium text-gray-900 shadow-sm focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900"
+                  onChange={(e) => setSelectedChart(e.target.value)}
+                  value={selectedChart || ""}
+                >
+                  <option value="" disabled>-- Select an indicator --</option>
                   {datasets.map((ds) => (
-                    <button
-                      key={ds.id}
-                      onClick={() => setSelectedChart(ds.id)}
-                      className="border border-[#E5E7EB] p-5 text-left hover:border-gray-900 hover:shadow-sm transition-all group"
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-[10.5px] font-semibold uppercase tracking-widest text-gray-900 bg-gray-100 px-2 py-0.5">
-                          {ds.category}
-                        </span>
-                        <span className="text-[11px] text-gray-400 capitalize">{ds.chartType}</span>
-                      </div>
-                      <h3 className="text-[14px] font-semibold text-gray-900 mb-1.5 group-hover:text-gray-900 transition-colors">
-                        {ds.title}
-                      </h3>
-                      <p className="text-[12px] text-gray-500 mb-4 leading-relaxed">{ds.description}</p>
-                      <div className="h-[100px] pointer-events-none">
-                        <InteractiveChart dataset={ds} height={100} />
-                      </div>
-                      <div className="mt-3 flex items-center gap-1 text-[12px] text-gray-900 font-medium">
-                        {t("view_full_chart")} <ArrowRight className="w-3.5 h-3.5" />
-                      </div>
-                    </button>
+                    <option key={ds.id} value={ds.id}>
+                      {ds.category.toUpperCase()} - {ds.title}
+                    </option>
                   ))}
-                  {datasets.length === 0 && !error && (
-                    <div className="col-span-full text-center py-16 text-gray-400">
-                      <BarChart2 className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                      <p className="text-[14px]">{t("no_datasets")}</p>
-                      <Link href="/admin" className="text-[13px] text-gray-900 hover:underline mt-1 inline-block">
-                        {t("add_one_cms")}
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              )}
-            </>
-          ) : selectedDataset ? (
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* Loading state */}
+          {isLoading && (
+            <div className="flex items-center justify-center py-24 gap-3 text-gray-400">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span className="text-[13.5px]">{t("loading_datasets")}</span>
+            </div>
+          )}
+
+          {/* Error state — fallback to localStorage */}
+          {error && (
+            <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl mb-6">
+              <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-[13px] font-semibold text-red-700">{t("could_not_reach_api")}</p>
+                <p className="text-[12px] text-red-500 mt-0.5">
+                  {t("showing_cached_data")}: <code className="bg-red-100 px-1 rounded">{t("start_api_server")}</code>
+                </p>
+              </div>
+            </div>
+          )}
+
+          {!isLoading && !selectedDataset && datasets.length === 0 && !error && (
+            <div className="col-span-full text-center py-16 text-gray-400 border border-dashed border-[#E5E7EB] rounded-xl">
+              <BarChart2 className="w-10 h-10 mx-auto mb-3 opacity-30" />
+              <p className="text-[14px]">{t("no_datasets")}</p>
+              <Link href="/admin" className="text-[13px] text-gray-900 hover:underline mt-1 inline-block">
+                {t("add_one_cms")}
+              </Link>
+            </div>
+          )}
+
+          {!isLoading && !selectedDataset && datasets.length > 0 && (
+            <div className="border border-dashed border-[#E5E7EB] rounded-xl p-16 flex flex-col items-center justify-center text-center text-gray-500 bg-gray-50/50">
+               <LineChartIcon className="w-12 h-12 mb-4 text-gray-400 opacity-50" />
+               <p className="text-[14px] font-medium text-gray-600 mb-1">No chart selected</p>
+               <p className="text-[13px] max-w-sm">Please select an indicator from the dropdown above to view the interactive chart and corresponding data table.</p>
+            </div>
+          )}
+
+          {selectedDataset ? (
             <div>
-              <button
-                onClick={() => setSelectedChart(null)}
-                className="flex items-center gap-1.5 text-[12.5px] text-gray-500 hover:text-gray-900 mb-6 font-medium"
-              >
-                ← {t("back_to_all_charts")}
-              </button>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+                <button
+                  onClick={() => setSelectedChart(null)}
+                  className="flex items-center gap-1.5 text-[12.5px] text-gray-500 hover:text-gray-900 font-medium"
+                >
+                  ← {t("back_to_all_charts")}
+                </button>
+                <div className="w-full sm:w-auto">
+                  <select
+                    className="w-full sm:w-[300px] border border-[#E5E7EB] bg-white rounded-md px-3 py-1.5 text-[13px] font-medium text-gray-900 shadow-sm focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900"
+                    onChange={(e) => setSelectedChart(e.target.value)}
+                    value={selectedChart || ""}
+                  >
+                    {datasets.map((ds) => (
+                      <option key={ds.id} value={ds.id}>
+                        {ds.category.toUpperCase()} - {ds.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
               <div className="border border-[#E5E7EB] p-6">
                 <div className="flex items-start justify-between mb-2">
                   <div>

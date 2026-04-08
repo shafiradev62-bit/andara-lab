@@ -38,6 +38,8 @@ const allowedOrigins = [
   // Vercel production & preview deployments
   "https://andaralab-ui.vercel.app",
   "https://andaralab-lkxp7b875-rahmis-projects-881d2cc1.vercel.app",
+  "https://andara-lab.vercel.app",
+  "https://andara-cl3il0m9o-rahmis-projects-881d2cc1.vercel.app",
 ];
 
 /** Comma-separated extra origins (e.g. https://lab.example.com,http://10.0.0.5:8080) */

@@ -164,6 +164,30 @@ export async function createDataset(
   }
 }
 
+export async function deployToVPS() {
+  try {
+    const res = await apiPost<{ success?: true, error?: string }>("/api/webhook/deploy?secret=" + (import.meta.env.VITE_DEPLOY_SECRET || "andara-secret-key"), {});
+    return res;
+  } catch (error) {
+    console.warn("Deploy triggered failed", error);
+    throw error;
+  }
+}
+
+export async function bulkCreateDatasets(
+  data: Omit<ChartDataset, "id" | "createdAt" | "updatedAt">[]
+): Promise<ChartDataset[]> {
+  try {
+    const res = await apiPost<ApiListResponse<ChartDataset>>("/api/datasets/bulk", data);
+    const currentDatasets = getSeedDatasets();
+    saveDatasetsToStorage([...currentDatasets, ...res.data]);
+    return res.data;
+  } catch (error) {
+    console.warn('API unavailable for bulkCreate, local cache not fully synced:', error);
+    throw error; // Let the hook handler catch it
+  }
+}
+
 export async function updateDataset(
   id: string,
   data: Partial<Omit<ChartDataset, "id" | "createdAt" | "updatedAt">>
@@ -718,6 +742,22 @@ export function useCreateDataset() {
     mutationFn: createDataset,
     onSuccess: () => {
       // Invalidate list so it refetches and includes the new entry
+      qc.invalidateQueries({ queryKey: QUERY_KEY.datasets });
+    },
+  });
+}
+
+export function useDeployToVPS() {
+  return useMutation({
+    mutationFn: deployToVPS,
+  });
+}
+
+export function useBulkCreateDatasets() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: bulkCreateDatasets,
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: QUERY_KEY.datasets });
     },
   });

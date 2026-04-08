@@ -35,6 +35,9 @@ RUN rm -f /usr/share/nginx/html/favicon.ico \
 # Copy built files from builder
 COPY --from=builder /app/artifacts/andaralab/dist/public /usr/share/nginx/html
 
+# Also copy public folder (gambar.png, etc) — in case dist didn't include it
+COPY --from=builder /app/artifacts/andaralab/public/ /usr/share/nginx/html/
+
 # Copy nginx configuration
 COPY <<EOF /etc/nginx/conf.d/default.conf
 server {

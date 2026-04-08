@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   useDatasets, useCreateDataset, useUpdateDataset,
-  useDeleteDataset, useResetDatasets,
+  useDeleteDataset, useResetDatasets, useBulkCreateDatasets, useDeployToVPS,
   usePages, useCreatePage, useUpdatePage, useDeletePage, useResetPages,
   usePosts, useCreatePost, useUpdatePost, useDeletePost, useResetPosts,
   useAnalisisList, useAnalisis, useCreateAnalisis, useUpdateAnalisis,
@@ -29,7 +29,7 @@ import {
   Globe, Eye, EyeOff, Link2, Unlink,
   BarChart3, PieChart, LayoutGrid, List, ArrowUp, ArrowDown,
   ArrowRight, Type, Layout, Star, Zap, Shield, Target,
-  GripVertical, Edit3, Archive,
+  GripVertical, Edit3, Archive, UploadCloud,
 } from "lucide-react";
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
@@ -1349,10 +1349,30 @@ function DataHubTab() {
   const updateMut  = useUpdateDataset();
   const deleteMut = useDeleteDataset();
   const resetMut  = useResetDatasets();
+  const bulkCreateMut = useBulkCreateDatasets();
 
   const [selected, setSelected]   = useState<ChartDataset | null>(null);
   const [draft, setDraft]         = useState<Partial<ChartDataset> | null>(null);
   const [view, setView]          = useState<"list" | "edit">("list");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleBulkUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const json = JSON.parse(e.target?.result as string);
+        if (!Array.isArray(json)) throw new Error("JSON must be an array of datasets");
+        await bulkCreateMut.mutateAsync(json);
+        alert(`Successfully auto-sync and bulk imported ${json.length} datasets`);
+        event.target.value = '';
+      } catch (err) {
+        alert("Bulk import failed: " + (err as Error).message);
+      }
+    };
+    reader.readAsText(file);
+  };
 
   const effective = draft !== null ? { ...selected, ...draft } as ChartDataset : selected;
 
@@ -1404,6 +1424,11 @@ function DataHubTab() {
                 className="flex items-center gap-1.5 text-[12px] font-medium text-gray-500 border border-gray-300 bg-white px-3 py-1.5 hover:bg-gray-50 disabled:opacity-50">
                 {resetMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
                 Reset to Seed
+              </button>
+              <input type="file" accept=".json" className="hidden" ref={fileInputRef} onChange={handleBulkUpload} />
+              <button onClick={() => fileInputRef.current?.click()} disabled={bulkCreateMut.isPending}
+                className="flex items-center gap-1 text-[12px] font-medium border border-[#E5E7EB] bg-white px-3 py-1.5 hover:bg-gray-50 disabled:opacity-50">
+                {bulkCreateMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />} Bulk Upload JSON
               </button>
               <button onClick={openNew}
                 className="flex items-center gap-2 text-[13px] font-medium text-white bg-gray-900 px-4 py-2 hover:bg-gray-700">
@@ -3416,6 +3441,7 @@ function CalendarTab() {
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<"data" | "pages" | "blog" | "analisis" | "featured" | "exchange-rates" | "calendar">("data");
+  const deployMut = useDeployToVPS();
 
   const tabs = [
     { key: "data" as const,          label: "Data Hub",           icon: <Database className="w-4 h-4" /> },

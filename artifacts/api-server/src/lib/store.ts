@@ -169,6 +169,7 @@ export interface DatasetStore {
   create(data: Omit<SeedDataset, "id" | "createdAt" | "updatedAt">): SeedDataset;
   update(id: string, data: Partial<Omit<SeedDataset, "id" | "createdAt" | "updatedAt">>): SeedDataset | null;
   delete(id: string): boolean;
+  bulkCreate(items: Omit<SeedDataset, "id" | "createdAt" | "updatedAt">[]): SeedDataset[];
   reset(): void;
   categories(): string[];
 }
@@ -232,6 +233,18 @@ class PersistentDatasetStore implements DatasetStore {
     const result = this.datasets.delete(id);
     if (result) this.save();
     return result;
+  }
+
+  bulkCreate(items: Omit<SeedDataset, "id" | "createdAt" | "updatedAt">[]): SeedDataset[] {
+    const records: SeedDataset[] = [];
+    for (const data of items) {
+      const id = `ds-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+      const record: SeedDataset = { ...cloneDeep(data), id, createdAt: now(), updatedAt: now() };
+      this.datasets.set(id, record);
+      records.push(record);
+    }
+    if (records.length > 0) this.save();
+    return records;
   }
 
   reset() { this.seed(); }

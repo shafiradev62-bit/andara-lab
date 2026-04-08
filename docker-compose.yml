@@ -25,6 +25,7 @@ services:
       - NODE_ENV=production
       - PORT=8080
       - DATA_DIR=/data
+      - DEPLOY_WEBHOOK_SECRET=${DEPLOY_WEBHOOK_SECRET:-}
     volumes:
       - andaralab-data:/data
     networks:
