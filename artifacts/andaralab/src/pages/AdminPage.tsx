@@ -1371,26 +1371,49 @@ function DataHubTab() {
           const json = JSON.parse(content);
           datasetsToCreate = Array.isArray(json) ? json : [json];
         } else if (extension === 'csv') {
-          // Simple CSV Parser: Headers in first row, data in remaining rows
-          const rows = content.split('\n').map(r => r.trim()).filter(r => r);
-          if (rows.length < 2) throw new Error("CSV must have at least a header and one data row.");
-          const headers = rows[0].split(',').map(h => h.trim());
-          const dataRows = rows.slice(1).map(r => {
-            const values = r.split(',').map(v => v.trim());
-            const obj: any = {};
-            headers.forEach((h, i) => obj[h] = values[i]);
-            return obj;
+          // Robust CSV Parser: Group rows by Title to create structured datasets
+          const lines = content.split('\n').map(r => r.trim()).filter(r => r);
+          if (lines.length < 2) throw new Error("CSV must have at least a header and one data row.");
+          const rawHeaders = lines[0].split(',').map(h => h.trim());
+          
+          // Map of groups: title -> data
+          const groups: Record<string, any> = {};
+          
+          lines.slice(1).forEach(line => {
+             const values = line.split(',').map(v => v.trim());
+             const rowObj: any = {};
+             rawHeaders.forEach((h, i) => rowObj[h] = values[i]);
+             
+             const title = rowObj.Title || rowObj.title || "Untitled";
+             if (!groups[title]) {
+                groups[title] = {
+                   title: title,
+                   description: rowObj.Description || rowObj.description || "",
+                   category: rowObj.Category || rowObj.category || "Macro Foundations",
+                   chartType: (rowObj.Type || rowObj.type || "line").toLowerCase(),
+                   unit: rowObj.Unit || rowObj.unit || "Value",
+                   data: []
+                };
+             }
+             // Exclude metadata from the actual chart rows
+             const { Title, title: t1, Description, description: d1, Category, category: c1, Type, type: tt1, Unit, unit: u1, ...dataFields } = rowObj;
+             groups[title].data.push(dataFields);
           });
 
-          // Heuristic: Use file name as title, first column as X-axis
-          datasetsToCreate = [{
-            title: file.name.replace('.csv', ''),
-            category: "Smart Import",
-            chartType: "line",
-            unit: "Value",
-            columns: headers,
-            rows: dataRows
-          }];
+          datasetsToCreate = Object.values(groups).map(g => {
+             const firstRow = g.data[0] || {};
+             const cols = Object.keys(firstRow);
+             return {
+                title: g.title,
+                description: g.description,
+                category: g.category,
+                chartType: g.chartType,
+                unit: g.unit,
+                color: "#1a3a5c",
+                columns: cols,
+                rows: g.data
+             };
+          });
         } else if (extension === 'pdf') {
           // Placeholder for PDF extraction logic
           alert("Smart PDF Data Extraction is analyzing the document... Please wait.");
@@ -2889,7 +2912,7 @@ function ExchangeRatesTab() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-[16px] font-semibold text-gray-900">Exchange Rates</h2>
-          <p className="text-[12px] text-gray-500 mt-1">Customize market ticker items. Changes appear in the header ticker on all pages.</p>
+          <p className="text-[12px] text-gray-500 mt-1">Manage exchange rates displayed in the market ticker and data hub.</p>
         </div>
         <div className="flex gap-2">
           <button
