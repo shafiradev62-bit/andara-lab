@@ -45,10 +45,12 @@ export default function DataHubPage() {
   const isCalendar = location.includes("economic-calendar");
   const isDashboard = location.includes("market-dashboard");
 
-  // Sync tab from URL on mount/route change
-  if (isCalendar && activeTab !== "calendar") setActiveTab("calendar");
-  else if (isDashboard && activeTab !== "market") setActiveTab("market");
-  else if (!isCalendar && !isDashboard && activeTab !== "charts") setActiveTab("charts");
+  // Sync tab from URL on route change
+  useEffect(() => {
+    if (isCalendar) setActiveTab("calendar");
+    else if (isDashboard) setActiveTab("market");
+    else setActiveTab("charts");
+  }, [isCalendar, isDashboard]);
 
   const selectedDataset = selectedChart ? datasets.find((d) => d.id === selectedChart) : null;
 
