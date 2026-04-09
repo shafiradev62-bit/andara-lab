@@ -13,6 +13,7 @@ import {
   useCalendarEvents, useCalendarConfig,
   useCreateCalendarEvent, useUpdateCalendarEvent,
   useDeleteCalendarEvent, useResetCalendarEvents, useUpdateCalendarConfig,
+  QUERY_KEY,
   type ChartDataset, type Page, type BlogPost,
   type AnalisisDeskriptif, type AnalysisSection, type AnalysisWidget,
   type AnalysisMetric, type AnalysisWidgetType,
@@ -1356,6 +1357,7 @@ function FeaturedInsightsTab() {
 // ─── Data Hub Tab ──────────────────────────────────────────────────────────────
 
 function DataHubTab() {
+  const qc = useQueryClient();
   const { data: datasets = [], isLoading } = useDatasets();
   const createMut  = useCreateDataset();
   const updateMut  = useUpdateDataset();
