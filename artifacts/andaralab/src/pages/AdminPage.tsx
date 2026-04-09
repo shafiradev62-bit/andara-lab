@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   useDatasets, useCreateDataset, useUpdateDataset,
   useDeleteDataset, useResetDatasets, useBulkCreateDatasets, useDeployToVPS,
@@ -1139,7 +1140,8 @@ function PostEditor({
 
 function FeaturedInsightsTab() {
   const [activeLocale, setActiveLocale] = useState<"en" | "id">("en");
-  const { data: config, isLoading } = useFeaturedInsights(activeLocale);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const { data: config, isLoading, refetch } = useFeaturedInsights(activeLocale);
   const updateMut = useUpdateFeaturedInsights();
   const resetMut = useResetFeaturedInsights();
 
@@ -1150,7 +1152,7 @@ function FeaturedInsightsTab() {
 
   useEffect(() => {
     if (config) setDraft({ ...config, slugs: [...config.slugs] });
-  }, [config]);
+  }, [config, refreshKey]);
 
   if (isLoading || !draft) {
     return (
@@ -1163,7 +1165,14 @@ function FeaturedInsightsTab() {
   const handleSave = () => {
     updateMut.mutate(
       { locale: activeLocale, data: draft },
-      { onSuccess: (updated) => setDraft({ ...updated, slugs: [...updated.slugs] }) },
+      { 
+        onSuccess: (updated) => {
+          setDraft({ ...updated, slugs: [...updated.slugs] });
+          // Force refresh by triggering refetch
+          refetch();
+          setRefreshKey(k => k + 1);
+        }
+      },
     );
   };
 
@@ -1296,7 +1305,10 @@ function FeaturedInsightsTab() {
                             <div className="text-[11px] text-gray-400">{post.category} · {post.readTime}</div>
                           </div>
                         ) : (
-                          <div className="text-[12.5px] text-gray-400 italic">Unknown: {item.slug}</div>
+                          <div>
+                            <div className="text-[12.5px] font-medium text-gray-600 truncate">{item.slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</div>
+                            <div className="text-[11px] text-amber-600">Slug: {item.slug} (post not found in published posts)</div>
+                          </div>
                         )}
                       </div>
                       <div className="flex items-center gap-1">
@@ -1372,31 +1384,56 @@ function DataHubTab() {
           datasetsToCreate = Array.isArray(json) ? json : [json];
         } else if (extension === 'csv') {
           // Robust CSV Parser: Group rows by Title to create structured datasets
+          // Handles quoted values and case-insensitive headers
           const lines = content.split('\n').map(r => r.trim()).filter(r => r);
           if (lines.length < 2) throw new Error("CSV must have at least a header and one data row.");
-          const rawHeaders = lines[0].split(',').map(h => h.trim());
           
-          // Map of groups: title -> data
+          // Helper to strip quotes
+          const clean = (s: string) => s.replace(/^["'](.*)["']$/, '$1').trim();
+
+          const rawHeaders = lines[0].split(',').map(h => clean(h));
           const groups: Record<string, any> = {};
           
           lines.slice(1).forEach(line => {
-             const values = line.split(',').map(v => v.trim());
+             // Basic comma split (doesn't handle commas inside quotes, but better than nothing)
+             const values = line.split(',').map(v => clean(v));
              const rowObj: any = {};
-             rawHeaders.forEach((h, i) => rowObj[h] = values[i]);
+             rawHeaders.forEach((h, i) => {
+                if (h) rowObj[h] = values[i];
+             });
              
-             const title = rowObj.Title || rowObj.title || "Untitled";
+             // Case-insensitive metadata extraction
+             const findValue = (keys: string[]) => {
+                const foundKey = Object.keys(rowObj).find(k => keys.includes(k.toLowerCase()));
+                return foundKey ? rowObj[foundKey] : undefined;
+             };
+
+             const title = findValue(['title', 'name', 'dataset']) || "Untitled";
+             const description = findValue(['description', 'desc', 'info']) || "";
+             const category = findValue(['category', 'cat', 'group']) || "Macro Foundations";
+             const type = (findValue(['type', 'charttype', 'chart']) || "line").toLowerCase();
+             const unit = findValue(['unit', 'measure']) || "";
+
              if (!groups[title]) {
                 groups[title] = {
-                   title: title,
-                   description: rowObj.Description || rowObj.description || "",
-                   category: rowObj.Category || rowObj.category || "Macro Foundations",
-                   chartType: (rowObj.Type || rowObj.type || "line").toLowerCase(),
-                   unit: rowObj.Unit || rowObj.unit || "Value",
+                   title, description, category, unit,
+                   chartType: type === 'combo' ? 'combo' : (['line', 'bar', 'area'].includes(type) ? type : 'line'),
                    data: []
                 };
              }
-             // Exclude metadata from the actual chart rows
-             const { Title, title: t1, Description, description: d1, Category, category: c1, Type, type: tt1, Unit, unit: u1, ...dataFields } = rowObj;
+
+             // Extract only non-metadata fields for the row data
+             const metaKeys = ['title', 'name', 'dataset', 'description', 'desc', 'info', 'category', 'cat', 'group', 'type', 'charttype', 'chart', 'unit', 'measure'];
+             const dataFields: any = {};
+             Object.keys(rowObj).forEach(k => {
+                if (!metaKeys.includes(k.toLowerCase())) {
+                   // Convert to number if possible
+                   const val = rowObj[k];
+                   const num = Number(val.replace(/[^\d.-]/g, ''));
+                   dataFields[k] = (!isNaN(num) && val.trim() !== "") ? num : val;
+                }
+             });
+
              groups[title].data.push(dataFields);
           });
 
@@ -1409,7 +1446,9 @@ function DataHubTab() {
                 category: g.category,
                 chartType: g.chartType,
                 unit: g.unit,
+                unitType: "number",
                 color: "#1a3a5c",
+                colors: ["#1a3a5c", "#2a5a8c", "#0d9fbf", "#3b82f6", "#f59e0b"],
                 columns: cols,
                 rows: g.data
              };
@@ -1417,15 +1456,17 @@ function DataHubTab() {
         } else if (extension === 'pdf') {
           // Placeholder for PDF extraction logic
           alert("Smart PDF Data Extraction is analyzing the document... Please wait.");
-          // In a real scenario, we'd send to an AI/OCR endpoint.
-          // For now, we simulate success with a notice.
           return;
         } else {
           throw new Error("Unsupported file type");
         }
 
         await bulkCreateMut.mutateAsync(datasetsToCreate);
+        // Also invalidate analysis record so the "Total" dashboard updates
+        qc.invalidateQueries({ queryKey: QUERY_KEY.analisis });
         alert(`Successfully imported ${datasetsToCreate.length} dataset(s) from ${file.name}`);
+        // Reset file input
+        if (event.target) event.target.value = "";
         event.target.value = '';
       } catch (err) {
         alert("Upload failed: " + (err as Error).message);

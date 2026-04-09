@@ -764,6 +764,7 @@ export interface AnalisisDeskriptifStore {
   list(filter?: { status?: string; locale?: string }): AnalisisDeskriptifRecord[];
   get(id: string): AnalisisDeskriptifRecord | undefined;
   create(data: Omit<AnalisisDeskriptifRecord, "id" | "createdAt" | "updatedAt">): AnalisisDeskriptifRecord;
+  bulkCreate(items: Omit<AnalisisDeskriptifRecord, "id" | "createdAt" | "updatedAt">[]): AnalisisDeskriptifRecord[];
   update(id: string, data: Partial<Omit<AnalisisDeskriptifRecord, "id" | "createdAt" | "updatedAt">>): AnalisisDeskriptifRecord | null;
   delete(id: string): boolean;
   reset(): void;
@@ -802,7 +803,95 @@ class PersistentAnalisisDeskriptifStore implements AnalisisDeskriptifStore {
   list(filter?: { status?: string; locale?: string }): AnalisisDeskriptifRecord[] {
     let all = [...this.records.values()];
     if (filter?.status) all = all.filter((r) => r.status === filter.status);
-    return all;
+
+    // Dynamic enrichment for the "System Overview" dashboard
+    return all.map(record => {
+      if (record.id === "default-overview") {
+        const cloned = cloneDeep(record);
+        
+        // Pre-calculate all totals once
+        const dsCount = datasetStore.list().length;
+        const allPosts = blogPostStore.list();
+        const postCount = allPosts.length;
+        const pageCount = pageStore.list().length;
+        const catCount = datasetStore.categories().length;
+        const published = allPosts.filter(p => p.status === "published").length;
+        const enPosts = allPosts.filter(p => p.locale === "en").length;
+        const idPosts = allPosts.filter(p => p.locale === "id").length;
+
+        // 1. Update Coverage Section (s1-coverage)
+        const coverageSection = cloned.sections.find(s => s.id === "s1-coverage");
+        if (coverageSection) {
+          // Update Metric Card (w1)
+          const w1 = coverageSection.widgets.find(w => w.id === "w1");
+          if (w1 && w1.metrics) {
+            w1.metrics = w1.metrics.map(m => {
+              if (m.id === "m1") return { ...m, value: String(dsCount), note: `${dsCount} chart datasets available` };
+              if (m.id === "m2") return { ...m, value: String(postCount), note: `${postCount} total posts` };
+              if (m.id === "m3") return { ...m, value: String(pageCount), note: `${pageCount} pages available` };
+              if (m.id === "m4") return { ...m, value: String(catCount) };
+              return m;
+            });
+          }
+
+          // Update Distribution (w2) - Distribution by Category
+          const w2 = coverageSection.widgets.find(w => w.id === "w2");
+          if (w2) {
+            const allDatasets = datasetStore.list();
+            const counts: Record<string, number> = {};
+            allDatasets.forEach(ds => {
+              counts[ds.category] = (counts[ds.category] || 0) + 1;
+            });
+            const total = allDatasets.length || 1;
+            const palette = ["#1e3a5f", "#2a5a8c", "#0d9fbf", "#3b82f6", "#f59e0b"];
+            w2.distributionItems = Object.entries(counts)
+              .sort((a, b) => b[1] - a[1])
+              .map(([label, value], idx) => ({
+                label,
+                value,
+                percentage: Math.round((value / total) * 100),
+                color: palette[idx % palette.length]
+              }));
+          }
+        }
+
+        // 2. Update Blog Section (s2-blog -> w4)
+        const blogSection = cloned.sections.find(s => s.id === "s2-blog");
+        if (blogSection) {
+          const w4 = blogSection.widgets.find(w => w.id === "w4");
+          if (w4 && w4.metrics) {
+            w4.metrics = w4.metrics.map(m => {
+              if (m.id === "m5") return { ...m, value: String(published), note: `${postCount - published} draft pending` };
+              if (m.id === "m6") return { ...m, value: String(enPosts), trendValue: postCount > 0 ? `${Math.round((enPosts/postCount)*100)}%` : "0%" };
+              if (m.id === "m7") return { ...m, value: String(idPosts), trendValue: postCount > 0 ? `${Math.round((idPosts/postCount)*100)}%` : "0%" };
+              return m;
+            });
+          }
+          
+          // Update Blog Distribution (w5)
+          const w5 = blogSection.widgets.find(w => w.id === "w5");
+          if (w5) {
+            const counts: Record<string, number> = {};
+            allPosts.forEach(p => {
+              counts[p.category] = (counts[p.category] || 0) + 1;
+            });
+            const total = allPosts.length || 1;
+            const palette = ["#1e3a5f", "#2a5a8c", "#0d9fbf", "#3b82f6", "#f59e0b"];
+            w5.distributionItems = Object.entries(counts)
+              .sort((a, b) => b[1] - a[1])
+              .map(([label, value], idx) => ({
+                label,
+                value,
+                percentage: Math.round((value / total) * 100),
+                color: palette[idx % palette.length]
+              }));
+          }
+        }
+
+        return cloned;
+      }
+      return record;
+    });
   }
 
   get(id: string): AnalisisDeskriptifRecord | undefined { return this.records.get(id); }

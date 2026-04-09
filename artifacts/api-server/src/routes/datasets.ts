@@ -12,7 +12,7 @@ const createDatasetSchema = z.object({
   title:       z.string().min(1),
   description: z.string().optional().default(""),
   category:   z.string().min(1),
-  chartType:  z.enum(["line", "bar", "area"]),
+  chartType:  z.enum(["line", "bar", "area", "combo"]),
   color:      z.string().default("#1a3a5c"),
   unit:       z.string().default(""),
   unitType:   z.enum(["percent", "currency_idr", "currency_usd", "number", "custom"]).default("number"),
