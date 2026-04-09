@@ -1,0 +1,16 @@
+Title,Description,Category,Type,Unit,Period,Value,Forecast
+"Indonesia GDP Growth","Quarterly GDP year-on-year growth percentage for Indonesia.","Macro Foundations","line","%","2023 Q1",5.03,5.1
+"Indonesia GDP Growth","Quarterly GDP year-on-year growth percentage for Indonesia.","Macro Foundations","line","%","2023 Q2",5.17,5.2
+"Indonesia GDP Growth","Quarterly GDP year-on-year growth percentage for Indonesia.","Macro Foundations","line","%","2023 Q3",4.94,5.0
+"Indonesia GDP Growth","Quarterly GDP year-on-year growth percentage for Indonesia.","Macro Foundations","line","%","2023 Q4",5.04,5.1
+"Indonesia GDP Growth","Quarterly GDP year-on-year growth percentage for Indonesia.","Macro Foundations","line","%","2024 Q1",5.11,5.2
+"Nickel Production Volume","Annual production volume of processed nickel in Indonesia (thousand tons).","Sectoral Intelligence","bar","K Tons","2019",602,0
+"Nickel Production Volume","Annual production volume of processed nickel in Indonesia (thousand tons).","Sectoral Intelligence","bar","K Tons","2020",765,0
+"Nickel Production Volume","Annual production volume of processed nickel in Indonesia (thousand tons).","Sectoral Intelligence","bar","K Tons","2021",950,0
+"Nickel Production Volume","Annual production volume of processed nickel in Indonesia (thousand tons).","Sectoral Intelligence","bar","K Tons","2022",1150,0
+"Nickel Production Volume","Annual production volume of processed nickel in Indonesia (thousand tons).","Sectoral Intelligence","bar","K Tons","2023",1350,0
+"Market Pulse & Inflation","Comparison between Market Index performance and Inflation rate.","Financial Markets","combo","Points","Jan 2024",7200,2.5
+"Market Pulse & Inflation","Comparison between Market Index performance and Inflation rate.","Financial Markets","combo","Points","Feb 2024",7350,2.7
+"Market Pulse & Inflation","Comparison between Market Index performance and Inflation rate.","Financial Markets","combo","Points","Mar 2024",7420,2.8
+"Market Pulse & Inflation","Comparison between Market Index performance and Inflation rate.","Financial Markets","combo","Points","Apr 2024",7280,3.0
+"Market Pulse & Inflation","Comparison between Market Index performance and Inflation rate.","Financial Markets","combo","Points","May 2024",7150,2.9
